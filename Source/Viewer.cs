@@ -2,8 +2,7 @@
 {
 	public class Viewer
 	{
-		public string id;
-		public string service;
+		public string name = null;
 		public bool connected = false;
 		public int coins = 0;
 	}

@@ -34,7 +34,7 @@ namespace Puppeteer
 			{
 				viewer.connected = true;
 			} else
-				state[$"{vID}"] = new Viewer() { connected = true };
+				state[$"{vID}"] = new Viewer() { connected = true, name = vID.name };
 			
 			Log.Warning($"Viewer {vID} joined");
 		}
