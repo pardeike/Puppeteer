@@ -1,5 +1,6 @@
 ﻿using JsonFx.Json;
 using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace Puppeteer
@@ -48,6 +49,20 @@ namespace Puppeteer
 	{
 		public string type = "update";
 		public DataJSON data;
+	}
+
+	public class ColonistInfo : JSONConvertable<ColonistInfo>
+	{
+		public string id;
+		public string name;
+		public ViewerID controller;
+		public bool connected;
+	}
+
+	public class AllColonists : JSONConvertable<AllColonists>
+	{
+		public string type = "colonists";
+		public List<ColonistInfo> colonists;
 	}
 
 	public class ViewerID

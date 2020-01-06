@@ -13,10 +13,10 @@ namespace Puppeteer
 
 		public Viewers()
 		{
-			var save = Tools.ReadConfig(saveFileName);
-			if (save != null)
+			var data = Tools.ReadConfig(saveFileName);
+			if (data != null)
 			{
-				var reader = new JsonReader(save);
+				var reader = new JsonReader(data);
 				state = reader.Deserialize<Dictionary<string, Viewer>>();
 			}
 		}
@@ -36,7 +36,7 @@ namespace Puppeteer
 					viewer.connected = true;
 				else
 				{
-					viewer = new Viewer() { vID = vID, name = vID.name };
+					viewer = new Viewer() { vID = vID, name = vID.name, connected = true };
 					state[vID.Identifier] = viewer;
 				}
 				SendEarned(connection, viewer);

@@ -8,7 +8,8 @@ namespace Puppeteer
 	{
 		GameEntered,
 		GameExited,
-		Save
+		Save,
+		ColonistsChanged
 	}
 
 	public interface ICommandProcessor
@@ -26,6 +27,7 @@ namespace Puppeteer
 
 		Connection connection;
 		readonly Viewers viewers;
+		readonly Colonists colonists;
 
 		public Puppeteer()
 		{
@@ -36,6 +38,7 @@ namespace Puppeteer
 			});
 			earnTimer.Start();
 			viewers = new Viewers();
+			colonists = new Colonists();
 		}
 
 		~Puppeteer()
@@ -59,6 +62,10 @@ namespace Puppeteer
 					break;
 				case Event.Save:
 					viewers.Save();
+					colonists.Save();
+					break;
+				case Event.ColonistsChanged:
+					colonists.SendAllColonists(connection);
 					break;
 			}
 		}

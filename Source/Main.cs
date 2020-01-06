@@ -62,6 +62,21 @@ namespace Puppeteer
 			}
 		}
 
+		[HarmonyPatch(typeof(ColonistBar))]
+		[HarmonyPatch("CheckRecacheEntries")]
+		static class ColonistBar_CheckRecacheEntries_Patch
+		{
+			public static void Prefix(bool ___entriesDirty)
+			{
+				if (___entriesDirty)
+				{
+					if (PuppeteerMain.puppeteer == null)
+						PuppeteerMain.puppeteer = new Puppeteer();
+					PuppeteerMain.puppeteer.SetEvent(Event.ColonistsChanged);
+				}
+			}
+		}
+
 		[HarmonyPatch(typeof(Thing))]
 		[HarmonyPatch(nameof(Thing.Position), MethodType.Setter)]
 		static class Thing_Position_Patch

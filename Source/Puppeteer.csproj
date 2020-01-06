@@ -34,6 +34,8 @@
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Colonist.cs" />
+    <Compile Include="Colonists.cs" />
     <Compile Include="Connection.cs" />
     <Compile Include="CrossPromotion.cs" />
     <Compile Include="GlobalSuppressions.cs" />

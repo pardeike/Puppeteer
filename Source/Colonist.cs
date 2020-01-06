@@ -2,11 +2,9 @@
 
 namespace Puppeteer
 {
-	public class Viewer
+	public class Colonist
 	{
-		public ViewerID vID;
-		public string name = null;
+		public ViewerID controller;
 		[JsonIgnore] public bool connected = false;
-		public int coins = 0;
 	}
 }
