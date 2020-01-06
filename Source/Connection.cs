@@ -1,7 +1,4 @@
-﻿using JsonFx.Json;
-using System;
-using System.IO;
-using System.Text;
+﻿using System;
 using System.Timers;
 using Verse;
 using WebSocketSharp;

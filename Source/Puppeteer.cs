@@ -1,7 +1,4 @@
-﻿using JsonFx.Json;
-using RimWorld.Planet;
-using System.Diagnostics;
-using System.Text;
+﻿using System.Diagnostics;
 using System.Timers;
 using Verse;
 
@@ -24,8 +21,8 @@ namespace Puppeteer
 		readonly Timer earnTimer = new Timer(earnIntervalInSeconds * 1000) { AutoReset = true };
 
 		const bool developmentMode = true;
-		const int earnIntervalInSeconds = 5;
-		const int earnAmount = 2;
+		const int earnIntervalInSeconds = 2;
+		const int earnAmount = 10;
 
 		Connection connection;
 		readonly Viewers viewers;
@@ -70,6 +67,7 @@ namespace Puppeteer
 		{
 			try
 			{
+				// Log.Warning($"MSG {msg}");
 				var cmd = SimpleCmd.Create(msg);
 				switch (cmd.type)
 				{
@@ -77,7 +75,7 @@ namespace Puppeteer
 						break;
 					case "join":
 						var join = Join.Create(msg);
-						viewers.Join(join.viewer);
+						viewers.Join(connection, join.viewer);
 						break;
 					case "leave":
 						var leave = Leave.Create(msg);

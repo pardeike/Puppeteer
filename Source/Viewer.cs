@@ -1,9 +1,12 @@
-﻿namespace Puppeteer
+﻿using JsonFx.Json;
+
+namespace Puppeteer
 {
 	public class Viewer
 	{
+		public ViewerID vID;
 		public string name = null;
-		public bool connected = false;
+		[JsonIgnore] public bool connected = true;
 		public int coins = 0;
 	}
 }

@@ -28,20 +28,26 @@ namespace Puppeteer
 			Tools.WriteConfig(saveFileName, sb.ToString());
 		}
 
-		public void Join(ViewerID vID)
+		public void Join(Connection connection, ViewerID vID)
 		{
-			if (state.TryGetValue($"{vID}", out var viewer))
+			if (vID.IsValid)
 			{
-				viewer.connected = true;
-			} else
-				state[$"{vID}"] = new Viewer() { connected = true, name = vID.name };
-			
-			Log.Warning($"Viewer {vID} joined");
+				if (state.TryGetValue(vID.Identifier, out var viewer))
+					viewer.connected = true;
+				else
+				{
+					viewer = new Viewer() { vID = vID, name = vID.name };
+					state[vID.Identifier] = viewer;
+				}
+				SendEarned(connection, viewer);
+
+				Log.Warning($"Viewer {vID} joined");
+			}
 		}
 
 		public void Leave(ViewerID vID)
 		{
-			if (state.TryGetValue($"{vID}", out var viewer))
+			if (state.TryGetValue(vID.Identifier, out var viewer))
 				viewer.connected = false;
 			
 			Log.Warning($"Viewer {vID} left");
@@ -52,8 +58,13 @@ namespace Puppeteer
 			state.DoIf(viewer => viewer.Value.connected, viewer =>
 			{
 				viewer.Value.coins += amount;
-				connection.Send(new Earned() { viewer = new ViewerID(viewer.Key), amount = viewer.Value.coins }.GetJSON());
+				SendEarned(connection, viewer.Value);
 			});
+		}
+
+		static void SendEarned(Connection connection, Viewer viewer)
+		{
+			connection.Send(new Earned() { viewer = viewer.vID, amount = viewer.coins }.GetJSON());
 		}
 	}
 }

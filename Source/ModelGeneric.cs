@@ -57,6 +57,9 @@ namespace Puppeteer
 		public string name;
 		public string picture;
 
+		public string Identifier => $"{service}:{id}";
+		public bool IsValid => (id ?? "").Length > 0 && (service ?? "").Length > 0;
+
 		public ViewerID() {}
 
 		public ViewerID(string str)
@@ -85,7 +88,7 @@ namespace Puppeteer
 
 		public override string ToString()
 		{
-			return $"{service}:{id}";
+			return $"{service}:{id}:{name}{(picture != null ? ":P" : "")}";
 		}
 	}
 }

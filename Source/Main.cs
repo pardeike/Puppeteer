@@ -1,5 +1,8 @@
 ﻿using Harmony;
 using RimWorld;
+using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
 using Verse;
 
 namespace Puppeteer
@@ -23,6 +26,8 @@ namespace Puppeteer
 		{
 			public static void Postfix()
 			{
+				if (PuppeteerMain.puppeteer == null)
+					PuppeteerMain.puppeteer = new Puppeteer();
 				PuppeteerMain.puppeteer.SetEvent(Event.GameEntered);
 			}
 		}
@@ -36,6 +41,23 @@ namespace Puppeteer
 				if (PuppeteerMain.puppeteer == null)
 					PuppeteerMain.puppeteer = new Puppeteer();
 				PuppeteerMain.puppeteer.SetEvent(Event.GameExited);
+			}
+		}
+
+		[HarmonyPatch]
+		static class GameDataSaveLoader_SaveGame_Patch
+		{
+			public static IEnumerable<MethodBase> TargetMethods()
+			{
+				yield return SymbolExtensions.GetMethodInfo(() => GameDataSaveLoader.SaveGame(""));
+				yield return SymbolExtensions.GetMethodInfo(() => Root.Shutdown());
+				yield return SymbolExtensions.GetMethodInfo(() => GenScene.GoToMainMenu());
+			}
+
+			public static void Postfix()
+			{
+				if (PuppeteerMain.puppeteer == null)
+					PuppeteerMain.puppeteer = new Puppeteer();
 				PuppeteerMain.puppeteer.SetEvent(Event.Save);
 			}
 		}
