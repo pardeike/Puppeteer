@@ -83,6 +83,7 @@ namespace Puppeteer
 				{
 					case "welcome":
 						colonists.SendAllColonists(connection);
+						colonists.SendConnectAll(connection);
 						break;
 					case "join":
 						var join = Join.Create(msg);
@@ -94,8 +95,12 @@ namespace Puppeteer
 						break;
 					case "assign":
 						var assign = Assign.Create(msg);
-						colonists.Assign(assign.colonistID, assign.viewer);
+						colonists.Assign(connection, assign.colonistID, assign.viewer);
 						colonists.SendAllColonists(connection);
+						break;
+					case "keep-alive":
+						var keepAlive = KeepAlive.Create(msg);
+						colonists.KeepAlive(keepAlive.colonistID, keepAlive.viewer);
 						break;
 					default:
 						Log.Warning($"unknown command '{cmd.type}'");

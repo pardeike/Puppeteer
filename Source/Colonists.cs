@@ -1,6 +1,7 @@
 ﻿using Harmony;
 using JsonFx.Json;
 using RimWorld;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -30,6 +31,11 @@ namespace Puppeteer
 			Tools.WriteConfig(saveFileName, sb.ToString());
 		}
 
+		public void SendConnectAll(Connection connection)
+		{
+			state.DoIf(pair => pair.Value.controller != null, pair => SendConnected(connection, pair.Key, pair.Value.controller, true));
+		}
+
 		public void SendAllColonists(Connection connection)
 		{
 			var pawns = Find.Maps.SelectMany(map => map.mapPawns.FreeColonists).ToList();
@@ -44,37 +50,44 @@ namespace Puppeteer
 					id = p.ThingID,
 					name = p.Name.ToStringShort,
 					controller = controller,
-					connected = colonist?.connected ?? false
+					lastSeen = colonist != null ? Tools.ConvertToUnixTimestamp(colonist.lastSeen) : 0
 				};
 			}).ToList();
 			connection.Send(new AllColonists() { colonists = colonists }.GetJSON());
 		}
 
-		public void Assign(string colonistID, ViewerID viewer)
+		public static void SendConnected(Connection connection, string colonistID, ViewerID viewer, bool state)
+		{
+			Log.Warning($"CONNECTED {colonistID} {viewer} {state}");
+			connection.Send(new Connected() { viewer = viewer.Simple, colonistID = colonistID, state = state }.GetJSON());
+		}
+
+		public void Assign(Connection connection, string colonistID, ViewerID viewer)
 		{
 			if (state.TryGetValue(colonistID, out var colonist))
-				colonist.controller = viewer;
+			{
+				var controller = colonist.controller;
+				if (controller != null && viewer != controller)
+					SendConnected(connection, colonistID, controller, false);
+			}
+
+			if (viewer == null)
+			{
+				_ = state.Remove(colonistID);
+				return;
+			}
+
 			colonist = new Colonist() { controller = viewer };
 			state[colonistID] = colonist;
+			SendConnected(connection, colonistID, viewer, true);
 		}
 
-		public void Add(Pawn pawn)
+		public void KeepAlive(string colonistID, ViewerID viewer)
 		{
-			if (state.ContainsKey(pawn.ThingID) == false)
-				state[pawn.ThingID] = new Colonist();
-		}
-
-		public void Remove(Pawn pawn)
-		{
-			_ = state.Remove(pawn.ThingID);
-		}
-
-		public void Connect(Pawn pawn, ViewerID viewer)
-		{
-			if (state.TryGetValue(pawn.ThingID, out var colonist))
+			if (state.TryGetValue(colonistID, out var colonist))
 			{
-				colonist.controller = viewer;
-				colonist.connected = viewer != null;
+				if (colonist.controller == viewer)
+					colonist.lastSeen = DateTime.Now;
 			}
 		}
 	}

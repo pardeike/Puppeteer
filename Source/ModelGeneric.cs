@@ -52,7 +52,22 @@ namespace Puppeteer
 		public ViewerID viewer;
 	}
 
-public class Update : JSONConvertable<Update>
+	public class Connected: JSONConvertable<Connected>
+	{
+		public string type = "connected";
+		public ViewerID viewer;
+		public string colonistID;
+		public bool state;
+	}
+
+	public class KeepAlive: JSONConvertable<KeepAlive>
+	{
+		public string type;
+		public ViewerID viewer;
+		public string colonistID;
+	}
+
+	public class Update : JSONConvertable<Update>
 	{
 		public string type = "update";
 		public DataJSON data;
@@ -63,7 +78,7 @@ public class Update : JSONConvertable<Update>
 		public string id;
 		public string name;
 		public ViewerID controller;
-		public bool connected;
+		public double lastSeen;
 	}
 
 	public class AllColonists : JSONConvertable<AllColonists>
@@ -81,6 +96,7 @@ public class Update : JSONConvertable<Update>
 
 		public string Identifier => $"{service}:{id}";
 		public bool IsValid => (id ?? "").Length > 0 && (service ?? "").Length > 0;
+		public ViewerID Simple => new ViewerID() { id = id, service = service };
 
 		public ViewerID() {}
 
@@ -92,6 +108,7 @@ public class Update : JSONConvertable<Update>
 			name = parts.Length > 2 ? parts[2] : null;
 			picture = null;
 		}
+
 
 		public override int GetHashCode()
 		{
