@@ -50,6 +50,14 @@ namespace Puppeteer
 			connection.Send(new AllColonists() { colonists = colonists }.GetJSON());
 		}
 
+		public void Assign(string colonistID, ViewerID viewer)
+		{
+			if (state.TryGetValue(colonistID, out var colonist))
+				colonist.controller = viewer;
+			colonist = new Colonist() { controller = viewer };
+			state[colonistID] = colonist;
+		}
+
 		public void Add(Pawn pawn)
 		{
 			if (state.ContainsKey(pawn.ThingID) == false)

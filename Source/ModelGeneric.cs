@@ -45,7 +45,14 @@ namespace Puppeteer
 		public ViewerID viewer;
 	}
 
-	public class Update : JSONConvertable<Update>
+	public class Assign : JSONConvertable<Assign>
+	{
+		public string type;
+		public string colonistID;
+		public ViewerID viewer;
+	}
+
+public class Update : JSONConvertable<Update>
 	{
 		public string type = "update";
 		public DataJSON data;

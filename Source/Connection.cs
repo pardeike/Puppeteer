@@ -57,7 +57,7 @@ namespace Puppeteer
 
 		public void Send(string data, Action<bool> callback = null)
 		{
-			if (ws.ReadyState == WebSocketState.Closed)
+			if (ws != null && ws.ReadyState == WebSocketState.Closed)
 			{
 				if (DateTime.Now < nextRetry)
 				{
@@ -66,7 +66,7 @@ namespace Puppeteer
 				}
 				Connect();
 			}
-			if (ws.ReadyState == WebSocketState.Open)
+			if (ws != null && ws.ReadyState == WebSocketState.Open)
 				ws.SendAsync(data, callback);
 			else
 				callback(false);
@@ -74,7 +74,7 @@ namespace Puppeteer
 
 		public void Disconnect()
 		{
-			if (ws.ReadyState == WebSocketState.Open)
+			if (ws != null && ws.ReadyState == WebSocketState.Open)
 				ws.CloseAsync(CloseStatusCode.Normal);
 		}
 

@@ -1,6 +1,5 @@
 ﻿using Harmony;
 using RimWorld;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Verse;
@@ -13,6 +12,8 @@ namespace Puppeteer
 
 		public PuppeteerMain(ModContentPack content) : base(content)
 		{
+			puppeteer = new Puppeteer();
+
 			var harmony = HarmonyInstance.Create("net.pardeike.harmony.Puppeteer");
 			harmony.PatchAll();
 		}
@@ -26,8 +27,6 @@ namespace Puppeteer
 		{
 			public static void Postfix()
 			{
-				if (PuppeteerMain.puppeteer == null)
-					PuppeteerMain.puppeteer = new Puppeteer();
 				PuppeteerMain.puppeteer.SetEvent(Event.GameEntered);
 			}
 		}
@@ -38,8 +37,6 @@ namespace Puppeteer
 		{
 			public static void Postfix()
 			{
-				if (PuppeteerMain.puppeteer == null)
-					PuppeteerMain.puppeteer = new Puppeteer();
 				PuppeteerMain.puppeteer.SetEvent(Event.GameExited);
 			}
 		}
@@ -56,8 +53,6 @@ namespace Puppeteer
 
 			public static void Postfix()
 			{
-				if (PuppeteerMain.puppeteer == null)
-					PuppeteerMain.puppeteer = new Puppeteer();
 				PuppeteerMain.puppeteer.SetEvent(Event.Save);
 			}
 		}
@@ -70,8 +65,6 @@ namespace Puppeteer
 			{
 				if (___entriesDirty)
 				{
-					if (PuppeteerMain.puppeteer == null)
-						PuppeteerMain.puppeteer = new Puppeteer();
 					PuppeteerMain.puppeteer.SetEvent(Event.ColonistsChanged);
 				}
 			}

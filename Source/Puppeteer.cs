@@ -28,6 +28,7 @@ namespace Puppeteer
 		Connection connection;
 		readonly Viewers viewers;
 		readonly Colonists colonists;
+		bool firstTime = true;
 
 		public Puppeteer()
 		{
@@ -65,7 +66,9 @@ namespace Puppeteer
 					colonists.Save();
 					break;
 				case Event.ColonistsChanged:
-					colonists.SendAllColonists(connection);
+					if (firstTime == false)
+						colonists.SendAllColonists(connection);
+					firstTime = false;
 					break;
 			}
 		}
@@ -79,6 +82,7 @@ namespace Puppeteer
 				switch (cmd.type)
 				{
 					case "welcome":
+						colonists.SendAllColonists(connection);
 						break;
 					case "join":
 						var join = Join.Create(msg);
@@ -87,6 +91,11 @@ namespace Puppeteer
 					case "leave":
 						var leave = Leave.Create(msg);
 						viewers.Leave(leave.viewer);
+						break;
+					case "assign":
+						var assign = Assign.Create(msg);
+						colonists.Assign(assign.colonistID, assign.viewer);
+						colonists.SendAllColonists(connection);
 						break;
 					default:
 						Log.Warning($"unknown command '{cmd.type}'");
