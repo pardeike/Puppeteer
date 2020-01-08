@@ -121,7 +121,11 @@ namespace Puppeteer
 
 		public static bool operator ==(ViewerID v1, ViewerID v2)
 		{
-			return ((object)v1) != null && ((object)v2) != null && v1.id == v2.id && v1.service == v2.service;
+			if (((object)v1) == null)
+				return ((object)v2) == null;
+			if (((object)v2) == null)
+				return ((object)v1) == null;
+			return v1.id == v2.id && v1.service == v2.service;
 		}
 
 		public static bool operator !=(ViewerID v1, ViewerID v2)

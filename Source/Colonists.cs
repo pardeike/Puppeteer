@@ -74,6 +74,7 @@ namespace Puppeteer
 				_ = state.Remove("" + colonistID);
 				return;
 			}
+			_ = state.RemoveAll(pair => pair.Value.controller == viewer);
 
 			if (state.TryGetValue("" + colonistID, out var colonist))
 			{

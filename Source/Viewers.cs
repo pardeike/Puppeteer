@@ -2,7 +2,6 @@
 using JsonFx.Json;
 using System.Collections.Generic;
 using System.Text;
-using Verse;
 
 namespace Puppeteer
 {
