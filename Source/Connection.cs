@@ -32,7 +32,7 @@ namespace Puppeteer
 
 		void Connect()
 		{
-			var tokenContent = Tools.ReadConfig("PuppeteerToken.txt");
+			var tokenContent = "PuppeteerToken.txt".ReadConfig();
 			if (tokenContent == null)
 			{
 				Log.Warning("Cannot read PuppeteerToken.txt");
@@ -42,14 +42,12 @@ namespace Puppeteer
 			var parts = tokenContent.Split('.');
 			if (parts.Length == 3)
 			{
-				var json = Tools.Base64Decode(parts[1]);
+				var json = parts[1].Base64Decode();
 				var token = TokenJSON.Create(json);
-				Log.Warning("# Connecting (" + token.game + ")");
 			}
 			else
 				Log.Warning("Invalid token format");
 
-			Log.Warning("# Connecting");
 			ws.SetCookie(new WebSocketSharp.Net.Cookie("id_token", tokenContent));
 			ws.ConnectAsync();
 			nextRetry = new DateTime().AddSeconds(5);
@@ -80,7 +78,6 @@ namespace Puppeteer
 
 		private void Ws_OnOpen(object sender, EventArgs e)
 		{
-			Log.Warning("# Open");
 			isConnected = true;
 
 			ws.SendAsync("{\"type\":\"hello\"}", null);
@@ -89,7 +86,6 @@ namespace Puppeteer
 
 		private void Ws_OnClose(object sender, CloseEventArgs e)
 		{
-			Log.Warning("# Closed " + e.Code);
 			isConnected = false;
 
 			timer.Stop();

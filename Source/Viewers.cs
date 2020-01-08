@@ -9,11 +9,13 @@ namespace Puppeteer
 	public class Viewers
 	{
 		const string saveFileName = "PuppeteerViewers.json";
+
+		// keys: "{Service}:{ID}" (ViewerID.Identifier)
 		public Dictionary<string, Viewer> state = new Dictionary<string, Viewer>();
 
 		public Viewers()
 		{
-			var data = Tools.ReadConfig(saveFileName);
+			var data = saveFileName.ReadConfig();
 			if (data != null)
 			{
 				var reader = new JsonReader(data);
@@ -25,32 +27,42 @@ namespace Puppeteer
 		{
 			var sb = new StringBuilder();
 			using (var writer = new JsonWriter(sb)) { writer.Write(state); }
-			Tools.WriteConfig(saveFileName, sb.ToString());
+			saveFileName.WriteConfig(sb.ToString());
 		}
 
-		public void Join(Connection connection, ViewerID vID)
+		public void Join(Connection connection, Colonists colonists, ViewerID vID)
 		{
 			if (vID.IsValid)
 			{
 				if (state.TryGetValue(vID.Identifier, out var viewer))
+				{
 					viewer.connected = true;
+					var thingID = colonists.FindThingID(viewer.vID);
+					viewer.controlling = thingID == null ? null : Tools.ColonistForThingID(int.Parse(thingID));
+				}
 				else
 				{
-					viewer = new Viewer() { vID = vID, name = vID.name, connected = true };
+					viewer = new Viewer() { vID = vID, connected = true };
 					state[vID.Identifier] = viewer;
 				}
 				SendEarned(connection, viewer);
-
-				Log.Warning($"Viewer {vID} joined");
 			}
 		}
 
 		public void Leave(ViewerID vID)
 		{
 			if (state.TryGetValue(vID.Identifier, out var viewer))
+			{
 				viewer.connected = false;
-			
-			Log.Warning($"Viewer {vID} left");
+				viewer.controlling = null;
+			}
+		}
+
+		public Viewer FindViewer(ViewerID vID)
+		{
+			if (state.TryGetValue(vID.Identifier, out var viewer))
+				return viewer;
+			return null;
 		}
 
 		public void Earn(Connection connection, int amount)

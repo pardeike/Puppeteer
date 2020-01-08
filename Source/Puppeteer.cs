@@ -73,6 +73,19 @@ namespace Puppeteer
 			}
 		}
 
+		public ViewerInfo GetViewerInfo(Pawn pawn)
+		{
+			var colonist = colonists.FindColonist(pawn);
+			if (colonist == null || colonist.controller == null) return null;
+			var viewer = viewers.FindViewer(colonist.controller);
+			if (viewer == null || viewer.controlling == null) return null;
+			return new ViewerInfo() { 
+				controller = colonist.controller, 
+				pawn = viewer.controlling,
+				connected = viewer.connected
+			};
+		}
+
 		public void Message(string msg)
 		{
 			try
@@ -83,11 +96,10 @@ namespace Puppeteer
 				{
 					case "welcome":
 						colonists.SendAllColonists(connection);
-						colonists.SendConnectAll(connection);
 						break;
 					case "join":
 						var join = Join.Create(msg);
-						viewers.Join(connection, join.viewer);
+						viewers.Join(connection, colonists, join.viewer);
 						break;
 					case "leave":
 						var leave = Leave.Create(msg);
@@ -95,12 +107,8 @@ namespace Puppeteer
 						break;
 					case "assign":
 						var assign = Assign.Create(msg);
-						colonists.Assign(connection, assign.colonistID, assign.viewer);
+						colonists.Assign(assign.colonistID, assign.viewer);
 						colonists.SendAllColonists(connection);
-						break;
-					case "keep-alive":
-						var keepAlive = KeepAlive.Create(msg);
-						colonists.KeepAlive(keepAlive.colonistID, keepAlive.viewer);
 						break;
 					default:
 						Log.Warning($"unknown command '{cmd.type}'");
@@ -121,10 +129,13 @@ namespace Puppeteer
 		static int counter = 0;
 		public void PawnUpdate(Pawn pawn)
 		{
+			var viewerInfo = GetViewerInfo(pawn);
+			if (viewerInfo == null || viewerInfo.controller == null) return;
+
 			var stopWatch = new Stopwatch();
 			stopWatch.Start();
 
-			var data = new Update() { data = new DataJSON(pawn) }.GetJSON();
+			var data = new Update() { viewer = viewerInfo.controller, data = new DataJSON(pawn) }.GetJSON();
 			connection.Send(data, (success) =>
 			{
 				var d = stopWatch.ElapsedMilliseconds;

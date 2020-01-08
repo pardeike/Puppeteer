@@ -21,8 +21,8 @@ namespace Puppeteer
 
 	class Patches
 	{
-		[HarmonyPatch(typeof(Map))]
-		[HarmonyPatch(nameof(Map.FinalizeInit))]
+		[HarmonyPatch(typeof(Game))]
+		[HarmonyPatch(nameof(Game.FinalizeInit))]
 		static class Map_FinalizeInit_Patch
 		{
 			public static void Postfix()

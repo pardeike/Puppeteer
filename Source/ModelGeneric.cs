@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Verse;
 
 namespace Puppeteer
 {
@@ -48,43 +49,36 @@ namespace Puppeteer
 	public class Assign : JSONConvertable<Assign>
 	{
 		public string type;
-		public string colonistID;
+		public int colonistID;
 		public ViewerID viewer;
-	}
-
-	public class Connected: JSONConvertable<Connected>
-	{
-		public string type = "connected";
-		public ViewerID viewer;
-		public string colonistID;
-		public bool state;
-	}
-
-	public class KeepAlive: JSONConvertable<KeepAlive>
-	{
-		public string type;
-		public ViewerID viewer;
-		public string colonistID;
 	}
 
 	public class Update : JSONConvertable<Update>
 	{
 		public string type = "update";
+		public ViewerID viewer;
 		public DataJSON data;
 	}
 
 	public class ColonistInfo : JSONConvertable<ColonistInfo>
 	{
-		public string id;
+		public int id;
 		public string name;
 		public ViewerID controller;
-		public double lastSeen;
+		public string lastSeen;
 	}
 
 	public class AllColonists : JSONConvertable<AllColonists>
 	{
 		public string type = "colonists";
 		public List<ColonistInfo> colonists;
+	}
+
+	public class ViewerInfo
+	{
+		public ViewerID controller;
+		public Pawn pawn;
+		public bool connected;
 	}
 
 	public class ViewerID
@@ -122,7 +116,17 @@ namespace Puppeteer
 
 		public bool Equals(ViewerID obj)
 		{
-			return obj != null && obj.id == id && obj.service == service;
+			return obj == this;
+		}
+
+		public static bool operator ==(ViewerID v1, ViewerID v2)
+		{
+			return ((object)v1) != null && ((object)v2) != null && v1.id == v2.id && v1.service == v2.service;
+		}
+
+		public static bool operator !=(ViewerID v1, ViewerID v2)
+		{
+			return !(v1 == v2);
 		}
 
 		public override string ToString()
