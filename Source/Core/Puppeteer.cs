@@ -17,8 +17,10 @@ namespace Puppeteer
 		void Message(string msg);
 	}
 
+	[StaticConstructorOnStartup]
 	public class Puppeteer : ICommandProcessor
 	{
+		public static Puppeteer instance = new Puppeteer();
 		readonly Timer earnTimer = new Timer(earnIntervalInSeconds * 1000) { AutoReset = true };
 
 		const bool developmentMode = true;

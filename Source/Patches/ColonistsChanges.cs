@@ -14,7 +14,7 @@ namespace Puppeteer
 		public static void Postfix(Pawn __instance, bool respawningAfterLoad)
 		{
 			if (respawningAfterLoad == false && __instance.Spawned && __instance.IsColonist)
-				PuppeteerMain.puppeteer.SetEvent(Event.ColonistsChanged);
+				Puppeteer.instance.SetEvent(Event.ColonistsChanged);
 		}
 	}
 
@@ -24,7 +24,7 @@ namespace Puppeteer
 	{
 		public static void Postfix()
 		{
-			PuppeteerMain.puppeteer.SetEvent(Event.ColonistsChanged);
+			Puppeteer.instance.SetEvent(Event.ColonistsChanged);
 		}
 	}
 
@@ -40,7 +40,7 @@ namespace Puppeteer
 		public static void Postfix(Pawn __instance)
 		{
 			if (__instance.IsColonist)
-				PuppeteerMain.puppeteer.SetEvent(Event.ColonistsChanged);
+				Puppeteer.instance.SetEvent(Event.ColonistsChanged);
 		}
 	}
 
@@ -51,7 +51,7 @@ namespace Puppeteer
 		public static void Postfix(Pawn pawn)
 		{
 			if (pawn.IsColonist)
-				PuppeteerMain.puppeteer.SetEvent(Event.ColonistsChanged);
+				Puppeteer.instance.SetEvent(Event.ColonistsChanged);
 		}
 	}
 
@@ -61,7 +61,7 @@ namespace Puppeteer
 	{
 		public static void Postfix()
 		{
-			PuppeteerMain.puppeteer.SetEvent(Event.ColonistsChanged);
+			Puppeteer.instance.SetEvent(Event.ColonistsChanged);
 		}
 	}
 }

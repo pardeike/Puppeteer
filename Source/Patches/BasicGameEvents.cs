@@ -12,7 +12,7 @@ namespace Puppeteer
 	{
 		public static void Postfix()
 		{
-			PuppeteerMain.puppeteer.SetEvent(Event.GameEntered);
+			Puppeteer.instance.SetEvent(Event.GameEntered);
 		}
 	}
 
@@ -22,7 +22,7 @@ namespace Puppeteer
 	{
 		public static void Postfix()
 		{
-			PuppeteerMain.puppeteer.SetEvent(Event.GameExited);
+			Puppeteer.instance.SetEvent(Event.GameExited);
 		}
 	}
 
@@ -38,7 +38,7 @@ namespace Puppeteer
 
 		public static void Postfix()
 		{
-			PuppeteerMain.puppeteer.SetEvent(Event.Save);
+			Puppeteer.instance.SetEvent(Event.Save);
 		}
 	}
 }

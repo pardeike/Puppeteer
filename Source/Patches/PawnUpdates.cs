@@ -13,7 +13,7 @@ namespace Puppeteer
 			if (pawn == null || pawn.Spawned == false || pawn.IsColonist == false)
 				return;
 
-			PuppeteerMain.puppeteer.PawnUpdate(pawn);
+			Puppeteer.instance.PawnUpdate(pawn);
 		}
 	}
 }

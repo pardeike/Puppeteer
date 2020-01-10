@@ -3,16 +3,20 @@ using Verse;
 
 namespace Puppeteer
 {
-	class PuppeteerMain : Mod
+	[StaticConstructorOnStartup]
+	class Main
 	{
-		public static Puppeteer puppeteer;
-
-		public PuppeteerMain(ModContentPack content) : base(content)
+		static Main()
 		{
-			puppeteer = new Puppeteer();
-
 			var harmony = HarmonyInstance.Create("net.pardeike.harmony.Puppeteer");
 			harmony.PatchAll();
+		}
+	}
+
+	public class PuppeteerMain : Mod
+	{
+		public PuppeteerMain(ModContentPack content) : base(content)
+		{
 		}
 	}
 }
