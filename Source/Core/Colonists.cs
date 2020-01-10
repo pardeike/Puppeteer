@@ -34,9 +34,24 @@ namespace Puppeteer
 
 		public void SendAllColonists(Connection connection)
 		{
-			var pawns = Find.Maps.SelectMany(map => map.mapPawns.FreeColonists).ToList();
-			PlayerPawnsDisplayOrderUtility.Sort(pawns);
-			var colonists = pawns.Select(p =>
+			if (connection == null) return;
+			var allPawns = new List<Pawn>();
+			Find.Maps.Do(map =>
+			{
+				var pawns = map.mapPawns.FreeColonists.ToList();
+				PlayerPawnsDisplayOrderUtility.Sort(pawns);
+				allPawns.AddRange(pawns);
+			});
+			Find.WorldObjects.Caravans
+				.Where(caravan => caravan.IsPlayerControlled)
+				.OrderBy(caravan => caravan.ID).Do(caravan =>
+				{
+					var pawns = caravan.PawnsListForReading;
+					PlayerPawnsDisplayOrderUtility.Sort(pawns);
+					allPawns.AddRange(pawns);
+				});
+
+			var colonists = allPawns.Select(p =>
 			{
 				ViewerID controller = null;
 				if (state.TryGetValue(""+p.thingIDNumber, out var colonist))

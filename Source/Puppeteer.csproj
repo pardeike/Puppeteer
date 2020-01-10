@@ -34,19 +34,24 @@
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Colonist.cs" />
-    <Compile Include="Colonists.cs" />
-    <Compile Include="Connection.cs" />
-    <Compile Include="CrossPromotion.cs" />
-    <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="Main.cs" />
-    <Compile Include="ModelPawnUpdates.cs" />
-    <Compile Include="ModelGeneric.cs" />
+    <Compile Include="Misc\JSONConvertable.cs" />
+    <Compile Include="Models\Colonist.cs" />
+    <Compile Include="Core\Colonists.cs" />
+    <Compile Include="Misc\Connection.cs" />
+    <Compile Include="Misc\CrossPromotion.cs" />
+    <Compile Include="Misc\GlobalSuppressions.cs" />
+    <Compile Include="Misc\Main.cs" />
+    <Compile Include="Models\PawnUpdates.cs" />
+    <Compile Include="Models\Commands.cs" />
+    <Compile Include="Models\ViewerID.cs" />
+    <Compile Include="Patches\ColonistsChanges.cs" />
+    <Compile Include="Patches\BasicGameEvents.cs" />
+    <Compile Include="Patches\PawnUpdates.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Puppeteer.cs" />
-    <Compile Include="Tools.cs" />
-    <Compile Include="Viewer.cs" />
-    <Compile Include="Viewers.cs" />
+    <Compile Include="Core\Puppeteer.cs" />
+    <Compile Include="Misc\Tools.cs" />
+    <Compile Include="Models\Viewer.cs" />
+    <Compile Include="Core\Viewers.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="0Harmony, Version=1.2.0.1, Culture=neutral, processorArchitecture=MSIL">

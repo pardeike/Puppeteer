@@ -55,11 +55,8 @@ namespace Puppeteer
 					connection = new Connection(developmentMode, this);
 					break;
 				case Event.GameExited:
-					if (connection != null)
-					{
-						connection.Disconnect();
-						connection = null;
-					}
+					connection?.Disconnect();
+					connection = null;
 					break;
 				case Event.Save:
 					viewers.Save();
@@ -88,6 +85,7 @@ namespace Puppeteer
 
 		public void Message(string msg)
 		{
+			if (connection == null) return;
 			try
 			{
 				// Log.Warning($"MSG {msg}");
@@ -129,6 +127,8 @@ namespace Puppeteer
 		static int counter = 0;
 		public void PawnUpdate(Pawn pawn)
 		{
+			if (connection == null) return;
+
 			var viewerInfo = GetViewerInfo(pawn);
 			if (viewerInfo == null || viewerInfo.controller == null) return;
 
