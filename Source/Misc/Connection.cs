@@ -55,19 +55,19 @@ namespace Puppeteer
 
 		public void Send(string data, Action<bool> callback = null)
 		{
-			if (ws != null && ws.ReadyState == WebSocketState.Closed)
+			if (ws?.ReadyState == WebSocketState.Closed)
 			{
 				if (DateTime.Now < nextRetry)
 				{
-					callback(false);
+					callback?.Invoke(false);
 					return;
 				}
 				Connect();
 			}
-			if (ws != null && ws.ReadyState == WebSocketState.Open)
-				ws.SendAsync(data, callback);
+			if (ws?.ReadyState == WebSocketState.Open)
+				ws?.SendAsync(data, callback);
 			else
-				callback(false);
+				callback?.Invoke(false);
 		}
 
 		public void Disconnect()

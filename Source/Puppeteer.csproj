@@ -34,6 +34,7 @@
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Core\ColonistCamera.cs" />
     <Compile Include="Misc\JSONConvertable.cs" />
     <Compile Include="Models\Colonist.cs" />
     <Compile Include="Core\Colonists.cs" />
@@ -44,6 +45,7 @@
     <Compile Include="Models\PawnUpdates.cs" />
     <Compile Include="Models\Commands.cs" />
     <Compile Include="Models\ViewerID.cs" />
+    <Compile Include="Patches\ColonistPortraits.cs" />
     <Compile Include="Patches\ColonistsChanges.cs" />
     <Compile Include="Patches\BasicGameEvents.cs" />
     <Compile Include="Patches\PawnUpdates.cs" />
@@ -74,6 +76,9 @@
     <Reference Include="Assembly-CSharp-firstpass">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="FJ.CoreWin, Version=0.8.0.0, Culture=neutral, PublicKeyToken=d79a4df8eb0cd3e3, processorArchitecture=MSIL">
+      <HintPath>..\packages\Flux.Jpeg.Core.0.8.0\lib\net35\FJ.CoreWin.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
