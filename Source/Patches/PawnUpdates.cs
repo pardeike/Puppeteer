@@ -7,8 +7,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Verse;
-using static Puppeteer.Tools;
+using static Harmony.AccessTools;
 
 namespace Puppeteer
 {
@@ -43,8 +44,13 @@ namespace Puppeteer
 
 	public static class Renderer
 	{
+		const int imageSize = 256;
 		public static float renderOffset = 0f;
+		public static Vector3 RenderOffsetVector => new Vector3(renderOffset, 0f, 0f);
+		public static CellRect fakeViewRect = CellRect.Empty;
+		public static bool fakeZoom = false;
 		public static readonly Dictionary<Pawn, PawnImage> pawnImages = new Dictionary<Pawn, PawnImage>();
+		static readonly FieldRef<SubcameraDriver, Camera[]> subcamerasRef = FieldRefAccess<SubcameraDriver, Camera[]>("subcameras");
 
 		public static byte[] GetPawnPortrait(Pawn pawn, int size)
 		{
@@ -53,10 +59,19 @@ namespace Puppeteer
 			RenderTexture.active = renderTexture;
 			portrait.ReadPixels(new Rect(0, 0, size, size), 0, 0);
 			portrait.Apply();
-			return portrait.EncodeToPNG();
+			var data = portrait.EncodeToPNG();
+			UnityEngine.Object.Destroy(portrait);
+			return data;
 		}
 
-		public static void GetPawnScreenRender(Pawn pawn, int imageSize, float radius)
+		public static void SetCamera(Camera camera, ref Vector3 position, float size)
+		{
+			camera.orthographicSize = size;
+			camera.farClipPlane = 100f;
+			camera.transform.position = position;
+		}
+
+		public static void GetPawnScreenRender(Pawn pawn, float radius)
 		{
 			if (pawnImages.TryGetValue(pawn, out var image) == false)
 			{
@@ -65,33 +80,41 @@ namespace Puppeteer
 				pawnImages[pawn] = image;
 			}
 
-			var startX = pawn.DrawPos.x - radius;
-			var startZ = pawn.DrawPos.z - radius;
-			var endX = startX + 2 * radius;
-			var endZ = startZ + 2 * radius;
+			var camera = Find.Camera;
+			var rememberFarClipPlane = camera.farClipPlane;
+			var rememberPosition = camera.transform.position;
+			var rememberOrthographicSize = camera.orthographicSize;
 
-			var orthographicSize = 2 * radius;
-			var cameraBaseY = 10f + 15f + (orthographicSize - 11f) / 49f * 50f;
+			// var camera = ColonistCameraManager.Camera;
+			var subCameras = subcamerasRef(Current.SubcameraDriver);
 
-			var camRectMinX = (int)Math.Floor(startX);
-			var camRectMinZ = (int)Math.Floor(startZ);
-			var camRectMaxX = (int)Math.Ceiling(endX);
-			var camRectMaxZ = (int)Math.Ceiling(endZ);
-
-			var camera = ColonistCameraManager.Camera;
-			camera.orthographicSize = orthographicSize;
-			camera.farClipPlane = cameraBaseY + 100f;
-			camera.transform.position = new Vector3(Renderer.renderOffset + pawn.DrawPos.x, cameraBaseY, pawn.DrawPos.z);
+			var cameraPos = new Vector3(renderOffset + pawn.DrawPos.x, 40f, pawn.DrawPos.z);
+			SetCamera(camera, ref cameraPos, radius);
+			for (var i = 0; i < subCameras.Length; i++)
+				SetCamera(subCameras[i], ref cameraPos, radius);
 
 			var renderTexture = RenderTexture.GetTemporary(imageSize, imageSize, 24);
 			camera.targetTexture = renderTexture;
 			RenderTexture.active = renderTexture;
 			camera.Render();
 			image.imageTexture.ReadPixels(new Rect(0, 0, imageSize, imageSize), 0, 0, false);
+			image.imageTexture.Apply();
 			image.isNew = true;
 			RenderTexture.ReleaseTemporary(renderTexture);
 			camera.targetTexture = null;
 			RenderTexture.active = null;
+
+			SetCamera(camera, ref rememberPosition, rememberOrthographicSize);
+			camera.farClipPlane = rememberFarClipPlane;
+		}
+
+		public static void RemovePawn(Pawn pawn)
+		{
+			if (pawnImages.TryGetValue(pawn, out var image))
+			{
+				UnityEngine.Object.Destroy(image.imageTexture);
+				_ = pawnImages.Remove(pawn);
+			}
 		}
 	}
 
@@ -112,74 +135,121 @@ namespace Puppeteer
 		}
 	}
 
+	[HarmonyPatch(typeof(CameraDriver))]
+	[HarmonyPatch(nameof(CameraDriver.CurrentViewRect), MethodType.Getter)]
+	static class CameraDriver_CurrentViewRect_Patch
+	{
+		public static bool Prefix(ref CellRect __result)
+		{
+			if (Renderer.fakeViewRect.IsEmpty) return true;
+			__result = Renderer.fakeViewRect;
+			return false;
+		}
+	}
+
+	[HarmonyPatch(typeof(CameraDriver))]
+	[HarmonyPatch(nameof(CameraDriver.CurrentZoom), MethodType.Getter)]
+	static class CameraDriver_CurrentZoom_Patch
+	{
+		public static bool Prefix(ref CameraZoomRange __result)
+		{
+			if (Renderer.fakeZoom == false) return true;
+			__result = CameraZoomRange.Closest;
+			return false;
+		}
+	}
+
+	/* TODO: do we need this?
 	[HarmonyPatch(typeof(Map))]
 	[HarmonyPatch(nameof(Map.Center), MethodType.Getter)]
 	static class Map_Center_Patch
 	{
 		public static void Postfix(ref IntVec3 __result)
 		{
-			if (Renderer.renderOffset != 0f)
-				__result += new IntVec3((int)Renderer.renderOffset, 0, 0);
+			if (Renderer.renderOffset == 0f) return;
+			__result += new IntVec3((int)Renderer.renderOffset, 0, 0);
 		}
-	}
-
-	[HarmonyPatch(typeof(GenThing))]
-	[HarmonyPatch(nameof(GenThing.TrueCenter))]
-	[HarmonyPatch(new Type[] { typeof(IntVec3), typeof(Rot4), typeof(IntVec2), typeof(float) })]
-	static class GenThing_TrueCenter_Patch
-	{
-		public static void Postfix(ref Vector3 __result)
-		{
-			if (Renderer.renderOffset != 0f)
-				__result += new Vector3(Renderer.renderOffset, 0f, 0f);
-		}
-	}
+	}*/
 
 	[HarmonyPatch(typeof(Graphics))]
 	[HarmonyPatch("DrawMeshImpl")]
 	static class Graphics_DrawMeshImpl_Patch
 	{
-		static Vector3 ExtractTranslationFromMatrix(ref Matrix4x4 matrix)
-		{
-			Vector3 translate;
-			translate.x = matrix.m03;
-			translate.y = matrix.m13;
-			translate.z = matrix.m23;
-			return translate;
-		}
-
-		static Quaternion ExtractRotationFromMatrix(ref Matrix4x4 matrix)
-		{
-			Vector3 forward;
-			forward.x = matrix.m02;
-			forward.y = matrix.m12;
-			forward.z = matrix.m22;
-
-			Vector3 upwards;
-			upwards.x = matrix.m01;
-			upwards.y = matrix.m11;
-			upwards.z = matrix.m21;
-
-			return Quaternion.LookRotation(forward, upwards);
-		}
-
-		static Vector3 ExtractScaleFromMatrix(ref Matrix4x4 matrix)
-		{
-			Vector3 scale;
-			scale.x = new Vector4(matrix.m00, matrix.m10, matrix.m20, matrix.m30).magnitude;
-			scale.y = new Vector4(matrix.m01, matrix.m11, matrix.m21, matrix.m31).magnitude;
-			scale.z = new Vector4(matrix.m02, matrix.m12, matrix.m22, matrix.m32).magnitude;
-			return scale;
-		}
-
 		public static void Prefix(ref Matrix4x4 matrix)
 		{
 			if (Renderer.renderOffset == 0f) return;
-			matrix = Matrix4x4.TRS(
-				ExtractTranslationFromMatrix(ref matrix) + new Vector3(Renderer.renderOffset, 0f, 0f),
-				ExtractRotationFromMatrix(ref matrix),
-				ExtractScaleFromMatrix(ref matrix)
-			);
+			matrix = matrix.OffsetRef(new Vector3(Renderer.renderOffset, 0f, 0f));
+		}
+	}
+
+	[HarmonyPatch(typeof(Graphics))]
+	[HarmonyPatch("DrawMeshInstancedImpl")]
+	[HarmonyPatch(new[] { typeof(Mesh), typeof(int), typeof(Material), typeof(List<Matrix4x4>), typeof(MaterialPropertyBlock), typeof(ShadowCastingMode), typeof(bool), typeof(int), typeof(Camera) })]
+	static class Graphics_DrawMeshInstancedImpl1_Patch
+	{
+		public static void Prefix(List<Matrix4x4> matrices)
+		{
+			if (Renderer.renderOffset == 0f) return;
+			for (var i = 0; i < matrices.Count; i++)
+				matrices[i] = matrices[i].Offset(Renderer.RenderOffsetVector);
+		}
+	}
+
+	[HarmonyPatch(typeof(Graphics))]
+	[HarmonyPatch("DrawMeshInstancedImpl")]
+	[HarmonyPatch(new[] { typeof(Mesh), typeof(int), typeof(Material), typeof(Matrix4x4[]), typeof(int), typeof(MaterialPropertyBlock), typeof(ShadowCastingMode), typeof(bool), typeof(int), typeof(Camera) })]
+	static class Graphics_DrawMeshInstancedImpl2_Patch
+	{
+		public static void Prefix(Matrix4x4[] matrices)
+		{
+			if (Renderer.renderOffset == 0f) return;
+			for (var i = 0; i < matrices.Length; i++)
+				matrices[i] = matrices[i].Offset(Renderer.RenderOffsetVector);
+		}
+	}
+
+	[HarmonyPatch(typeof(Graphics))]
+	[HarmonyPatch("DrawMeshInstancedIndirectImpl")]
+	static class Graphics_DrawMeshInstancedIndirectImpl_Patch
+	{
+		public static void Prefix(ref Bounds bounds)
+		{
+			if (Renderer.renderOffset == 0f) return;
+			bounds.center += Renderer.RenderOffsetVector;
+		}
+	}
+
+	[HarmonyPatch(typeof(Graphics))]
+	[HarmonyPatch("Internal_DrawMeshNow1")]
+	static class Graphics_Internal_DrawMeshNow1_Patch
+	{
+		public static void Prefix(ref Vector3 position)
+		{
+			if (Renderer.renderOffset == 0f) return;
+			position += Renderer.RenderOffsetVector;
+		}
+	}
+
+	[HarmonyPatch(typeof(Graphics))]
+	[HarmonyPatch("Internal_DrawMeshNow2")]
+	static class Graphics_Internal_DrawMeshNow2_Patch
+	{
+		public static void Prefix(ref Matrix4x4 matrix)
+		{
+			if (Renderer.renderOffset == 0f) return;
+			matrix = matrix.OffsetRef(Renderer.RenderOffsetVector);
+		}
+	}
+
+	[HarmonyPatch(typeof(Game))]
+	[HarmonyPatch(nameof(Game.UpdatePlay))]
+	static class Game_UpdatePlay_Patch
+	{
+		public static void Postfix()
+		{
+			foreach (var map in Current.Game.Maps)
+				if (WorldRendererUtility.WorldRenderedNow || map != Find.CurrentMap)
+					Tools.RenderColonists(map, false);
 		}
 	}
 
@@ -187,62 +257,11 @@ namespace Puppeteer
 	[HarmonyPatch(nameof(Map.MapUpdate))]
 	static class Map_MapUpdate_Patch
 	{
-		static readonly Dictionary<Map, int> counters = new Dictionary<Map, int>();
-		static readonly StaticFieldRef<int> lastViewRectGetFrameRef = StaticFieldRefAccess<int>(typeof(CameraDriver), "lastViewRectGetFrame");
-		static readonly StaticFieldRef<CellRect> lastViewRectRef = StaticFieldRefAccess<CellRect>(typeof(CameraDriver), "lastViewRect");
-
-		static void SetCurrentMapDirectly(Map map)
+		public static void Postfix()
 		{
-			var game = Current.Game;
-			game.currentMapIndex = (sbyte)game.Maps.IndexOf(map);
-		}
-
-		public static void Postfix(Map __instance)
-		{
-			var map = __instance;
-			if (WorldRendererUtility.WorldRenderedNow == false && map == Find.CurrentMap)
-			{
-				map.mapPawns.FreeColonists.Do(colonist => Renderer.GetPawnScreenRender(colonist, 256, 1f));
-				return;
-			}
-
-			var rememberedMap = Find.CurrentMap;
-			SetCurrentMapDirectly(map);
-
-			Renderer.renderOffset = 2000f * (1 + Current.Game.currentMapIndex);
-			var cameraTransformPosition = Find.Camera.transform.position;
-			Find.Camera.transform.position += new Vector3(Renderer.renderOffset, 0f, 0f);
-
-			var rememberLastViewRectGetFrame = lastViewRectGetFrameRef();
-			var rememberLastViewRect = lastViewRectRef();
-
-			map.mapPawns.FreeColonists.Do(colonist =>
-			{
-				lastViewRectGetFrameRef() = Time.frameCount;
-				lastViewRectRef() = new CellRect(colonist.Position.x - 2, colonist.Position.z - 2, colonist.Position.x + 2, colonist.Position.z + 2);
-
-				//map.mapDrawer.DrawMapMesh();
-				var sections = new HashSet<Section>();
-				_ = sections.Add(map.mapDrawer.SectionAt(colonist.Position + new IntVec3(-1, 0, -1)));
-				_ = sections.Add(map.mapDrawer.SectionAt(colonist.Position + new IntVec3(1, 0, -1)));
-				_ = sections.Add(map.mapDrawer.SectionAt(colonist.Position + new IntVec3(1, 0, 1)));
-				_ = sections.Add(map.mapDrawer.SectionAt(colonist.Position + new IntVec3(-1, 0, 1)));
-				sections.ToList().Do(section => section.DrawSection(false));
-
-				map.dynamicDrawManager.DrawDynamicThings();
-				MapEdgeClipDrawer.DrawClippers(map);
-				map.overlayDrawer.DrawAllOverlays();
-				try { map.areaManager.AreaManagerUpdate(); }
-				catch (Exception) { }
-				Renderer.GetPawnScreenRender(colonist, 256, 1f);
-			});
-
-			lastViewRectGetFrameRef() = rememberLastViewRectGetFrame;
-			lastViewRectRef() = rememberLastViewRect;
-
-			Find.Camera.transform.position = cameraTransformPosition;
-			SetCurrentMapDirectly(rememberedMap);
-			Renderer.renderOffset = 0f;
+			if (WorldRendererUtility.WorldRenderedNow) return;
+			var map = Find.CurrentMap;
+			if (map != null) Tools.RenderColonists(map, true);
 		}
 	}
 
@@ -256,7 +275,7 @@ namespace Puppeteer
 			if (pawn == null || pawn.Spawned == false || pawn.IsColonist == false)
 				return;
 
-			// Renderer.GetPawnScreenRender(pawn, 256, 1f);
+			// Renderer.GetPawnScreenRender(pawn, 1.5f);
 
 			//var imageData = Renderer.GetPawnPortrait(pawn, 256);
 			//File.WriteAllBytes($"C:\\Users\\andre\\Desktop\\Pawns\\Portrait-{pawn.Name.ToStringShort}.png", imageData);

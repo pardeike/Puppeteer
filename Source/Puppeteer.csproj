@@ -36,6 +36,7 @@
   <ItemGroup>
     <Compile Include="Core\ColonistCamera.cs" />
     <Compile Include="Misc\JSONConvertable.cs" />
+    <Compile Include="Misc\MatrixTools.cs" />
     <Compile Include="Models\Colonist.cs" />
     <Compile Include="Core\Colonists.cs" />
     <Compile Include="Misc\Connection.cs" />
@@ -45,7 +46,6 @@
     <Compile Include="Models\PawnUpdates.cs" />
     <Compile Include="Models\Commands.cs" />
     <Compile Include="Models\ViewerID.cs" />
-    <Compile Include="Patches\ColonistPortraits.cs" />
     <Compile Include="Patches\ColonistsChanges.cs" />
     <Compile Include="Patches\BasicGameEvents.cs" />
     <Compile Include="Patches\PawnUpdates.cs" />

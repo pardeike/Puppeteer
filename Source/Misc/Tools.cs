@@ -1,5 +1,7 @@
 ﻿using Harmony;
+using RimWorld;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -50,6 +52,76 @@ namespace Puppeteer
 			return Find.Maps
 				.SelectMany(map => map.mapPawns.FreeColonists)
 				.FirstOrDefault(pawn => pawn.thingIDNumber == thingID);
+		}
+
+		public static void SetCurrentMapDirectly(Map map)
+		{
+			var game = Current.Game;
+			game.currentMapIndex = (sbyte)game.Maps.IndexOf(map);
+		}
+
+		public static float CurrentMapOffset()
+		{
+			return 2000f * (1 + Current.Game.currentMapIndex);
+		}
+
+		public static void RenderColonists(Map map, bool isVisibleMap)
+		{
+			var colonists = new HashSet<Pawn>(map.mapPawns.FreeColonists);
+			Renderer.fakeZoom = true;
+
+			if (isVisibleMap)
+			{
+				var viewRect = Find.CameraDriver.CurrentViewRect.ContractedBy(2);
+				var visibleColonists = colonists.Where(c => viewRect.Contains(c.Position)).ToList();
+				visibleColonists.Do(c =>
+				{
+					Renderer.GetPawnScreenRender(c, 1.5f);
+					_ = colonists.Remove(c);
+				});
+				if (colonists.Count == 0) return;
+			}
+			else
+			{
+				map.weatherManager.DrawAllWeather();
+			}
+
+			var rememberedMap = Find.CurrentMap;
+			SetCurrentMapDirectly(map);
+
+			Renderer.renderOffset = CurrentMapOffset();
+			Renderer.fakeViewRect = new CellRect(0, 0, map.Size.x, map.Size.z);
+
+			colonists.Do(c => map.glowGrid.MarkGlowGridDirty(c.Position));
+
+			map.skyManager.SkyManagerUpdate();
+			map.powerNetManager.UpdatePowerNetsAndConnections_First();
+			map.glowGrid.GlowGridUpdate_First();
+
+			PlantFallColors.SetFallShaderGlobals(map);
+			//map.waterInfo.SetTextures();
+
+			colonists.Do(c =>
+			{
+				var pos = c.Position;
+				Renderer.fakeViewRect = new CellRect(pos.x - 3, pos.z - 3, pos.x + 3, pos.z + 3);
+
+				map.mapDrawer.MapMeshDrawerUpdate_First();
+				map.mapDrawer.DrawMapMesh();
+				map.dynamicDrawManager.DrawDynamicThings();
+			});
+
+			map.gameConditionManager.GameConditionManagerDraw(map);
+			MapEdgeClipDrawer.DrawClippers(map);
+			map.designationManager.DrawDesignations();
+			map.overlayDrawer.DrawAllOverlays();
+
+			colonists.Do(c => Renderer.GetPawnScreenRender(c, 1.5f));
+
+			Renderer.fakeViewRect = CellRect.Empty;
+			SetCurrentMapDirectly(rememberedMap);
+			Renderer.renderOffset = 0f;
+			Renderer.fakeZoom = false;
 		}
 
 		public delegate ref T StaticFieldRef<T>();
