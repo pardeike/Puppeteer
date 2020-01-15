@@ -1,7 +1,9 @@
 ﻿using Harmony;
 using JsonFx.Json;
+using Puppeteer.Core;
 using System.Collections.Generic;
 using System.Text;
+using Verse;
 
 namespace Puppeteer
 {
@@ -36,8 +38,10 @@ namespace Puppeteer
 				if (state.TryGetValue(vID.Identifier, out var viewer))
 				{
 					viewer.connected = true;
-					var thingID = colonists.FindThingID(viewer.vID);
-					viewer.controlling = thingID == null ? null : Tools.ColonistForThingID(int.Parse(thingID));
+					var info = colonists.FindEntry(viewer.vID);
+					viewer.controlling = info?.thingID == null ? null : Tools.ColonistForThingID(int.Parse(info.thingID));
+					if (viewer.controlling != null)
+						SendPortrait(connection, viewer);
 				}
 				else
 				{
@@ -59,6 +63,7 @@ namespace Puppeteer
 
 		public Viewer FindViewer(ViewerID vID)
 		{
+			if (vID == null) return null;
 			if (state.TryGetValue(vID.Identifier, out var viewer))
 				return viewer;
 			return null;
@@ -75,7 +80,18 @@ namespace Puppeteer
 
 		static void SendEarned(Connection connection, Viewer viewer)
 		{
-			connection.Send(new Earned() { viewer = viewer.vID, amount = viewer.coins }.GetJSON());
+			connection.Send(new Earned() { viewer = viewer.vID, info = new Earned.Info() { amount = viewer.coins }}.GetJSON());
+		}
+
+		static void SendPortrait(Connection connection, Viewer viewer)
+		{
+			OperationQueue.Add(OperationType.Portrait, () =>
+			{
+				var portrait = Renderer.GetPawnPortrait(viewer.controlling, 128);
+				var json = new Portrait() { viewer = viewer.vID, info = new Portrait.Info(portrait) }.GetJSON();
+				if (connection.isConnected)
+					connection.Send(json);
+			});
 		}
 	}
 }

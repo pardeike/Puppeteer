@@ -1,5 +1,6 @@
 ﻿using Harmony;
 using RimWorld;
+using RimWorld.Planet;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -65,21 +66,50 @@ namespace Puppeteer
 			return 2000f * (1 + Current.Game.currentMapIndex);
 		}
 
-		public static void RenderColonists(Map map, bool isVisibleMap)
+		static int colonistTicks = 0;
+		const float colonistEveryTicks = 60f;
+		static int colonistCounter = -1;
+		public static Pawn ColonistRoundRobbin(Map visibleMap)
 		{
-			var colonists = new HashSet<Pawn>(map.mapPawns.FreeColonists);
+			var colonists = Current.Game.Maps.SelectMany(map => map.mapPawns.FreeColonists).ToList();
+			if (colonists.Count == 0) return null;
+			var delay = colonistEveryTicks / colonists.Count + 1;
+			colonistTicks++;
+			if (colonistTicks < delay) return null;
+			colonistTicks = 0;
+			for(var i = 1; i <= colonists.Count; i++)
+			{
+				var idx = (colonistCounter + 1) % colonists.Count;
+				var offscreen = visibleMap == null && colonists[idx].Map != Find.CurrentMap;
+				var onscreen = visibleMap != null && colonists[idx].Map == visibleMap;
+				if (offscreen || onscreen)
+				{
+					colonistCounter = idx;
+					return colonists[idx];
+				}
+			}
+			return null;
+		}
+
+		public static void RenderColonists(Map visibleMap)
+		{
+			var pawn = ColonistRoundRobbin(visibleMap);
+			if (pawn == null) return;
+			var map = pawn.Map;
+			if (map == null) return;
+			var isVisibleMap = map == Find.CurrentMap && WorldRendererUtility.WorldRenderedNow == false;
+			
 			Renderer.fakeZoom = true;
 
 			if (isVisibleMap)
 			{
 				var viewRect = Find.CameraDriver.CurrentViewRect.ContractedBy(2);
-				var visibleColonists = colonists.Where(c => viewRect.Contains(c.Position)).ToList();
-				visibleColonists.Do(c =>
+				var visible = viewRect.Contains(pawn.Position);
+				if (visible)
 				{
-					Renderer.GetPawnScreenRender(c, 1.5f);
-					_ = colonists.Remove(c);
-				});
-				if (colonists.Count == 0) return;
+					Renderer.PawnScreenRender(pawn, 1.5f);
+					return;
+				}
 			}
 			else
 			{
@@ -92,7 +122,7 @@ namespace Puppeteer
 			Renderer.renderOffset = CurrentMapOffset();
 			Renderer.fakeViewRect = new CellRect(0, 0, map.Size.x, map.Size.z);
 
-			colonists.Do(c => map.glowGrid.MarkGlowGridDirty(c.Position));
+			map.glowGrid.MarkGlowGridDirty(pawn.Position);
 
 			map.skyManager.SkyManagerUpdate();
 			map.powerNetManager.UpdatePowerNetsAndConnections_First();
@@ -101,22 +131,19 @@ namespace Puppeteer
 			PlantFallColors.SetFallShaderGlobals(map);
 			//map.waterInfo.SetTextures();
 
-			colonists.Do(c =>
-			{
-				var pos = c.Position;
-				Renderer.fakeViewRect = new CellRect(pos.x - 3, pos.z - 3, pos.x + 3, pos.z + 3);
+			var pos = pawn.Position;
+			Renderer.fakeViewRect = new CellRect(pos.x - 3, pos.z - 3, pos.x + 3, pos.z + 3);
 
-				map.mapDrawer.MapMeshDrawerUpdate_First();
-				map.mapDrawer.DrawMapMesh();
-				map.dynamicDrawManager.DrawDynamicThings();
-			});
+			map.mapDrawer.MapMeshDrawerUpdate_First();
+			map.mapDrawer.DrawMapMesh();
+			map.dynamicDrawManager.DrawDynamicThings();
 
 			map.gameConditionManager.GameConditionManagerDraw(map);
 			MapEdgeClipDrawer.DrawClippers(map);
 			map.designationManager.DrawDesignations();
 			map.overlayDrawer.DrawAllOverlays();
 
-			colonists.Do(c => Renderer.GetPawnScreenRender(c, 1.5f));
+			Renderer.PawnScreenRender(pawn, 1.5f);
 
 			Renderer.fakeViewRect = CellRect.Empty;
 			SetCurrentMapDirectly(rememberedMap);

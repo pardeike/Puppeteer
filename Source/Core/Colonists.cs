@@ -8,6 +8,12 @@ using Verse;
 
 namespace Puppeteer
 {
+	public class ColonistEntry
+	{
+		public string thingID;
+		public Colonist colonist;
+	}
+
 	public class Colonists
 	{
 		const string saveFileName = "PuppeteerColonists.json";
@@ -67,16 +73,17 @@ namespace Puppeteer
 			connection.Send(new AllColonists() { colonists = colonists }.GetJSON());
 		}
 
-		public string FindThingID(ViewerID viewer)
+		public ColonistEntry FindEntry(ViewerID viewer)
 		{
 			return state
 				.Where(pair => pair.Value.controller == viewer)
-				.Select(pair => pair.Key)
+				.Select(pair => new ColonistEntry() { thingID = pair.Key, colonist = pair.Value })
 				.FirstOrDefault();
 		}
 
 		public Colonist FindColonist(Pawn pawn)
 		{
+			if (pawn == null) return null;
 			if (state.TryGetValue("" + pawn.thingIDNumber, out var colonist))
 				return colonist;
 			return null;

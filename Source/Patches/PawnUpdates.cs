@@ -1,140 +1,13 @@
 ﻿using Harmony;
 using Puppeteer.Core;
-using RimWorld;
 using RimWorld.Planet;
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Verse;
-using static Harmony.AccessTools;
 
 namespace Puppeteer
 {
-	public class PawnImage
-	{
-		readonly string name;
-		public Texture2D imageTexture;
-		public bool isNew;
-
-		public PawnImage(Pawn pawn, Texture2D imageTexture)
-		{
-			name = pawn.Name.ToStringShort;
-			this.imageTexture = imageTexture;
-			isNew = true;
-		}
-
-		public bool Write()
-		{
-			if (isNew == false) return false;
-			isNew = false;
-			var encodedImage = imageTexture.EncodeToJPG(50);
-			try
-			{
-				File.WriteAllBytes($"C:\\Users\\andre\\Desktop\\Pawns\\{name}.jpg", encodedImage);
-			}
-			catch (Exception)
-			{
-			}
-			return true;
-		}
-	}
-
-	public static class Renderer
-	{
-		const int imageSize = 256;
-		public static float renderOffset = 0f;
-		public static Vector3 RenderOffsetVector => new Vector3(renderOffset, 0f, 0f);
-		public static CellRect fakeViewRect = CellRect.Empty;
-		public static bool fakeZoom = false;
-		public static readonly Dictionary<Pawn, PawnImage> pawnImages = new Dictionary<Pawn, PawnImage>();
-		static readonly FieldRef<SubcameraDriver, Camera[]> subcamerasRef = FieldRefAccess<SubcameraDriver, Camera[]>("subcameras");
-
-		public static byte[] GetPawnPortrait(Pawn pawn, int size)
-		{
-			var renderTexture = PortraitsCache.Get(pawn, new Vector2(size, size));
-			var portrait = new Texture2D(size, size, TextureFormat.ARGB32, false);
-			RenderTexture.active = renderTexture;
-			portrait.ReadPixels(new Rect(0, 0, size, size), 0, 0);
-			portrait.Apply();
-			var data = portrait.EncodeToPNG();
-			UnityEngine.Object.Destroy(portrait);
-			return data;
-		}
-
-		public static void SetCamera(Camera camera, ref Vector3 position, float size)
-		{
-			camera.orthographicSize = size;
-			camera.farClipPlane = 100f;
-			camera.transform.position = position;
-		}
-
-		public static void GetPawnScreenRender(Pawn pawn, float radius)
-		{
-			if (pawnImages.TryGetValue(pawn, out var image) == false)
-			{
-				var imageTexture = new Texture2D(imageSize, imageSize, TextureFormat.RGB24, false);
-				image = new PawnImage(pawn, imageTexture);
-				pawnImages[pawn] = image;
-			}
-
-			var camera = Find.Camera;
-			var rememberFarClipPlane = camera.farClipPlane;
-			var rememberPosition = camera.transform.position;
-			var rememberOrthographicSize = camera.orthographicSize;
-
-			// var camera = ColonistCameraManager.Camera;
-			var subCameras = subcamerasRef(Current.SubcameraDriver);
-
-			var cameraPos = new Vector3(renderOffset + pawn.DrawPos.x, 40f, pawn.DrawPos.z);
-			SetCamera(camera, ref cameraPos, radius);
-			for (var i = 0; i < subCameras.Length; i++)
-				SetCamera(subCameras[i], ref cameraPos, radius);
-
-			var renderTexture = RenderTexture.GetTemporary(imageSize, imageSize, 24);
-			camera.targetTexture = renderTexture;
-			RenderTexture.active = renderTexture;
-			camera.Render();
-			image.imageTexture.ReadPixels(new Rect(0, 0, imageSize, imageSize), 0, 0, false);
-			image.imageTexture.Apply();
-			image.isNew = true;
-			RenderTexture.ReleaseTemporary(renderTexture);
-			camera.targetTexture = null;
-			RenderTexture.active = null;
-
-			SetCamera(camera, ref rememberPosition, rememberOrthographicSize);
-			camera.farClipPlane = rememberFarClipPlane;
-		}
-
-		public static void RemovePawn(Pawn pawn)
-		{
-			if (pawnImages.TryGetValue(pawn, out var image))
-			{
-				UnityEngine.Object.Destroy(image.imageTexture);
-				_ = pawnImages.Remove(pawn);
-			}
-		}
-	}
-
-	[HarmonyPatch(typeof(TickManager))]
-	[HarmonyPatch(nameof(TickManager.TickManagerUpdate))]
-	static class Verse_TickManager_TickManagerUpdate_Patch
-	{
-		static int throttle = 0;
-		static int counter = 0;
-
-		public static void Postfix()
-		{
-			if (++throttle % 15 != 0) return;
-			var images = Renderer.pawnImages.Values.ToArray();
-			if (images.Length == 0) return;
-			if (++counter >= images.Length) counter = 0;
-			_ = images[counter].Write();
-		}
-	}
-
 	[HarmonyPatch(typeof(CameraDriver))]
 	[HarmonyPatch(nameof(CameraDriver.CurrentViewRect), MethodType.Getter)]
 	static class CameraDriver_CurrentViewRect_Patch
@@ -247,9 +120,8 @@ namespace Puppeteer
 	{
 		public static void Postfix()
 		{
-			foreach (var map in Current.Game.Maps)
-				if (WorldRendererUtility.WorldRenderedNow || map != Find.CurrentMap)
-					Tools.RenderColonists(map, false);
+			Tools.RenderColonists(null);
+			OperationQueue.Process(OperationType.Portrait);
 		}
 	}
 
@@ -257,11 +129,10 @@ namespace Puppeteer
 	[HarmonyPatch(nameof(Map.MapUpdate))]
 	static class Map_MapUpdate_Patch
 	{
-		public static void Postfix()
+		public static void Postfix(Map __instance)
 		{
-			if (WorldRendererUtility.WorldRenderedNow) return;
 			var map = Find.CurrentMap;
-			if (map != null) Tools.RenderColonists(map, true);
+			if (map != null) Tools.RenderColonists(__instance);
 		}
 	}
 
@@ -274,11 +145,6 @@ namespace Puppeteer
 			var pawn = __instance as Pawn;
 			if (pawn == null || pawn.Spawned == false || pawn.IsColonist == false)
 				return;
-
-			// Renderer.GetPawnScreenRender(pawn, 1.5f);
-
-			//var imageData = Renderer.GetPawnPortrait(pawn, 256);
-			//File.WriteAllBytes($"C:\\Users\\andre\\Desktop\\Pawns\\Portrait-{pawn.Name.ToStringShort}.png", imageData);
 
 			// Puppeteer.instance.PawnUpdate(pawn);
 		}

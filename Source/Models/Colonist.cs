@@ -6,6 +6,7 @@ namespace Puppeteer
 	{
 		public ViewerID controller;
 		[JsonIgnore] public string lastSeen = "";
+		[JsonIgnore] public byte[] portrait = null;
 
 		public override string ToString()
 		{

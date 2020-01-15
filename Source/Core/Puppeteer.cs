@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using Harmony;
+using System;
+using System.Diagnostics;
 using System.Timers;
 using Verse;
 
@@ -17,6 +19,11 @@ namespace Puppeteer
 		void Message(string msg);
 	}
 
+	/*
+	 * if (Renderer.pawnImages.TryGetValue(pawn, out var pawnImage))
+				Puppeteer.instance.PawnOnMap(pawn, pawnImage.Image);
+				*/
+
 	[StaticConstructorOnStartup]
 	public class Puppeteer : ICommandProcessor
 	{
@@ -27,7 +34,7 @@ namespace Puppeteer
 		const int earnIntervalInSeconds = 2;
 		const int earnAmount = 10;
 
-		Connection connection;
+		public Connection connection;
 		readonly Viewers viewers;
 		readonly Colonists colonists;
 		bool firstTime = true;
@@ -40,6 +47,7 @@ namespace Puppeteer
 					viewers.Earn(connection, earnAmount);
 			});
 			earnTimer.Start();
+
 			viewers = new Viewers();
 			colonists = new Colonists();
 		}
@@ -121,45 +129,16 @@ namespace Puppeteer
 			}
 		}
 
-		static long secs = 0;
-		static long min = 1000000;
-		static long max = -100000;
-		static long n = 0;
-		static int fail = 0;
-		static int counter = 0;
-		public void PawnUpdate(Pawn pawn)
+		public void PawnOnMap(Pawn pawn, byte[] image)
 		{
 			if (connection == null) return;
 
 			var viewerInfo = GetViewerInfo(pawn);
 			if (viewerInfo == null || viewerInfo.controller == null) return;
 
-			var stopWatch = new Stopwatch();
-			stopWatch.Start();
-
-			var data = new Update() { viewer = viewerInfo.controller, data = new DataJSON(pawn) }.GetJSON();
-			connection.Send(data, (success) =>
-			{
-				var d = stopWatch.ElapsedMilliseconds;
-				stopWatch.Stop();
-				if (d < min) min = d;
-				if (d > max) max = d;
-				if (success == false) fail++;
-				secs += d;
-				n++;
-			});
-
-			if (++counter >= 60)
-			{
-				var avg = (float)secs / n;
-				Log.Warning("-> avg:" + avg + " min:" + min + " max:" + max + " fail:" + fail);
-				secs = 0;
-				n = 0;
-				min = 1000000;
-				max = -100000;
-				counter = 0;
-				fail = 0;
-			}
+			var data = new OnMap() { viewer = viewerInfo.controller, info = new OnMap.Info(image) }.GetJSON();
+			connection.Send(data);
 		}
 	}
 }
+ 
