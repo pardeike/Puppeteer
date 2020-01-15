@@ -94,6 +94,7 @@ namespace Puppeteer
 			if (viewer == null)
 			{
 				_ = state.Remove("" + colonistID);
+				Save();
 				return;
 			}
 			_ = state.RemoveAll(pair => pair.Value.controller == viewer);
@@ -101,11 +102,13 @@ namespace Puppeteer
 			if (state.TryGetValue("" + colonistID, out var colonist))
 			{
 				colonist.controller = viewer;
+				Save();
 				return;
 			}
 
 			colonist = new Colonist() { controller = viewer };
 			state["" + colonistID] = colonist;
+			Save();
 		}
 	}
 }

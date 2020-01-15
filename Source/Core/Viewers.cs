@@ -48,6 +48,7 @@ namespace Puppeteer
 					viewer = new Viewer() { vID = vID, connected = true };
 					state[vID.Identifier] = viewer;
 				}
+				Save();
 				SendEarned(connection, viewer);
 			}
 		}
@@ -58,6 +59,7 @@ namespace Puppeteer
 			{
 				viewer.connected = false;
 				viewer.controlling = null;
+				Save();
 			}
 		}
 
