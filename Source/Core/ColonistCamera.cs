@@ -76,10 +76,6 @@ namespace Puppeteer.Core
 			}
 		}
 
-		public void OnPostRender()
-		{
-		}
-
 		/*public void UpdateTexture(int width, int height)
 		{
 			var renderTexture = camera.targetTexture;

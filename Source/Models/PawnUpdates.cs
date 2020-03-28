@@ -1,4 +1,4 @@
-﻿using JsonFx.Json;
+﻿using Newtonsoft.Json;
 using RimWorld;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,10 +15,14 @@ namespace Puppeteer
 		public int version;
 		public int iat;
 
-		public static TokenJSON Create(string str)
+		public static TokenJSON Create(string token)
 		{
-			var reader = new JsonReader(str);
-			return reader.Deserialize<TokenJSON>();
+			return JsonConvert.DeserializeObject<TokenJSON>(token);
+		}
+
+		public override string ToString()
+		{
+			return $"[service={service} id={id} game={game} version={version} iat={iat}]";
 		}
 	}
 
@@ -26,7 +30,7 @@ namespace Puppeteer
 	{
 		public PawnJSON pawn;
 
-		public DataJSON(Verse.Pawn p)
+		public DataJSON(Pawn p)
 		{
 			pawn = PawnJSON.Make(p);
 		}
@@ -141,7 +145,7 @@ namespace Puppeteer
 			return s;
 		}
 
-		public static PawnJSON Make(Verse.Pawn p)
+		public static PawnJSON Make(Pawn p)
 		{
 			if (p == null) return null;
 			return new PawnJSON()
@@ -277,7 +281,7 @@ namespace Puppeteer
 			{
 				meleeThreat = PawnJSON.Make(mindState.meleeThreat),
 				enemyTarget = ThingJSON.Make(mindState.enemyTarget),
-				prioWorkType = mindState.priorityWork?.WorkType?.defName,
+				prioWorkType = mindState.priorityWork?.WorkGiver?.defName,
 				prioWorkCell = CellJSON.Make(mindState.priorityWork?.Cell)
 			};
 		}
@@ -403,7 +407,7 @@ namespace Puppeteer
 			if (b == null) return null;
 			return new BedJSON()
 			{
-				owners = b.AssignedPawns.Select(o => o.Name.ToStringShort).ToArray(),
+				owners = b.CurOccupants.Select(o => o.Name.ToStringShort).ToArray(),
 				quality = b.TryGetComp<CompQuality>()?.Quality.GetLabel()
 			};
 		}

@@ -1,4 +1,4 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using Verse;
 
 namespace Puppeteer
@@ -8,7 +8,7 @@ namespace Puppeteer
 	{
 		static Main()
 		{
-			var harmony = HarmonyInstance.Create("net.pardeike.harmony.Puppeteer");
+			var harmony = new Harmony("net.pardeike.harmony.Puppeteer");
 			harmony.PatchAll();
 		}
 	}

@@ -1,9 +1,7 @@
-﻿using Harmony;
-using JsonFx.Json;
+﻿using HarmonyLib;
+using Newtonsoft.Json;
 using Puppeteer.Core;
 using System.Collections.Generic;
-using System.Text;
-using Verse;
 
 namespace Puppeteer
 {
@@ -18,17 +16,13 @@ namespace Puppeteer
 		{
 			var data = saveFileName.ReadConfig();
 			if (data != null)
-			{
-				var reader = new JsonReader(data);
-				state = reader.Deserialize<Dictionary<string, Viewer>>();
-			}
+				state = JsonConvert.DeserializeObject<Dictionary<string, Viewer>>(data);
 		}
 
 		public void Save()
 		{
-			var sb = new StringBuilder();
-			using (var writer = new JsonWriter(sb)) { writer.Write(state); }
-			saveFileName.WriteConfig(sb.ToString());
+			var data = JsonConvert.SerializeObject(state);
+			saveFileName.WriteConfig(data);
 		}
 
 		public void Join(Connection connection, Colonists colonists, ViewerID vID)
@@ -40,8 +34,6 @@ namespace Puppeteer
 					viewer.connected = true;
 					var info = colonists.FindEntry(viewer.vID);
 					viewer.controlling = info?.thingID == null ? null : Tools.ColonistForThingID(int.Parse(info.thingID));
-					if (viewer.controlling != null)
-						SendPortrait(connection, viewer);
 				}
 				else
 				{
@@ -50,6 +42,7 @@ namespace Puppeteer
 				}
 				Save();
 				SendEarned(connection, viewer);
+				SendPortrait(connection, viewer);
 			}
 		}
 
@@ -82,17 +75,18 @@ namespace Puppeteer
 
 		static void SendEarned(Connection connection, Viewer viewer)
 		{
-			connection.Send(new Earned() { viewer = viewer.vID, info = new Earned.Info() { amount = viewer.coins }}.GetJSON());
+			connection.Send(new Earned() { viewer = viewer.vID, info = new Earned.Info() { amount = viewer.coins } });
 		}
 
-		static void SendPortrait(Connection connection, Viewer viewer)
+		public static void SendPortrait(Connection connection, Viewer viewer)
 		{
+			if (viewer.controlling == null)
+				return;
+
 			OperationQueue.Add(OperationType.Portrait, () =>
 			{
 				var portrait = Renderer.GetPawnPortrait(viewer.controlling, 128);
-				var json = new Portrait() { viewer = viewer.vID, info = new Portrait.Info(portrait) }.GetJSON();
-				if (connection.isConnected)
-					connection.Send(json);
+				connection.Send(new Portrait() { viewer = viewer.vID, info = new Portrait.Info() { image = portrait } });
 			});
 		}
 	}

@@ -1,7 +1,5 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using Puppeteer.Core;
-using RimWorld.Planet;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Verse;
@@ -45,8 +43,8 @@ namespace Puppeteer
 	}*/
 
 	[HarmonyPatch(typeof(Graphics))]
-	[HarmonyPatch("DrawMeshImpl")]
-	static class Graphics_DrawMeshImpl_Patch
+	[HarmonyPatch("Internal_DrawMesh")]
+	static class Graphics_Internal_DrawMesh_Patch
 	{
 		public static void Prefix(ref Matrix4x4 matrix)
 		{
@@ -56,22 +54,9 @@ namespace Puppeteer
 	}
 
 	[HarmonyPatch(typeof(Graphics))]
-	[HarmonyPatch("DrawMeshInstancedImpl")]
-	[HarmonyPatch(new[] { typeof(Mesh), typeof(int), typeof(Material), typeof(List<Matrix4x4>), typeof(MaterialPropertyBlock), typeof(ShadowCastingMode), typeof(bool), typeof(int), typeof(Camera) })]
-	static class Graphics_DrawMeshInstancedImpl1_Patch
-	{
-		public static void Prefix(List<Matrix4x4> matrices)
-		{
-			if (Renderer.renderOffset == 0f) return;
-			for (var i = 0; i < matrices.Count; i++)
-				matrices[i] = matrices[i].Offset(Renderer.RenderOffsetVector);
-		}
-	}
-
-	[HarmonyPatch(typeof(Graphics))]
-	[HarmonyPatch("DrawMeshInstancedImpl")]
-	[HarmonyPatch(new[] { typeof(Mesh), typeof(int), typeof(Material), typeof(Matrix4x4[]), typeof(int), typeof(MaterialPropertyBlock), typeof(ShadowCastingMode), typeof(bool), typeof(int), typeof(Camera) })]
-	static class Graphics_DrawMeshInstancedImpl2_Patch
+	[HarmonyPatch("DrawMeshInstanced")]
+	[HarmonyPatch(new[] { typeof(Mesh), typeof(int), typeof(Material), typeof(Matrix4x4[]), typeof(int), typeof(MaterialPropertyBlock), typeof(ShadowCastingMode), typeof(bool), typeof(int), typeof(Camera), typeof(LightProbeUsage), typeof(LightProbeProxyVolume) })]
+	static class Graphics_DrawMeshInstanced_Patch
 	{
 		public static void Prefix(Matrix4x4[] matrices)
 		{
@@ -82,8 +67,8 @@ namespace Puppeteer
 	}
 
 	[HarmonyPatch(typeof(Graphics))]
-	[HarmonyPatch("DrawMeshInstancedIndirectImpl")]
-	static class Graphics_DrawMeshInstancedIndirectImpl_Patch
+	[HarmonyPatch("Internal_DrawMeshInstancedIndirect")]
+	static class Graphics_Internal_DrawMeshInstancedIndirect_Patch
 	{
 		public static void Prefix(ref Bounds bounds)
 		{

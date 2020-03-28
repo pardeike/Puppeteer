@@ -1,8 +1,7 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using RimWorld;
 using RimWorld.Planet;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -77,7 +76,7 @@ namespace Puppeteer
 			colonistTicks++;
 			if (colonistTicks < delay) return null;
 			colonistTicks = 0;
-			for(var i = 1; i <= colonists.Count; i++)
+			for (var i = 1; i <= colonists.Count; i++)
 			{
 				var idx = (colonistCounter + 1) % colonists.Count;
 				var offscreen = visibleMap == null && colonists[idx].Map != Find.CurrentMap;
@@ -98,7 +97,7 @@ namespace Puppeteer
 			var map = pawn.Map;
 			if (map == null) return;
 			var isVisibleMap = map == Find.CurrentMap && WorldRendererUtility.WorldRenderedNow == false;
-			
+
 			Renderer.fakeZoom = true;
 
 			if (isVisibleMap)
@@ -167,7 +166,7 @@ namespace Puppeteer
 
 			// workaround for using ref-return with DynamicMethod:
 			// a.) initialize with dummy return value
-			var dm = new DynamicMethod(s_name, typeof(T), new Type[0], type, true);
+			var dm = new DynamicMethod(s_name, typeof(T), Array.Empty<Type>(), type, true);
 
 			// b.) replace with desired 'ByRef' return value
 			var trv = Traverse.Create(dm);

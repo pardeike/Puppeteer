@@ -1,9 +1,8 @@
-﻿using Harmony;
-using JsonFx.Json;
+﻿using HarmonyLib;
+using Newtonsoft.Json;
 using RimWorld;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Verse;
 
 namespace Puppeteer
@@ -25,17 +24,13 @@ namespace Puppeteer
 		{
 			var data = saveFileName.ReadConfig();
 			if (data != null)
-			{
-				var reader = new JsonReader(data);
-				state = reader.Deserialize<Dictionary<string, Colonist>>();
-			}
+				state = JsonConvert.DeserializeObject<Dictionary<string, Colonist>>(data);
 		}
 
 		public void Save()
 		{
-			var sb = new StringBuilder();
-			using (var writer = new JsonWriter(sb)) { writer.Write(state); }
-			saveFileName.WriteConfig(sb.ToString());
+			var data = JsonConvert.SerializeObject(state);
+			saveFileName.WriteConfig(data);
 		}
 
 		public void SendAllColonists(Connection connection)
@@ -60,7 +55,7 @@ namespace Puppeteer
 			var colonists = allPawns.Select(p =>
 			{
 				ViewerID controller = null;
-				if (state.TryGetValue(""+p.thingIDNumber, out var colonist))
+				if (state.TryGetValue("" + p.thingIDNumber, out var colonist))
 					controller = colonist.controller;
 				return new ColonistInfo()
 				{
@@ -70,7 +65,7 @@ namespace Puppeteer
 					lastSeen = colonist?.lastSeen ?? ""
 				};
 			}).ToList();
-			connection.Send(new AllColonists() { colonists = colonists }.GetJSON());
+			connection.Send(new AllColonists() { colonists = colonists });
 		}
 
 		public ColonistEntry FindEntry(ViewerID viewer)
@@ -89,26 +84,35 @@ namespace Puppeteer
 			return null;
 		}
 
-		public void Assign(int colonistID, ViewerID viewer)
+		public void Assign(int colonistID, ViewerID viewer, Connection connection)
 		{
+			void SendAssignment(ViewerID v, bool state) => connection.Send(new Assignment() { viewer = v, state = state });
+
 			if (viewer == null)
 			{
+				if (state.TryGetValue("" + colonistID, out var current))
+					if (current.controller != null)
+						SendAssignment(current.controller, false);
 				_ = state.Remove("" + colonistID);
 				Save();
+
 				return;
 			}
+			state.DoIf(pair => pair.Value.controller == viewer, pair => SendAssignment(pair.Value.controller, false));
 			_ = state.RemoveAll(pair => pair.Value.controller == viewer);
 
 			if (state.TryGetValue("" + colonistID, out var colonist))
 			{
 				colonist.controller = viewer;
 				Save();
+				SendAssignment(viewer, true);
 				return;
 			}
 
 			colonist = new Colonist() { controller = viewer };
 			state["" + colonistID] = colonist;
 			Save();
+			SendAssignment(viewer, true);
 		}
 	}
 }

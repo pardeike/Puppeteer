@@ -1,4 +1,4 @@
-﻿using JsonFx.Json;
+﻿using Newtonsoft.Json;
 using Verse;
 
 namespace Puppeteer

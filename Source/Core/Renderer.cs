@@ -1,7 +1,7 @@
 ﻿using RimWorld;
 using UnityEngine;
 using Verse;
-using static Harmony.AccessTools;
+using static HarmonyLib.AccessTools;
 
 namespace Puppeteer
 {
@@ -21,8 +21,11 @@ namespace Puppeteer
 			RenderTexture.active = renderTexture;
 			portrait.ReadPixels(new Rect(0, 0, size, size), 0, 0);
 			portrait.Apply();
-			var data = portrait.EncodeToPNG();
-			UnityEngine.Object.Destroy(portrait);
+			//var compressor = new TJCompressor();
+			//var ptr = portrait.GetNativeTexturePtr();
+			//var stride = size * 4;
+			//var data = compressor.Compress(ptr, stride, size, size, TJPixelFormats.TJPF_ARGB, TJSubsamplingOptions.TJSAMP_444, 75, TJFlags.NONE);
+			var data = portrait.EncodeToJPG(10); // PNG();
 			return data;
 		}
 
@@ -62,7 +65,7 @@ namespace Puppeteer
 			SetCamera(camera, ref rememberPosition, rememberOrthographicSize);
 			camera.farClipPlane = rememberFarClipPlane;
 
-			var jpgData = imageTexture.EncodeToJPG(50);
+			var jpgData = imageTexture.EncodeToJPG(10);
 			Puppeteer.instance.PawnOnMap(pawn, jpgData);
 		}
 	}

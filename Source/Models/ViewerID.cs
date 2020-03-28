@@ -1,4 +1,5 @@
-﻿using Verse;
+﻿using Newtonsoft.Json;
+using Verse;
 
 namespace Puppeteer
 {
@@ -16,9 +17,9 @@ namespace Puppeteer
 		public string name;
 		public string picture;
 
-		public string Identifier => $"{service}:{id}";
-		public bool IsValid => (id ?? "").Length > 0 && (service ?? "").Length > 0;
-		public ViewerID Simple => new ViewerID() { id = id, service = service };
+		[JsonIgnore] public string Identifier => $"{service}:{id}";
+		[JsonIgnore] public bool IsValid => (id ?? "").Length > 0 && (service ?? "").Length > 0;
+		[JsonIgnore] public ViewerID Simple => new ViewerID() { id = id, service = service };
 
 		public ViewerID() { }
 

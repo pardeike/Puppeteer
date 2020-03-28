@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Puppeteer
 {
@@ -8,9 +7,10 @@ namespace Puppeteer
 		public string type;
 	}
 
-	public class InfoCmd : SimpleCmd
+	public class Ping : JSONConvertable<Earned>
 	{
-		public Dictionary<string, string> info;
+		public string type = "ping";
+		public bool game = true;
 	}
 
 	public class Earned : JSONConvertable<Earned>
@@ -29,12 +29,7 @@ namespace Puppeteer
 	{
 		public class Info
 		{
-			public string image;
-
-			public Info(byte[] image)
-			{
-				this.image = image == null ? null : Convert.ToBase64String(image);
-			}
+			public byte[] image;
 		}
 
 		public string type = "portrait";
@@ -46,17 +41,19 @@ namespace Puppeteer
 	{
 		public class Info
 		{
-			public string image;
-
-			public Info(byte[] image)
-			{
-				this.image = image == null ? null : Convert.ToBase64String(image);
-			}
+			public byte[] image;
 		}
 
 		public string type = "on-map";
 		public ViewerID viewer;
 		public Info info;
+	}
+
+	public class Assignment : JSONConvertable<Assignment>
+	{
+		public string type = "assignment";
+		public ViewerID viewer;
+		public bool state;
 	}
 
 	public class Join : JSONConvertable<Join>

@@ -1,7 +1,4 @@
-﻿using Harmony;
-using System;
-using System.Diagnostics;
-using System.Timers;
+﻿using System.Timers;
 using Verse;
 
 namespace Puppeteer
@@ -16,19 +13,21 @@ namespace Puppeteer
 
 	public interface ICommandProcessor
 	{
-		void Message(string msg);
+		void Message(byte[] msg);
 	}
 
 	/*
 	 * if (Renderer.pawnImages.TryGetValue(pawn, out var pawnImage))
 				Puppeteer.instance.PawnOnMap(pawn, pawnImage.Image);
-				*/
+	*/
 
 	[StaticConstructorOnStartup]
 	public class Puppeteer : ICommandProcessor
 	{
 		public static Puppeteer instance = new Puppeteer();
+
 		readonly Timer earnTimer = new Timer(earnIntervalInSeconds * 1000) { AutoReset = true };
+		public Timer connectionRetryTimer = new Timer(10000) { AutoReset = true };
 
 		const bool developmentMode = true;
 		const int earnIntervalInSeconds = 2;
@@ -50,16 +49,23 @@ namespace Puppeteer
 
 			viewers = new Viewers();
 			colonists = new Colonists();
+
+			connectionRetryTimer.Elapsed += new ElapsedEventHandler((sender, e) =>
+			{
+				connection?.Send(new Ping());
+			});
+			connectionRetryTimer.Start();
 		}
 
 		~Puppeteer()
 		{
+			connectionRetryTimer?.Stop();
 			earnTimer?.Stop();
 		}
 
 		public void SetEvent(Event evt)
 		{
-			switch(evt)
+			switch (evt)
 			{
 				case Event.GameEntered:
 					connection = new Connection(developmentMode, this);
@@ -86,14 +92,15 @@ namespace Puppeteer
 			if (colonist == null || colonist.controller == null) return null;
 			var viewer = viewers.FindViewer(colonist.controller);
 			if (viewer == null || viewer.controlling == null) return null;
-			return new ViewerInfo() { 
-				controller = colonist.controller, 
+			return new ViewerInfo()
+			{
+				controller = colonist.controller,
 				pawn = viewer.controlling,
 				connected = viewer.connected
 			};
 		}
 
-		public void Message(string msg)
+		public void Message(byte[] msg)
 		{
 			if (connection == null) return;
 			try
@@ -115,7 +122,7 @@ namespace Puppeteer
 						break;
 					case "assign":
 						var assign = Assign.Create(msg);
-						colonists.Assign(assign.colonistID, assign.viewer);
+						colonists.Assign(assign.colonistID, assign.viewer, connection);
 						colonists.SendAllColonists(connection);
 						break;
 					default:
@@ -132,13 +139,9 @@ namespace Puppeteer
 		public void PawnOnMap(Pawn pawn, byte[] image)
 		{
 			if (connection == null) return;
-
 			var viewerInfo = GetViewerInfo(pawn);
 			if (viewerInfo == null || viewerInfo.controller == null) return;
-
-			var data = new OnMap() { viewer = viewerInfo.controller, info = new OnMap.Info(image) }.GetJSON();
-			connection.Send(data);
+			connection.Send(new OnMap() { viewer = viewerInfo.controller, info = new OnMap.Info() { image = image } });
 		}
 	}
 }
- 
