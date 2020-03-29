@@ -47,7 +47,9 @@
     <Compile Include="Core\ColonistCamera.cs" />
     <Compile Include="Core\OperationQueue.cs" />
     <Compile Include="Core\Renderer.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Misc\ConcurrentQueue.cs" />
+    <Compile Include="Misc\FileWatcher.cs" />
     <Compile Include="Misc\JSONConvertable.cs" />
     <Compile Include="Misc\MatrixTools.cs" />
     <Compile Include="Models\Colonist.cs" />

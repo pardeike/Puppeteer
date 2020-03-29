@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Puppeteer.Core;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Puppeteer
 {
@@ -85,7 +86,7 @@ namespace Puppeteer
 
 			OperationQueue.Add(OperationType.Portrait, () =>
 			{
-				var portrait = Renderer.GetPawnPortrait(viewer.controlling, 128);
+				var portrait = Renderer.GetPawnPortrait(viewer.controlling, new Vector2(35f, 55f));
 				connection.Send(new Portrait() { viewer = viewer.vID, info = new Portrait.Info() { image = portrait } });
 			});
 		}

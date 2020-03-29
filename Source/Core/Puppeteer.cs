@@ -1,4 +1,5 @@
-﻿using System.Timers;
+﻿using System;
+using System.Timers;
 using Verse;
 
 namespace Puppeteer
@@ -15,11 +16,6 @@ namespace Puppeteer
 	{
 		void Message(byte[] msg);
 	}
-
-	/*
-	 * if (Renderer.pawnImages.TryGetValue(pawn, out var pawnImage))
-				Puppeteer.instance.PawnOnMap(pawn, pawnImage.Image);
-	*/
 
 	[StaticConstructorOnStartup]
 	public class Puppeteer : ICommandProcessor
@@ -142,6 +138,37 @@ namespace Puppeteer
 			var viewerInfo = GetViewerInfo(pawn);
 			if (viewerInfo == null || viewerInfo.controller == null) return;
 			connection.Send(new OnMap() { viewer = viewerInfo.controller, info = new OnMap.Info() { image = image } });
+		}
+
+		public void UpdatePortrait(Pawn pawn)
+		{
+			var colonist = colonists.FindColonist(pawn);
+			if (colonist == null || colonist.controller == null) return;
+			var viewer = viewers.FindViewer(colonist.controller);
+			if (viewer == null || viewer.controlling == null) return;
+			Viewers.SendPortrait(connection, viewer);
+		}
+
+		public void UpdateColonist(Pawn pawn)
+		{
+			var colonist = colonists.FindColonist(pawn);
+			if (colonist == null || colonist.controller == null) return;
+			var viewer = viewers.FindViewer(colonist.controller);
+			if (viewer == null || viewer.controlling == null) return;
+
+			var inspect = Array.Empty<string>();
+			var info = new ColonisBaseInfo.Info();
+			if (pawn.Spawned && pawn.Map != null)
+			{
+				inspect = pawn.GetInspectString().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+				info.name = pawn.Name.ToStringFull;
+				info.x = pawn.Position.x;
+				info.y = pawn.Position.z;
+				info.mx = pawn.Map.Size.x;
+				info.my = pawn.Map.Size.z;
+				info.inspect = inspect;
+			}
+			connection.Send(new ColonisBaseInfo() { viewer = viewer.vID, info = info });
 		}
 	}
 }

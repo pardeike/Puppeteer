@@ -49,6 +49,23 @@ namespace Puppeteer
 		public Info info;
 	}
 
+	public class ColonisBaseInfo : JSONConvertable<OnMap>
+	{
+		public class Info
+		{
+			public string name;
+			public int x;
+			public int y;
+			public int mx;
+			public int my;
+			public string[] inspect;
+		}
+
+		public string type = "colonist-basics";
+		public ViewerID viewer;
+		public Info info;
+	}
+
 	public class Assignment : JSONConvertable<Assignment>
 	{
 		public string type = "assignment";

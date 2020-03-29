@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using RimWorld;
+﻿using RimWorld;
 using System.Collections.Generic;
 using System.Linq;
 using Verse;
@@ -7,7 +6,7 @@ using Verse.AI;
 
 namespace Puppeteer
 {
-	public class TokenJSON
+	/*public class TokenJSON
 	{
 		public string service;
 		public string id;
@@ -24,7 +23,7 @@ namespace Puppeteer
 		{
 			return $"[service={service} id={id} game={game} version={version} iat={iat}]";
 		}
-	}
+	}*/
 
 	public class DataJSON
 	{
@@ -130,12 +129,12 @@ namespace Puppeteer
 		public string assignment;
 		public string[] timetable;
 
-		static IEnumerable<JobJSON> GetJobs(JobQueue queue)
+		/*static IEnumerable<JobJSON> GetJobs(JobQueue queue)
 		{
 			if (queue == null) yield break;
 			for (var i = 0; i < queue.Count; i++)
 				yield return JobJSON.Make(queue[i].job);
-		}
+		}*/
 
 		static string ToAssignment(TimeAssignmentDef def)
 		{

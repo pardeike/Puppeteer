@@ -6,7 +6,11 @@ namespace Puppeteer
 {
 	public class Connection
 	{
+		public const string tokenFilename = "PuppeteerToken.txt";
+		public static string token = ReadToken();
+
 		public readonly WebSocket ws;
+		public readonly Action<string, string> action;
 		readonly string endpoint;
 		readonly ICommandProcessor processor;
 
@@ -23,31 +27,39 @@ namespace Puppeteer
 			ws.OnMessage += Ws_OnMessage;
 			ws.OnError += Ws_OnError;
 			ws.OnClose += Ws_OnClose;
+
+			action = FileWatcher.AddListener((action, file) =>
+			{
+				if (file == tokenFilename)
+					ws.Close();
+			});
+
 			Connect();
 		}
 
 		void Connect()
 		{
-			var tokenContent = "PuppeteerToken.txt".ReadConfig();
-			if (tokenContent == null)
-			{
-				Log.Warning("Cannot read PuppeteerToken.txt");
-				return;
-			}
-
-			var parts = tokenContent.Split('.');
-			if (parts.Length == 3)
-			{
-				var json = parts[1].Base64Decode();
-				var token = TokenJSON.Create(json);
-				// Log.Warning($"Token {token}");
-			}
-			else
-				Log.Warning("Invalid token format");
-
-			ws.SetCookie(new WebSocketSharp.Net.Cookie("id_token", tokenContent));
+			var token = ReadToken();
+			if (token != null && token.Length > 0)
+				ws.SetCookie(new WebSocketSharp.Net.Cookie("id_token", token));
 			ws.ConnectAsync();
 			nextRetry = new DateTime().AddSeconds(5);
+		}
+
+		static string ReadToken()
+		{
+			var tokenContent = tokenFilename.ReadConfig();
+			if (tokenContent == null)
+				return "";
+
+			var parts = tokenContent.Split('.');
+			if (parts.Length != 3)
+				return "";
+
+			//var json = parts[1].Base64Decode();
+			//var token = TokenJSON.Create(json);
+			// Log.Warning($"Token {token}");
+			return tokenContent;
 		}
 
 		public void Send<T>(JSONConvertable<T> obj, Action<bool> callback = null)
@@ -83,6 +95,8 @@ namespace Puppeteer
 		{
 			if (ws != null && ws.ReadyState == WebSocketState.Open)
 				ws.CloseAsync(CloseStatusCode.Normal);
+
+			FileWatcher.RemoveListener(action);
 		}
 
 		private void Ws_OnOpen(object sender, EventArgs e)

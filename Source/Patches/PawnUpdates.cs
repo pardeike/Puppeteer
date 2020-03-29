@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using Puppeteer.Core;
+using RimWorld;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Verse;
@@ -132,6 +133,16 @@ namespace Puppeteer
 				return;
 
 			// Puppeteer.instance.PawnUpdate(pawn);
+		}
+	}
+
+	[HarmonyPatch(typeof(PortraitsCache))]
+	[HarmonyPatch(nameof(PortraitsCache.SetDirty))]
+	static class PortraitsCache_SetDirty_Patch
+	{
+		public static void Postfix(Pawn pawn)
+		{
+			Puppeteer.instance.UpdatePortrait(pawn);
 		}
 	}
 }

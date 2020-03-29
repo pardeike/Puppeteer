@@ -7,26 +7,27 @@ namespace Puppeteer
 {
 	public static class Renderer
 	{
-		const int imageSize = 256;
+		const int imageSize = 128;
 		public static float renderOffset = 0f;
 		public static Vector3 RenderOffsetVector => new Vector3(renderOffset, 0f, 0f);
 		public static CellRect fakeViewRect = CellRect.Empty;
 		public static bool fakeZoom = false;
 		static readonly FieldRef<SubcameraDriver, Camera[]> subcamerasRef = FieldRefAccess<SubcameraDriver, Camera[]>("subcameras");
 
-		public static byte[] GetPawnPortrait(Pawn pawn, int size)
+		public static byte[] GetPawnPortrait(Pawn pawn, Vector2 boundings)
 		{
-			var renderTexture = PortraitsCache.Get(pawn, new Vector2(size, size), new Vector3(0f, 0f, 0.1f), 1.28f);
-			var portrait = new Texture2D(size, size, TextureFormat.ARGB32, false);
+			var renderTexture = PortraitsCache.Get(pawn, boundings, new Vector3(0f, 0f, 0.11f), 1.28205f);
+			var w = renderTexture.width;
+			var h = renderTexture.height;
+			var portrait = new Texture2D(w, h, TextureFormat.ARGB32, false);
 			RenderTexture.active = renderTexture;
-			portrait.ReadPixels(new Rect(0, 0, size, size), 0, 0);
+			portrait.ReadPixels(new Rect(0, 0, w, h), 0, 0);
 			portrait.Apply();
+			return portrait.EncodeToPNG();
 			//var compressor = new TJCompressor();
 			//var ptr = portrait.GetNativeTexturePtr();
 			//var stride = size * 4;
 			//var data = compressor.Compress(ptr, stride, size, size, TJPixelFormats.TJPF_ARGB, TJSubsamplingOptions.TJSAMP_444, 75, TJFlags.NONE);
-			var data = portrait.EncodeToJPG(10); // PNG();
-			return data;
 		}
 
 		public static void SetCamera(Camera camera, ref Vector3 position, float size)
@@ -65,8 +66,9 @@ namespace Puppeteer
 			SetCamera(camera, ref rememberPosition, rememberOrthographicSize);
 			camera.farClipPlane = rememberFarClipPlane;
 
-			var jpgData = imageTexture.EncodeToJPG(10);
+			var jpgData = imageTexture.EncodeToJPG(60);
 			Puppeteer.instance.PawnOnMap(pawn, jpgData);
+			Puppeteer.instance.UpdateColonist(pawn); // TODO: send only when changed
 		}
 	}
 }
