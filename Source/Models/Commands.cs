@@ -93,6 +93,35 @@ namespace Puppeteer
 			}
 		}
 
+		public class ThoughtInfo
+		{
+			public string name;
+			public int min;
+			public int max;
+			public int value;
+		}
+
+		public class CapacityInfo
+		{
+			public string name;
+			public string value;
+			public int[] rgb;
+		}
+
+		public class HediffInfo
+		{
+			public string name;
+			public int count;
+			public int[] rgb;
+		}
+
+		public class Injury
+		{
+			public string name;
+			public HediffInfo[] hediffs;
+			public int[] rgb;
+		}
+
 		public class Info
 		{
 			public string name;
@@ -108,6 +137,11 @@ namespace Puppeteer
 			public bool drafted;
 			public string response;
 			public NeedInfo[] needs;
+			public ThoughtInfo[] thoughts;
+			public CapacityInfo[] capacities;
+			public int bleedingRate;
+			public int deathIn;
+			public Injury[] injuries;
 		}
 
 		public string type = "colonist-basics";

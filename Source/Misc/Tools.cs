@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
+using UnityEngine;
 using Verse;
 
 namespace Puppeteer
@@ -22,6 +23,11 @@ namespace Puppeteer
 
 			var data = Convert.FromBase64String(value);
 			return Encoding.UTF8.GetString(data);
+		}
+
+		public static int[] GetRGB(Color color)
+		{
+			return new[] { (int)(255 * color.r), (int)(255 * color.g), (int)(255 * color.b) };
 		}
 
 		public static string AsString(this DateTime dateTime)

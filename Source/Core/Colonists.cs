@@ -90,34 +90,41 @@ namespace Puppeteer
 			return null;
 		}
 
-		public void Assign(int colonistID, ViewerID viewer, Connection connection)
+		public void Assign(string colonistID, ViewerID viewer, Connection connection)
 		{
 			void SendAssignment(ViewerID v, bool state) => connection.Send(new Assignment() { viewer = v, state = state });
 
+			var pawn = FindEntry(viewer)?.GetPawn();
+			var pawnNameTriple = pawn?.Name as NameTriple;
+
 			if (viewer == null)
 			{
-				if (state.TryGetValue("" + colonistID, out var current))
+				if (state.TryGetValue(colonistID, out var current))
 					if (current.controller != null)
 						SendAssignment(current.controller, false);
-				_ = state.Remove("" + colonistID);
+				_ = state.Remove(colonistID);
 				Save();
+
+				if (pawnNameTriple != null) pawn.Name = new NameTriple(pawnNameTriple.First, pawnNameTriple.First, pawnNameTriple.Last);
 
 				return;
 			}
 			state.DoIf(pair => pair.Value.controller == viewer, pair => SendAssignment(pair.Value.controller, false));
 			_ = state.RemoveAll(pair => pair.Value.controller == viewer);
 
-			if (state.TryGetValue("" + colonistID, out var colonist))
+			if (state.TryGetValue(colonistID, out var colonist))
 			{
 				colonist.controller = viewer;
 				Save();
+				if (pawnNameTriple != null) pawn.Name = new NameTriple(pawnNameTriple.First, viewer.name, pawnNameTriple.Last);
 				SendAssignment(viewer, true);
 				return;
 			}
 
 			colonist = new Colonist() { controller = viewer };
-			state["" + colonistID] = colonist;
+			state[colonistID] = colonist;
 			Save();
+			if (pawnNameTriple != null) pawn.Name = new NameTriple(pawnNameTriple.First, viewer.name, pawnNameTriple.Last);
 			SendAssignment(viewer, true);
 		}
 

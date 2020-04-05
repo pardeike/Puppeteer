@@ -1,5 +1,7 @@
-﻿using RimWorld;
+﻿using HarmonyLib;
+using RimWorld;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
 using UnityEngine;
@@ -37,6 +39,8 @@ namespace Puppeteer
 		readonly Colonists colonists;
 		bool firstTime = true;
 
+		static Func<Pawn, bool, IEnumerable<IGrouping<BodyPartRecord, Hediff>>> VisibleHediffGroupsInOrder;
+
 		public Puppeteer()
 		{
 			earnTimer.Elapsed += new ElapsedEventHandler((sender, e) =>
@@ -54,6 +58,9 @@ namespace Puppeteer
 				connection?.Send(new Ping());
 			});
 			connectionRetryTimer.Start();
+
+			var m_VisibleHediffGroupsInOrder = AccessTools.Method(typeof(HealthCardUtility), "VisibleHediffGroupsInOrder");
+			VisibleHediffGroupsInOrder = (Func<Pawn, bool, IEnumerable<IGrouping<BodyPartRecord, Hediff>>>)Delegate.CreateDelegate(typeof(Func<Pawn, bool, IEnumerable<IGrouping<BodyPartRecord, Hediff>>>), m_VisibleHediffGroupsInOrder);
 		}
 
 		~Puppeteer()
@@ -121,7 +128,7 @@ namespace Puppeteer
 						break;
 					case "assign":
 						var assign = Assign.Create(msg);
-						colonists.Assign(assign.colonistID, assign.viewer, connection);
+						colonists.Assign($"{assign.colonistID}", assign.viewer, connection);
 						colonists.SendAllColonists(connection);
 						break;
 					case "state":
@@ -167,6 +174,92 @@ namespace Puppeteer
 				.ToArray();
 		}
 
+		ColonistBaseInfo.ThoughtInfo[] GetThoughts(Pawn pawn)
+		{
+			var overallThoughtGroups = new List<Thought>();
+			PawnNeedsUIUtility.GetThoughtGroupsInDisplayOrder(pawn.needs.mood, overallThoughtGroups);
+			return overallThoughtGroups.Select(overallThoughtGroup =>
+			{
+				var thoughtGroup = new List<Thought>();
+				pawn.needs.mood.thoughts.GetMoodThoughts(overallThoughtGroup, thoughtGroup);
+				var leadingThoughtInGroup = PawnNeedsUIUtility.GetLeadingThoughtInGroup(thoughtGroup);
+				if (!leadingThoughtInGroup.VisibleInNeedsTab)
+					return null;
+				var name = leadingThoughtInGroup.LabelCap;
+				if (thoughtGroup.Count > 1) name = $"{name} {thoughtGroup.Count}x";
+				var value = (int)pawn.needs.mood.thoughts.MoodOffsetOfGroup(leadingThoughtInGroup);
+				var minMemory = thoughtGroup.First() as Thought_Memory;
+				var maxMemory = thoughtGroup.Last() as Thought_Memory;
+				var min = 0f;
+				var max = 0f;
+				if (minMemory != null)
+				{
+					var duration = overallThoughtGroup.def.DurationTicks;
+					(duration - minMemory.age).TicksToPeriod(out var y1, out var q1, out var d1, out min);
+					(duration - maxMemory.age).TicksToPeriod(out var y2, out var q2, out var d2, out max);
+				}
+				return new ColonistBaseInfo.ThoughtInfo() { name = name, value = value, min = (int)Math.Round(min), max = (int)Math.Round(max) };
+			})
+			.ToArray();
+		}
+
+		ColonistBaseInfo.CapacityInfo[] GetCapacities(Pawn pawn)
+		{
+			var result = DefDatabase<PawnCapacityDef>.AllDefs
+				.Where(def => def.showOnHumanlikes && PawnCapacityUtility.BodyCanEverDoCapacity(pawn.RaceProps.body, def))
+				.OrderBy(def => def.listOrder)
+				.Select(def =>
+				{
+					var name = def.GetLabelFor(pawn.RaceProps.IsFlesh, pawn.RaceProps.Humanlike).CapitalizeFirst();
+					var value = HealthCardUtility.GetEfficiencyLabel(pawn, def);
+					return new ColonistBaseInfo.CapacityInfo() { name = name, value = value.First, rgb = Tools.GetRGB(value.Second) };
+				})
+				.ToList();
+			var pain = HealthCardUtility.GetPainLabel(pawn);
+			result.Insert(0, new ColonistBaseInfo.CapacityInfo()
+			{
+				name = "PainLevel".Translate(),
+				value = pain.First,
+				rgb = Tools.GetRGB(pain.Second)
+			});
+			return result.ToArray();
+		}
+
+		ColonistBaseInfo.Injury[] GetInjuries(Pawn pawn)
+		{
+			return VisibleHediffGroupsInOrder(pawn, true)
+				.Select((IEnumerable<Hediff> diffs) =>
+				{
+					var hediffInfos = new List<ColonistBaseInfo.HediffInfo>();
+					var part = diffs.First<Hediff>().Part;
+					var name = part.LabelCap;
+					var color = HealthUtility.GetPartConditionLabel(pawn, part).Second;
+					foreach (var grouping in from x in diffs group x by x.UIGroupKey)
+					{
+						ColonistBaseInfo.HediffInfo lastHediffInfo = null;
+						foreach (var hediff2 in grouping)
+						{
+							if (hediff2.LabelCap != lastHediffInfo?.name)
+							{
+								lastHediffInfo = new ColonistBaseInfo.HediffInfo()
+								{
+									name = hediff2.LabelCap,
+									count = 1,
+									rgb = Tools.GetRGB(hediff2.LabelColor)
+								};
+								hediffInfos.Add(lastHediffInfo);
+							}
+							else
+							{
+								lastHediffInfo.count++;
+							}
+						}
+					}
+					return new ColonistBaseInfo.Injury() { name = name, hediffs = hediffInfos.ToArray(), rgb = Tools.GetRGB(color) };
+				})
+				.ToArray();
+		}
+
 		public void UpdateColonist(Pawn pawn)
 		{
 			var colonist = colonists.FindColonist(pawn);
@@ -200,6 +293,12 @@ namespace Puppeteer
 				info.drafted = pawn.Drafted;
 				info.response = pawn.playerSettings.hostilityResponse.GetLabel();
 				info.needs = GetNeeds(pawn);
+				info.thoughts = GetThoughts(pawn);
+				info.capacities = GetCapacities(pawn);
+				info.bleedingRate = (int)(pawn.health.hediffSet.BleedRateTotal * 100f + 0.5f);
+				var ticksUntilDeath = HealthUtility.TicksUntilDeathDueToBloodLoss(pawn);
+				info.deathIn = (int)(((float)ticksUntilDeath / GenDate.TicksPerHour) + 0.5f);
+				info.injuries = GetInjuries(pawn);
 			}
 			connection.Send(new ColonistBaseInfo() { viewer = viewer.vID, info = info });
 		}
