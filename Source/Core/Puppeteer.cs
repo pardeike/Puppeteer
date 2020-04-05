@@ -1,5 +1,8 @@
-﻿using System;
+﻿using RimWorld;
+using System;
+using System.Linq;
 using System.Timers;
+using UnityEngine;
 using Verse;
 
 namespace Puppeteer
@@ -101,8 +104,8 @@ namespace Puppeteer
 			if (connection == null) return;
 			try
 			{
-				// Log.Warning($"MSG {msg}");
 				var cmd = SimpleCmd.Create(msg);
+				// Log.Warning($"MSG {cmd.type}");
 				switch (cmd.type)
 				{
 					case "welcome":
@@ -120,6 +123,10 @@ namespace Puppeteer
 						var assign = Assign.Create(msg);
 						colonists.Assign(assign.colonistID, assign.viewer, connection);
 						colonists.SendAllColonists(connection);
+						break;
+					case "state":
+						var state = IncomingState.Create(msg);
+						colonists.SetState(state);
 						break;
 					default:
 						Log.Warning($"unknown command '{cmd.type}'");
@@ -149,6 +156,17 @@ namespace Puppeteer
 			Viewers.SendPortrait(connection, viewer);
 		}
 
+		ColonistBaseInfo.NeedInfo[] GetNeeds(Pawn pawn)
+		{
+			var needs = pawn.needs.AllNeeds.Where(n => n.ShowOnNeedList && n.GetType() != typeof(Need_Mood)).ToList();
+			if (needs == null) return Array.Empty<ColonistBaseInfo.NeedInfo>();
+			PawnNeedsUIUtility.SortInDisplayOrder(needs);
+			needs.InsertRange(0, pawn.needs.AllNeeds.Where(n => n.GetType() == typeof(Need_Mood)));
+			return needs
+				.Select(need => new ColonistBaseInfo.NeedInfo(need))
+				.ToArray();
+		}
+
 		public void UpdateColonist(Pawn pawn)
 		{
 			var colonist = colonists.FindColonist(pawn);
@@ -157,7 +175,7 @@ namespace Puppeteer
 			if (viewer == null || viewer.controlling == null) return;
 
 			var inspect = Array.Empty<string>();
-			var info = new ColonisBaseInfo.Info();
+			var info = new ColonistBaseInfo.Info();
 			if (pawn.Spawned && pawn.Map != null)
 			{
 				inspect = pawn.GetInspectString().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
@@ -167,8 +185,23 @@ namespace Puppeteer
 				info.mx = pawn.Map.Size.x;
 				info.my = pawn.Map.Size.z;
 				info.inspect = inspect;
+				info.health = new ColonistBaseInfo.Percentage()
+				{
+					label = HealthUtility.GetGeneralConditionLabel(pawn, true),
+					percent = pawn.health.summaryHealth.SummaryHealthPercent
+				};
+				info.mood = new ColonistBaseInfo.Percentage()
+				{
+					label = pawn.needs.mood.MoodString.CapitalizeFirst(),
+					percent = pawn.needs.mood.CurLevelPercentage
+				};
+				info.restrict = new ColonistBaseInfo.Value(pawn.timetable.CurrentAssignment.LabelCap, pawn.timetable.CurrentAssignment.color);
+				info.area = new ColonistBaseInfo.Value(AreaUtility.AreaAllowedLabel(pawn), pawn.playerSettings?.EffectiveAreaRestriction?.Color ?? Color.gray);
+				info.drafted = pawn.Drafted;
+				info.response = pawn.playerSettings.hostilityResponse.GetLabel();
+				info.needs = GetNeeds(pawn);
 			}
-			connection.Send(new ColonisBaseInfo() { viewer = viewer.vID, info = info });
+			connection.Send(new ColonistBaseInfo() { viewer = viewer.vID, info = info });
 		}
 	}
 }

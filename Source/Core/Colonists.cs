@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using Newtonsoft.Json;
 using RimWorld;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Verse;
@@ -9,8 +10,13 @@ namespace Puppeteer
 {
 	public class ColonistEntry
 	{
-		public string thingID;
+		public int thingID;
 		public Colonist colonist;
+
+		public Pawn GetPawn()
+		{
+			return Tools.ColonistForThingID(thingID);
+		}
 	}
 
 	public class Colonists
@@ -72,7 +78,7 @@ namespace Puppeteer
 		{
 			return state
 				.Where(pair => pair.Value.controller == viewer)
-				.Select(pair => new ColonistEntry() { thingID = pair.Key, colonist = pair.Value })
+				.Select(pair => new ColonistEntry() { thingID = int.Parse(pair.Key), colonist = pair.Value })
 				.FirstOrDefault();
 		}
 
@@ -113,6 +119,32 @@ namespace Puppeteer
 			state["" + colonistID] = colonist;
 			Save();
 			SendAssignment(viewer, true);
+		}
+
+		public void SetState(IncomingState state)
+		{
+			var entry = FindEntry(state.user);
+			if (entry == null) return;
+			var pawn = entry.GetPawn();
+			if (pawn == null) return;
+			switch (state.key)
+			{
+				case "hostile-response":
+					var responseMode = (HostilityResponseMode)Enum.Parse(typeof(HostilityResponseMode), state.val.ToString());
+					pawn.playerSettings.hostilityResponse = responseMode;
+					break;
+				case "drafted":
+					pawn.drafter.Drafted = Convert.ToBoolean(state.val);
+					break;
+				case "zone":
+					var area = pawn.Map.areaManager.AllAreas.Where(a => a.AssignableAsAllowed()).FirstOrDefault(a => a.Label == state.val.ToString());
+					if (area != null)
+						pawn.playerSettings.AreaRestriction = area;
+					break;
+				default:
+					Log.Warning($"Unknown set value operation with key ${state.key}");
+					break;
+			}
 		}
 	}
 }

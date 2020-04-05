@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Puppeteer.Core;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Puppeteer
@@ -34,7 +35,7 @@ namespace Puppeteer
 				{
 					viewer.connected = true;
 					var info = colonists.FindEntry(viewer.vID);
-					viewer.controlling = info?.thingID == null ? null : Tools.ColonistForThingID(int.Parse(info.thingID));
+					viewer.controlling = info?.thingID == null ? null : Tools.ColonistForThingID(info.thingID);
 				}
 				else
 				{
@@ -44,6 +45,7 @@ namespace Puppeteer
 				Save();
 				SendEarned(connection, viewer);
 				SendPortrait(connection, viewer);
+				SendState(connection, viewer);
 			}
 		}
 
@@ -89,6 +91,15 @@ namespace Puppeteer
 				var portrait = Renderer.GetPawnPortrait(viewer.controlling, new Vector2(35f, 55f));
 				connection.Send(new Portrait() { viewer = viewer.vID, info = new Portrait.Info() { image = portrait } });
 			});
+		}
+
+		static void SendState(Connection connection, Viewer viewer)
+		{
+			if (viewer.controlling?.Map != null)
+			{
+				var areas = viewer.controlling.Map.areaManager.AllAreas.Where(a => a.AssignableAsAllowed()).Select(a => a.Label).ToArray();
+				connection.Send(new OutgoingState<string[]>() { viewer = viewer.vID, key = "zones", val = areas });
+			}
 		}
 	}
 }
