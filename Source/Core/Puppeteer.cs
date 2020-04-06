@@ -1,11 +1,12 @@
-﻿using HarmonyLib;
-using RimWorld;
+﻿using RimWorld;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Timers;
 using UnityEngine;
 using Verse;
+using static HarmonyLib.AccessTools;
 
 namespace Puppeteer
 {
@@ -59,7 +60,7 @@ namespace Puppeteer
 			});
 			connectionRetryTimer.Start();
 
-			var m_VisibleHediffGroupsInOrder = AccessTools.Method(typeof(HealthCardUtility), "VisibleHediffGroupsInOrder");
+			var m_VisibleHediffGroupsInOrder = Method(typeof(HealthCardUtility), "VisibleHediffGroupsInOrder");
 			VisibleHediffGroupsInOrder = (Func<Pawn, bool, IEnumerable<IGrouping<BodyPartRecord, Hediff>>>)Delegate.CreateDelegate(typeof(Func<Pawn, bool, IEnumerable<IGrouping<BodyPartRecord, Hediff>>>), m_VisibleHediffGroupsInOrder);
 		}
 
@@ -267,6 +268,29 @@ namespace Puppeteer
 				.ToArray();
 		}
 
+		static readonly FieldInfo f_skillDefsInListOrderCached = Field(typeof(SkillUI), "skillDefsInListOrderCached");
+		static readonly FieldRef<List<SkillDef>> skillDefsInListOrderCachedRef = StaticFieldRefAccess<List<SkillDef>>(f_skillDefsInListOrderCached);
+		public ColonistBaseInfo.SkillInfo[] GetSkills(Pawn pawn)
+		{
+			var skills = pawn.skills;
+			return skillDefsInListOrderCachedRef()
+				.Select(skillDef => skills.GetSkill(skillDef))
+				.Select(skill =>
+				{
+					var name = skill.def.skillLabel.CapitalizeFirst();
+					if (skill.TotallyDisabled)
+						return new ColonistBaseInfo.SkillInfo() { name = name, level = -1 };
+					return new ColonistBaseInfo.SkillInfo()
+					{
+						name = name,
+						level = skill.Level,
+						passion = (int)skill.passion,
+						progress = new[] { (int)skill.xpSinceLastLevel, (int)skill.XpRequiredForLevelUp }
+					};
+				})
+				.ToArray();
+		}
+
 		public void UpdateColonist(Pawn pawn)
 		{
 			var colonist = colonists.FindColonist(pawn);
@@ -306,6 +330,7 @@ namespace Puppeteer
 				var ticksUntilDeath = HealthUtility.TicksUntilDeathDueToBloodLoss(pawn);
 				info.deathIn = (int)(((float)ticksUntilDeath / GenDate.TicksPerHour) + 0.5f);
 				info.injuries = GetInjuries(pawn);
+				info.skills = GetSkills(pawn);
 			}
 			connection.Send(new ColonistBaseInfo() { viewer = viewer.vID, info = info });
 		}

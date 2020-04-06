@@ -122,6 +122,14 @@ namespace Puppeteer
 			public int[] rgb;
 		}
 
+		public class SkillInfo
+		{
+			public string name;
+			public int level;
+			public int passion;
+			public int[] progress;
+		}
+
 		public class Info
 		{
 			public string name;
@@ -142,6 +150,7 @@ namespace Puppeteer
 			public int bleedingRate;
 			public int deathIn;
 			public Injury[] injuries;
+			public SkillInfo[] skills;
 		}
 
 		public string type = "colonist-basics";
