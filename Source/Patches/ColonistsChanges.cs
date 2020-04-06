@@ -40,7 +40,10 @@ namespace Puppeteer
 		public static void Postfix(Pawn __instance)
 		{
 			if (__instance.IsColonist)
+			{
+				Puppeteer.instance.PawnUnavailable(__instance);
 				Puppeteer.instance.SetEvent(Event.ColonistsChanged);
+			}
 		}
 	}
 

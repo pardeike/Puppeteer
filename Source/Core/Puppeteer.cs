@@ -146,6 +146,11 @@ namespace Puppeteer
 			}
 		}
 
+		public void PawnUnavailable(Pawn pawn)
+		{
+			colonists.Assign("" + pawn.thingIDNumber, null, connection);
+		}
+
 		public void PawnOnMap(Pawn pawn, byte[] image)
 		{
 			if (connection == null) return;

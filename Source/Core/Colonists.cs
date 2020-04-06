@@ -100,7 +100,7 @@ namespace Puppeteer
 			if (viewer == null)
 			{
 				if (state.TryGetValue(colonistID, out var current))
-					if (current.controller != null)
+					if (current?.controller != null)
 						SendAssignment(current.controller, false);
 				_ = state.Remove(colonistID);
 				Save();
