@@ -233,28 +233,30 @@ namespace Puppeteer
 					var hediffInfos = new List<ColonistBaseInfo.HediffInfo>();
 					var part = diffs.First<Hediff>().Part;
 					var name = part.LabelCap;
-					var color = HealthUtility.GetPartConditionLabel(pawn, part).Second;
 					foreach (var grouping in from x in diffs group x by x.UIGroupKey)
 					{
 						ColonistBaseInfo.HediffInfo lastHediffInfo = null;
-						foreach (var hediff2 in grouping)
-						{
-							if (hediff2.LabelCap != lastHediffInfo?.name)
+						if (grouping != null)
+							foreach (var hediff2 in grouping)
 							{
-								lastHediffInfo = new ColonistBaseInfo.HediffInfo()
+								if (hediff2.LabelCap != lastHediffInfo?.name)
 								{
-									name = hediff2.LabelCap,
-									count = 1,
-									rgb = Tools.GetRGB(hediff2.LabelColor)
-								};
-								hediffInfos.Add(lastHediffInfo);
+									lastHediffInfo = new ColonistBaseInfo.HediffInfo()
+									{
+										name = hediff2.LabelCap,
+										count = 1,
+										rgb = Tools.GetRGB(hediff2.LabelColor)
+									};
+									hediffInfos.Add(lastHediffInfo);
+								}
+								else
+								{
+									if (lastHediffInfo != null)
+										lastHediffInfo.count++;
+								}
 							}
-							else
-							{
-								lastHediffInfo.count++;
-							}
-						}
 					}
+					var color = HealthUtility.GetPartConditionLabel(pawn, part).Second;
 					return new ColonistBaseInfo.Injury() { name = name, hediffs = hediffInfos.ToArray(), rgb = Tools.GetRGB(color) };
 				})
 				.ToArray();

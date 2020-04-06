@@ -145,8 +145,7 @@ namespace Puppeteer
 					break;
 				case "zone":
 					var area = pawn.Map.areaManager.AllAreas.Where(a => a.AssignableAsAllowed()).FirstOrDefault(a => a.Label == state.val.ToString());
-					if (area != null)
-						pawn.playerSettings.AreaRestriction = area;
+					pawn.playerSettings.AreaRestriction = area;
 					break;
 				default:
 					Log.Warning($"Unknown set value operation with key ${state.key}");

@@ -1,6 +1,9 @@
 ﻿using HarmonyLib;
 using Puppeteer.Core;
 using RimWorld;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection.Emit;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Verse;
@@ -143,6 +146,45 @@ namespace Puppeteer
 		public static void Postfix(Pawn pawn)
 		{
 			Puppeteer.instance.UpdatePortrait(pawn);
+		}
+	}
+
+	[HarmonyPatch(typeof(PortraitsCache))]
+	[HarmonyPatch("SetAnimatedPortraitsDirty")]
+	static class ColonistBar_MarkColonistsDirty_Patch
+	{
+		static readonly List<Pawn> previousChangedPawns = new List<Pawn>();
+
+		static void ObserveChanges(List<Pawn> changedPawns)
+		{
+			previousChangedPawns.DoIf(pawn => changedPawns.Contains(pawn) == false, pawn => Puppeteer.instance.UpdatePortrait(pawn));
+			previousChangedPawns.Clear(); // don't replace the lists directly
+			previousChangedPawns.AddRange(changedPawns);
+		}
+
+		public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+		{
+			var m_ObserveChanges = SymbolExtensions.GetMethodInfo(() => ObserveChanges(null));
+			var f_toSetDirty = AccessTools.Field(typeof(PortraitsCache), "toSetDirty");
+			var m_get_Count = AccessTools.Property(typeof(List<Pawn>), "Count").GetGetMethod();
+			var list = instructions.ToList();
+			var found = false;
+			for (var n = 0; n < list.Count; n++)
+			{
+				var instruction = list[n];
+				if (instruction.LoadsField(f_toSetDirty) == false) continue;
+				var nextInstruction = list[n + 1];
+				if (nextInstruction.Calls(m_get_Count) == false) continue;
+				list.InsertRange(n + 1, new[]
+				{
+					new CodeInstruction(OpCodes.Dup),
+					new CodeInstruction(OpCodes.Call, m_ObserveChanges),
+				});
+				found = true;
+				break;
+			}
+			if (found == false) Log.Error("Patching SetAnimatedPortraitsDirty: cannot find ldsfld toSetDirty followed by List<Pawn>.Count");
+			return list.AsEnumerable();
 		}
 	}
 }
