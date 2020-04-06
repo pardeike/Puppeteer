@@ -43,6 +43,7 @@ namespace Puppeteer
 					state[vID.Identifier] = viewer;
 				}
 				Save();
+				Tools.SetColonistNickname(viewer.controlling, vID.name);
 				SendEarned(connection, viewer);
 				SendPortrait(connection, viewer);
 				SendState(connection, viewer);
@@ -54,6 +55,7 @@ namespace Puppeteer
 			if (state.TryGetValue(vID.Identifier, out var viewer))
 			{
 				viewer.connected = false;
+				Tools.SetColonistNickname(viewer.controlling, null);
 				viewer.controlling = null;
 				Save();
 			}

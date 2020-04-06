@@ -96,6 +96,14 @@ namespace Puppeteer
 			return null;
 		}
 
+		public static void SetColonistNickname(Pawn pawn, string nick)
+		{
+			if (pawn == null) return;
+			var name3 = pawn.Name as NameTriple;
+			if (name3 != null)
+				pawn.Name = new NameTriple(name3.First, nick ?? name3.First, name3.Last);
+		}
+
 		public static void RenderColonists(Map visibleMap)
 		{
 			var pawn = ColonistRoundRobbin(visibleMap);

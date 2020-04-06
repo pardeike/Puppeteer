@@ -94,19 +94,20 @@ namespace Puppeteer
 		{
 			void SendAssignment(ViewerID v, bool state) => connection.Send(new Assignment() { viewer = v, state = state });
 
-			var pawn = FindEntry(viewer)?.GetPawn();
-			var pawnNameTriple = pawn?.Name as NameTriple;
-
 			if (viewer == null)
 			{
 				if (state.TryGetValue(colonistID, out var current))
-					if (current?.controller != null)
+				{
+					var controller = current?.controller;
+					if (controller != null)
+					{
+						var entry = FindEntry(controller);
+						Tools.SetColonistNickname(entry?.GetPawn(), null);
 						SendAssignment(current.controller, false);
+					}
+				}
 				_ = state.Remove(colonistID);
 				Save();
-
-				if (pawnNameTriple != null) pawn.Name = new NameTriple(pawnNameTriple.First, pawnNameTriple.First, pawnNameTriple.Last);
-
 				return;
 			}
 			state.DoIf(pair => pair.Value.controller == viewer, pair => SendAssignment(pair.Value.controller, false));
@@ -116,7 +117,6 @@ namespace Puppeteer
 			{
 				colonist.controller = viewer;
 				Save();
-				if (pawnNameTriple != null) pawn.Name = new NameTriple(pawnNameTriple.First, viewer.name, pawnNameTriple.Last);
 				SendAssignment(viewer, true);
 				return;
 			}
@@ -124,7 +124,6 @@ namespace Puppeteer
 			colonist = new Colonist() { controller = viewer };
 			state[colonistID] = colonist;
 			Save();
-			if (pawnNameTriple != null) pawn.Name = new NameTriple(pawnNameTriple.First, viewer.name, pawnNameTriple.Last);
 			SendAssignment(viewer, true);
 		}
 
