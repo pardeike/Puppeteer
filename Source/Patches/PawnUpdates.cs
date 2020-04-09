@@ -46,6 +46,17 @@ namespace Puppeteer
 		}
 	}*/
 
+	[HarmonyPatch(typeof(Pawn))]
+	[HarmonyPatch(nameof(Pawn.Name), MethodType.Setter)]
+	static class Pawn_set_Name_Patch
+	{
+		public static void Postfix(Pawn __instance)
+		{
+			if (__instance.IsColonist)
+				Puppeteer.instance.SetEvent(Event.ColonistsChanged);
+		}
+	}
+
 	[HarmonyPatch(typeof(Graphics))]
 	[HarmonyPatch("Internal_DrawMesh")]
 	static class Graphics_Internal_DrawMesh_Patch
@@ -109,23 +120,12 @@ namespace Puppeteer
 	{
 		public static void Postfix()
 		{
-			Tools.RenderColonists(null);
+			Tools.RenderColonists();
 			OperationQueue.Process(OperationType.Portrait);
 		}
 	}
 
-	[HarmonyPatch(typeof(Map))]
-	[HarmonyPatch(nameof(Map.MapUpdate))]
-	static class Map_MapUpdate_Patch
-	{
-		public static void Postfix(Map __instance)
-		{
-			var map = Find.CurrentMap;
-			if (map != null) Tools.RenderColonists(__instance);
-		}
-	}
-
-	[HarmonyPatch(typeof(Thing))]
+	/*[HarmonyPatch(typeof(Thing))]
 	[HarmonyPatch(nameof(Thing.Position), MethodType.Setter)]
 	static class Thing_Position_Patch
 	{
@@ -137,7 +137,7 @@ namespace Puppeteer
 
 			// Puppeteer.instance.PawnUpdate(pawn);
 		}
-	}
+	}*/
 
 	[HarmonyPatch(typeof(PortraitsCache))]
 	[HarmonyPatch(nameof(PortraitsCache.SetDirty))]

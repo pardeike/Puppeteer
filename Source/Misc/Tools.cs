@@ -74,7 +74,7 @@ namespace Puppeteer
 		static int colonistTicks = 0;
 		const float colonistEveryTicks = 60f;
 		static int colonistCounter = -1;
-		public static Pawn ColonistRoundRobbin(Map visibleMap)
+		static Pawn ColonistRoundRobbin()
 		{
 			var colonists = Current.Game.Maps.SelectMany(map => map.mapPawns.FreeColonists).ToList();
 			if (colonists.Count == 0) return null;
@@ -82,18 +82,9 @@ namespace Puppeteer
 			colonistTicks++;
 			if (colonistTicks < delay) return null;
 			colonistTicks = 0;
-			for (var i = 1; i <= colonists.Count; i++)
-			{
-				var idx = (colonistCounter + 1) % colonists.Count;
-				var offscreen = visibleMap == null && colonists[idx].Map != Find.CurrentMap;
-				var onscreen = visibleMap != null && colonists[idx].Map == visibleMap;
-				if (offscreen || onscreen)
-				{
-					colonistCounter = idx;
-					return colonists[idx];
-				}
-			}
-			return null;
+			var idx = (colonistCounter + 1) % colonists.Count;
+			colonistCounter = idx;
+			return colonists[idx];
 		}
 
 		public static void SetColonistNickname(Pawn pawn, string nick)
@@ -104,15 +95,14 @@ namespace Puppeteer
 				pawn.Name = new NameTriple(name3.First, nick ?? name3.First, name3.Last);
 		}
 
-		public static void RenderColonists(Map visibleMap)
+		public static void RenderColonists()
 		{
-			var pawn = ColonistRoundRobbin(visibleMap);
+			var pawn = ColonistRoundRobbin();
 			if (pawn == null) return;
 			var map = pawn.Map;
 			if (map == null) return;
-			var isVisibleMap = map == Find.CurrentMap && WorldRendererUtility.WorldRenderedNow == false;
-
-			Renderer.fakeZoom = true;
+			var currentMap = Find.CurrentMap;
+			var isVisibleMap = map == currentMap && WorldRendererUtility.WorldRenderedNow == false;
 
 			if (isVisibleMap)
 			{
@@ -125,13 +115,10 @@ namespace Puppeteer
 				}
 			}
 			else
-			{
 				map.weatherManager.DrawAllWeather();
-			}
 
-			var rememberedMap = Find.CurrentMap;
+			Renderer.fakeZoom = true;
 			SetCurrentMapDirectly(map);
-
 			Renderer.renderOffset = CurrentMapOffset();
 			Renderer.fakeViewRect = new CellRect(0, 0, map.Size.x, map.Size.z);
 
@@ -159,8 +146,8 @@ namespace Puppeteer
 			Renderer.PawnScreenRender(pawn, 1.5f);
 
 			Renderer.fakeViewRect = CellRect.Empty;
-			SetCurrentMapDirectly(rememberedMap);
 			Renderer.renderOffset = 0f;
+			SetCurrentMapDirectly(currentMap);
 			Renderer.fakeZoom = false;
 		}
 

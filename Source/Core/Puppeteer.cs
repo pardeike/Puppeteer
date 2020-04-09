@@ -1,4 +1,5 @@
-﻿using RimWorld;
+﻿using HarmonyLib;
+using RimWorld;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -234,35 +235,35 @@ namespace Puppeteer
 		ColonistBaseInfo.Injury[] GetInjuries(Pawn pawn)
 		{
 			return VisibleHediffGroupsInOrder(pawn, true)
-				.Select((IEnumerable<Hediff> diffs) =>
+				.Cast<IEnumerable<Hediff>>()
+				.Select(diffs =>
 				{
 					var hediffInfos = new List<ColonistBaseInfo.HediffInfo>();
-					var part = diffs.First<Hediff>().Part;
-					var name = part.LabelCap;
-					foreach (var grouping in from x in diffs group x by x.UIGroupKey)
+					var part = diffs.First().Part;
+					var name = part?.LabelCap ?? "WholeBody".Translate();
+					diffs.GroupBy(d => d.UIGroupKey).DoIf(grouping => grouping != null, grouping =>
 					{
 						ColonistBaseInfo.HediffInfo lastHediffInfo = null;
-						if (grouping != null)
-							foreach (var hediff2 in grouping)
+						grouping.DoIf(hediff2 => hediff2 != null, hediff2 =>
+						{
+							if (hediff2.LabelCap != lastHediffInfo?.name)
 							{
-								if (hediff2.LabelCap != lastHediffInfo?.name)
+								lastHediffInfo = new ColonistBaseInfo.HediffInfo()
 								{
-									lastHediffInfo = new ColonistBaseInfo.HediffInfo()
-									{
-										name = hediff2.LabelCap,
-										count = 1,
-										rgb = Tools.GetRGB(hediff2.LabelColor)
-									};
-									hediffInfos.Add(lastHediffInfo);
-								}
-								else
-								{
-									if (lastHediffInfo != null)
-										lastHediffInfo.count++;
-								}
+									name = hediff2.LabelCap,
+									count = 1,
+									rgb = Tools.GetRGB(hediff2.LabelColor)
+								};
+								hediffInfos.Add(lastHediffInfo);
 							}
-					}
-					var color = HealthUtility.GetPartConditionLabel(pawn, part).Second;
+							else
+							{
+								if (lastHediffInfo != null)
+									lastHediffInfo.count++;
+							}
+						});
+					});
+					var color = part == null ? HealthUtility.RedColor : HealthUtility.GetPartConditionLabel(pawn, part).Second;
 					return new ColonistBaseInfo.Injury() { name = name, hediffs = hediffInfos.ToArray(), rgb = Tools.GetRGB(color) };
 				})
 				.ToArray();
@@ -270,23 +271,18 @@ namespace Puppeteer
 
 		static readonly FieldInfo f_skillDefsInListOrderCached = Field(typeof(SkillUI), "skillDefsInListOrderCached");
 		static readonly FieldRef<List<SkillDef>> skillDefsInListOrderCachedRef = StaticFieldRefAccess<List<SkillDef>>(f_skillDefsInListOrderCached);
-		public ColonistBaseInfo.SkillInfo[] GetSkills(Pawn pawn)
+		public static ColonistBaseInfo.SkillInfo[] GetSkills(Pawn pawn)
 		{
 			var skills = pawn.skills;
 			return skillDefsInListOrderCachedRef()
 				.Select(skillDef => skills.GetSkill(skillDef))
-				.Select(skill =>
+				.Where(skill => skill.TotallyDisabled == false)
+				.Select(skill => new ColonistBaseInfo.SkillInfo()
 				{
-					var name = skill.def.skillLabel.CapitalizeFirst();
-					if (skill.TotallyDisabled)
-						return new ColonistBaseInfo.SkillInfo() { name = name, level = -1 };
-					return new ColonistBaseInfo.SkillInfo()
-					{
-						name = name,
-						level = skill.Level,
-						passion = (int)skill.passion,
-						progress = new[] { (int)skill.xpSinceLastLevel, (int)skill.XpRequiredForLevelUp }
-					};
+					name = skill.def.skillLabel.CapitalizeFirst(),
+					level = skill.Level,
+					passion = (int)skill.passion,
+					progress = new[] { (int)skill.xpSinceLastLevel, (int)skill.XpRequiredForLevelUp }
 				})
 				.ToArray();
 		}

@@ -88,6 +88,7 @@ namespace Puppeteer
 				return;
 			}
 
+			//LongEventHandler.QueueLongEvent(() => Log.Warning($"SEND {obj.GetData().Length} {obj.GetType().Name}"), "PuppeteerLog", false, null, false);
 			ws?.SendAsync(obj.GetData(), callback);
 		}
 
@@ -121,9 +122,9 @@ namespace Puppeteer
 			processor.Message(e.RawData);
 		}
 
-		private void Ws_OnError(object sender, WebSocketSharp.ErrorEventArgs e)
+		private void Ws_OnError(object sender, ErrorEventArgs e)
 		{
-			Log.Warning($"# Error: {e.Message}");
+			Log.Warning($"# Error: {e.Message} [HResult={e.Exception?.HResult}] [Exception.Message={e.Exception?.Message ?? ""}]");
 		}
 	}
 }
