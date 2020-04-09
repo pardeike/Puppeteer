@@ -44,9 +44,7 @@ namespace Puppeteer
 				}
 				Save();
 				Tools.SetColonistNickname(viewer.controlling, vID.name);
-				SendEarned(connection, viewer);
-				SendPortrait(connection, viewer);
-				SendState(connection, viewer);
+				SendAllState(connection, viewer);
 			}
 		}
 
@@ -95,13 +93,31 @@ namespace Puppeteer
 			});
 		}
 
-		static void SendState(Connection connection, Viewer viewer)
+		public void SendAreas(Connection connection, Viewer forViewer = null)
 		{
-			if (viewer.controlling?.Map != null)
+			void SendArea(Viewer viewer)
 			{
-				var areas = viewer.controlling.Map.areaManager.AllAreas.Where(a => a.AssignableAsAllowed()).Select(a => a.Label).ToArray();
-				connection.Send(new OutgoingState<string[]>() { viewer = viewer.vID, key = "zones", val = areas });
+				var pawn = viewer.controlling;
+				if (pawn != null)
+				{
+					var areas = pawn.Map.areaManager.AllAreas.Where(a => a.AssignableAsAllowed()).Select(a => a.Label).ToArray();
+					connection.Send(new OutgoingState<string[]>() { viewer = viewer.vID, key = "zones", val = areas });
+				}
 			}
+
+			if (forViewer != null)
+			{
+				SendArea(forViewer);
+				return;
+			}
+			state.DoIf(viewer => viewer.Value.connected, pair => SendArea(pair.Value));
+		}
+
+		public void SendAllState(Connection connection, Viewer viewer)
+		{
+			SendEarned(connection, viewer);
+			SendPortrait(connection, viewer);
+			SendAreas(connection, viewer);
 		}
 	}
 }

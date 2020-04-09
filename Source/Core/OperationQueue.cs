@@ -8,7 +8,8 @@ namespace Puppeteer.Core
 {
 	public enum OperationType
 	{
-		Portrait
+		Portrait,
+		SetState
 	}
 
 	public static class OperationQueue

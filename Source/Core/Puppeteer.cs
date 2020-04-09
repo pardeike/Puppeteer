@@ -16,7 +16,8 @@ namespace Puppeteer
 		GameEntered,
 		GameExited,
 		Save,
-		ColonistsChanged
+		ColonistsChanged,
+		AreasUpdated
 	}
 
 	public interface ICommandProcessor
@@ -89,6 +90,9 @@ namespace Puppeteer
 					if (firstTime == false)
 						colonists.SendAllColonists(connection);
 					firstTime = false;
+					break;
+				case Event.AreasUpdated:
+					viewers.SendAreas(connection);
 					break;
 			}
 		}

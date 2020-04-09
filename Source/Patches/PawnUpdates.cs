@@ -3,6 +3,7 @@ using Puppeteer.Core;
 using RimWorld;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -54,6 +55,22 @@ namespace Puppeteer
 		{
 			if (__instance.IsColonist)
 				Puppeteer.instance.SetEvent(Event.ColonistsChanged);
+		}
+	}
+
+	[HarmonyPatch]
+	static class Area_Patches
+	{
+		public static IEnumerable<MethodBase> TargetMethods()
+		{
+			yield return AccessTools.Method(typeof(AreaManager), "NotifyEveryoneAreaRemoved");
+			yield return AccessTools.Method(typeof(AreaManager), "TryMakeNewAllowed");
+			yield return AccessTools.Method(typeof(Area_Allowed), "SetLabel");
+		}
+
+		public static void Postfix()
+		{
+			Puppeteer.instance.SetEvent(Event.AreasUpdated);
 		}
 	}
 
@@ -122,6 +139,16 @@ namespace Puppeteer
 		{
 			Tools.RenderColonists();
 			OperationQueue.Process(OperationType.Portrait);
+		}
+	}
+
+	[HarmonyPatch(typeof(Widgets))]
+	[HarmonyPatch(nameof(Widgets.WidgetsOnGUI))]
+	static class Widgets_WidgetsOnGUI_Patch
+	{
+		public static void Postfix()
+		{
+			OperationQueue.Process(OperationType.SetState);
 		}
 	}
 
