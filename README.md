@@ -20,7 +20,7 @@ https://discord.gg/mG5D923
 ### For Viewers
 
 1) Make sure you understand that this is **far from complete**!
-2) Start your game and open a web browser at https://puppeteer.rimworld.live
+2) Open a web browser at https://puppeteer.rimworld.live
 3) Use the Twitch button (YouTube button currently under review) to log in
 4) After logging in, wait in the Lobby until a streamer has made their game available, then select it
 5) When the streamer sees that you are in the game and available, he/she might assign a colonist to you
