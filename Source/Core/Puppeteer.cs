@@ -195,17 +195,19 @@ namespace Puppeteer
 				var name = leadingThoughtInGroup.LabelCap;
 				if (thoughtGroup.Count > 1) name = $"{name} {thoughtGroup.Count}x";
 				var value = (int)pawn.needs.mood.thoughts.MoodOffsetOfGroup(leadingThoughtInGroup);
-				var minMemory = thoughtGroup.First() as Thought_Memory;
-				var maxMemory = thoughtGroup.Last() as Thought_Memory;
-				var min = 0f;
-				var max = 0f;
-				if (minMemory != null)
+				var duration = overallThoughtGroup.def.DurationTicks;
+				var memories = thoughtGroup.OfType<Thought_Memory>().Where(th => th.age > 0);
+				var min = memories.Any() ? (int)Math.Round(memories.Min(thought =>
 				{
-					var duration = overallThoughtGroup.def.DurationTicks;
-					(duration - minMemory.age).TicksToPeriod(out var y1, out var q1, out var d1, out min);
-					(duration - maxMemory.age).TicksToPeriod(out var y2, out var q2, out var d2, out max);
-				}
-				return new ColonistBaseInfo.ThoughtInfo() { name = name, value = value, min = (int)Math.Round(min), max = (int)Math.Round(max) };
+					(duration - thought.age).TicksToPeriod(out var y1, out var q1, out var d1, out var val);
+					return val;
+				})) : 0;
+				var max = memories.Any() ? (int)Math.Round(memories.Max(thought =>
+				{
+					(duration - thought.age).TicksToPeriod(out var y1, out var q1, out var d1, out var val);
+					return val;
+				})) : 0;
+				return new ColonistBaseInfo.ThoughtInfo() { name = name, value = value, min = min, max = max };
 			})
 			.ToArray();
 		}
