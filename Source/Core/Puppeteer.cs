@@ -32,7 +32,6 @@ namespace Puppeteer
 		readonly Timer earnTimer = new Timer(earnIntervalInSeconds * 1000) { AutoReset = true };
 		public Timer connectionRetryTimer = new Timer(10000) { AutoReset = true };
 
-		const bool developmentMode = true;
 		const int earnIntervalInSeconds = 2;
 		const int earnAmount = 10;
 
@@ -76,7 +75,7 @@ namespace Puppeteer
 			switch (evt)
 			{
 				case Event.GameEntered:
-					connection = new Connection(developmentMode, this);
+					connection = new Connection(this);
 					break;
 				case Event.GameExited:
 					connection?.Disconnect();

@@ -14,6 +14,12 @@ namespace Puppeteer
 {
 	public static class Tools
 	{
+		public static bool IsLocalDev()
+		{
+			var path = Path.Combine(GenFilePaths.ConfigFolderPath, "PuppeteerLocalDevelopment.txt");
+			return File.Exists(path);
+		}
+
 		public static string Base64Decode(this string value)
 		{
 			value = value.Replace('-', '+');

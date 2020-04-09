@@ -17,10 +17,10 @@ namespace Puppeteer
 		public bool isConnected = false;
 		DateTime nextRetry = new DateTime(0);
 
-		public Connection(bool localDev, ICommandProcessor processor)
+		public Connection(ICommandProcessor processor)
 		{
 			this.processor = processor;
-			endpoint = localDev ? "ws://localhost:3000" : "wss://puppeteer-central.herokuapp.com";
+			endpoint = Tools.IsLocalDev() ? "ws://localhost:3000" : "wss://puppeteer-central.herokuapp.com";
 
 			ws = new WebSocket(endpoint + "/connect") { Compression = CompressionMethod.Deflate };
 			ws.OnOpen += Ws_OnOpen;
@@ -31,7 +31,10 @@ namespace Puppeteer
 			action = FileWatcher.AddListener((action, file) =>
 			{
 				if (file == tokenFilename)
+				{
+					Log.Warning("Token file changed");
 					ws.Close();
+				}
 			});
 
 			Connect();
@@ -41,7 +44,11 @@ namespace Puppeteer
 		{
 			var token = ReadToken();
 			if (token != null && token.Length > 0)
+			{
+				Log.Warning("Token found");
 				ws.SetCookie(new WebSocketSharp.Net.Cookie("id_token", token));
+			}
+			Log.Warning("Connecting...");
 			ws.ConnectAsync();
 			nextRetry = new DateTime().AddSeconds(5);
 		}
@@ -103,6 +110,7 @@ namespace Puppeteer
 		private void Ws_OnOpen(object sender, EventArgs e)
 		{
 			isConnected = true;
+			Log.Warning("Connected");
 
 			ws.SendAsync("{\"type\":\"hello\"}", null);
 		}
@@ -110,6 +118,7 @@ namespace Puppeteer
 		private void Ws_OnClose(object sender, CloseEventArgs e)
 		{
 			isConnected = false;
+			Log.Warning("Disconnected");
 
 			// 1005 = server closed, was connectable
 			// 1006 server did not send close, probably no connection
