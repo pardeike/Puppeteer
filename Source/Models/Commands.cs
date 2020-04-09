@@ -81,14 +81,20 @@ namespace Puppeteer
 		{
 			public string name;
 			public int value;
+			public int marker;
 			public int[] treshholds;
 
 			static readonly FieldRef<Need, List<float>> threshPercentsRef = FieldRefAccess<Need, List<float>>(Field(typeof(Need), "threshPercents"));
 
 			public NeedInfo(Need rNeed)
 			{
+				var max = 1f;
+				if (rNeed.def.scaleBar && rNeed.MaxLevel < 1f)
+					max = rNeed.MaxLevel;
+
 				name = rNeed.LabelCap;
 				value = (int)(rNeed.CurLevel * 100);
+				marker = rNeed.CurInstantLevelPercentage >= 0 ? (int)(rNeed.CurInstantLevelPercentage * max * 100 + 0.5f) : -1;
 				treshholds = threshPercentsRef(rNeed)?.Select(p => (int)(p * 100)).ToArray() ?? Array.Empty<int>();
 			}
 		}
