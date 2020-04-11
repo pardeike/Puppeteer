@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using Newtonsoft.Json;
-using Puppeteer.Core;
 using RimWorld;
 using System;
 using System.Collections.Generic;
@@ -38,6 +37,13 @@ namespace Puppeteer
 		{
 			var data = JsonConvert.SerializeObject(state);
 			saveFileName.WriteConfig(data);
+		}
+
+		public Pawn GetColonist(ViewerID viewer)
+		{
+			var entry = FindEntry(viewer);
+			if (entry == null) return null;
+			return entry.GetPawn();
 		}
 
 		public void SendAllColonists(Connection connection)

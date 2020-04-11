@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using Puppeteer.Core;
 using RimWorld;
 using System.Collections.Generic;
 using System.Linq;
@@ -148,6 +147,7 @@ namespace Puppeteer
 	{
 		public static void Postfix()
 		{
+			OperationQueue.Process(OperationType.Job);
 			OperationQueue.Process(OperationType.SetState);
 		}
 	}

@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using Newtonsoft.Json;
-using Puppeteer.Core;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;

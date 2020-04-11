@@ -219,4 +219,21 @@ namespace Puppeteer
 		public string type = "colonists";
 		public List<ColonistInfo> colonists;
 	}
+
+	public class IncomingJob : JSONConvertable<IncomingJob>
+	{
+		public string type;
+		public ViewerID user;
+		public string id;
+		public string method;
+		public string[] args;
+	}
+
+	public class OutgoingJobResult : JSONConvertable<OutgoingJobResult>
+	{
+		public string type = "job";
+		public ViewerID viewer;
+		public string id;
+		public string info; // json
+	}
 }

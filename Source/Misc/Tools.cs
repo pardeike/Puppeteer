@@ -77,6 +77,20 @@ namespace Puppeteer
 			return 2000f * (1 + Current.Game.currentMapIndex);
 		}
 
+		static readonly string[] directions16 = new[]
+		{
+			 "E", "E-SE", "SE", "S-SE", "S", "S-SW", "SW", "W-SW",
+			 "W", "W-NW", "NW", "N-NW", "N", "N-NE", "NE", "E-NE",
+		};
+		public static string GetDirectionalString(Thing from, Thing to)
+		{
+			var p1 = from.Position.ToVector3();
+			var p2 = to.Position.ToVector3();
+			var a = (int)(360 + p1.AngleToFlat(p2) + 11.25f) % 360;
+			var i = (int)(a / 22.5f);
+			return i < 0 || i > 15 ? "?" : directions16[i];
+		}
+
 		static int colonistTicks = 0;
 		const float colonistEveryTicks = 60f;
 		static int colonistCounter = -1;

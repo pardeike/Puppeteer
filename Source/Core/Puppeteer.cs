@@ -140,6 +140,11 @@ namespace Puppeteer
 						var state = IncomingState.Create(msg);
 						colonists.SetState(state);
 						break;
+					case "job":
+						var job = IncomingJob.Create(msg);
+						var colonist = colonists.GetColonist(job.user);
+						Jobs.Run(connection, colonist, job);
+						break;
 					default:
 						Log.Warning($"unknown command '{cmd.type}'");
 						break;

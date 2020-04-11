@@ -2,7 +2,7 @@
 using UnityEngine;
 using Verse;
 
-namespace Puppeteer.Core
+namespace Puppeteer
 {
 	public static class ColonistCameraManager
 	{

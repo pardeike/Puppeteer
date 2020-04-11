@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Verse.Noise;
 
-namespace Puppeteer.Core
+namespace Puppeteer
 {
 	public enum OperationType
 	{
 		Portrait,
-		SetState
+		SetState,
+		Job
 	}
 
 	public static class OperationQueue

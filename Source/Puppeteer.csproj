@@ -45,9 +45,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Core\ColonistCamera.cs" />
+    <Compile Include="Core\Jobs.cs" />
     <Compile Include="Core\OperationQueue.cs" />
     <Compile Include="Core\Renderer.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="Jobs\Fight.cs" />
     <Compile Include="Misc\ConcurrentQueue.cs" />
     <Compile Include="Misc\FileWatcher.cs" />
     <Compile Include="Misc\JSONConvertable.cs" />
@@ -58,6 +60,7 @@
     <Compile Include="Misc\CrossPromotion.cs" />
     <Compile Include="Misc\GlobalSuppressions.cs" />
     <Compile Include="Misc\Main.cs" />
+    <Compile Include="Models\JobResult.cs" />
     <Compile Include="Models\PawnUpdates.cs" />
     <Compile Include="Models\Commands.cs" />
     <Compile Include="Models\ViewerID.cs" />
