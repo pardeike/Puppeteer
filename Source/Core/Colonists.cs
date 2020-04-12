@@ -154,6 +154,7 @@ namespace Puppeteer
 					});
 					break;
 				case "priority":
+				{
 					var val = Convert.ToInt32(state.val);
 					var idx = val / 100;
 					var prio = val % 100;
@@ -168,6 +169,26 @@ namespace Puppeteer
 						}
 					});
 					break;
+				}
+				case "schedule":
+				{
+					var pair = Convert.ToString(state.val).Split(':');
+					if (pair.Length == 2)
+					{
+						var idx = Tools.SafeParse(pair[0]);
+						if (idx.HasValue)
+						{
+							var type = Tools.Assignments.FirstOrDefault(ass => ass.Value == pair[1]).Key;
+							OperationQueue.Add(OperationType.SetState, () =>
+							{
+								var pawn = entry.GetPawn();
+								if (pawn != null)
+									pawn.timetable.SetAssignment(idx.Value, type);
+							});
+						}
+					}
+					break;
+				}
 				default:
 					Log.Warning($"Unknown set value operation with key {state.key}");
 					break;

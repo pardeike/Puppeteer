@@ -258,6 +258,7 @@ namespace Puppeteer
 		public class Schedules
 		{
 			public string pawn;
+			public bool yours;
 			public string val;
 		}
 

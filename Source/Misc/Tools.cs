@@ -34,6 +34,18 @@ namespace Puppeteer
 			return Encoding.UTF8.GetString(data);
 		}
 
+		public static int? SafeParse(string str)
+		{
+			try
+			{
+				return int.Parse(str);
+			}
+			catch
+			{
+				return null;
+			}
+		}
+
 		public static int[] GetRGB(Color color)
 		{
 			return new[] { (int)(255 * color.r), (int)(255 * color.g), (int)(255 * color.b) };
@@ -79,6 +91,14 @@ namespace Puppeteer
 		{
 			return 2000f * (1 + Current.Game.currentMapIndex);
 		}
+
+		public static readonly Dictionary<TimeAssignmentDef, string> Assignments = new Dictionary<TimeAssignmentDef, string>()
+		{
+			{ TimeAssignmentDefOf.Anything, "A" },
+			{ TimeAssignmentDefOf.Work, "W" },
+			{ TimeAssignmentDefOf.Joy, "J" },
+			{ TimeAssignmentDefOf.Sleep, "S" },
+		};
 
 		static readonly string[] directions16 = new[]
 		{

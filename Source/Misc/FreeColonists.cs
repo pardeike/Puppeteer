@@ -3,7 +3,7 @@ using Verse;
 
 namespace Puppeteer
 {
-	public class FreeColonists
+	public static class FreeColonists
 	{
 		static readonly Dictionary<Map, List<Pawn>> pawns = new Dictionary<Map, List<Pawn>>();
 

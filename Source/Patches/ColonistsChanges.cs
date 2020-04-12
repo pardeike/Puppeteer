@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using RimWorld;
 using RimWorld.Planet;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Verse;
@@ -91,6 +92,16 @@ namespace Puppeteer
 	[HarmonyPatch(typeof(Pawn_TimetableTracker))]
 	[HarmonyPatch(nameof(Pawn_TimetableTracker.SetAssignment))]
 	static class Pawn_TimetableTracker_SetPriority_Patch
+	{
+		public static void Postfix()
+		{
+			Puppeteer.instance.SetEvent(Event.SchedulesChanged);
+		}
+	}
+
+	[HarmonyPatch(typeof(Pawn_TimetableTracker), MethodType.Constructor)]
+	[HarmonyPatch(new Type[] { typeof(Pawn) })]
+	static class Pawn_TimetableTracker_Constructor_Patch
 	{
 		public static void Postfix()
 		{

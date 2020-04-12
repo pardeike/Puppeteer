@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using Newtonsoft.Json;
-using RimWorld;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -157,25 +156,17 @@ namespace Puppeteer
 			SendStates(connection, "priorities", GetResult, null);
 		}
 
-		static readonly Dictionary<TimeAssignmentDef, string> assignments = new Dictionary<TimeAssignmentDef, string>()
-		{
-			{ TimeAssignmentDefOf.Anything, "A" },
-			{ TimeAssignmentDefOf.Work, "W" },
-			{ TimeAssignmentDefOf.Joy, "J" },
-			{ TimeAssignmentDefOf.Sleep, "S" },
-		};
-
 		public void SendSchedules(Connection connection)
 		{
-			ScheduleInfo GetResult(Pawn _unusedp)
+			ScheduleInfo GetResult(Pawn pawn)
 			{
 				string GetValues(Pawn p)
 				{
 					var schedules = Enumerable.Range(0, 24).Select(hour => p.timetable.GetAssignment(hour)).ToArray();
-					return schedules.Join(s => assignments[s], "");
+					return schedules.Join(s => Tools.Assignments[s], "");
 				}
 				var rows = Tools.AllColonists()
-					.Select(colonist => new ScheduleInfo.Schedules() { pawn = colonist.LabelShortCap, val = GetValues(colonist) })
+					.Select(colonist => new ScheduleInfo.Schedules() { pawn = colonist.LabelShortCap, yours = colonist == pawn, val = GetValues(colonist) })
 					.ToArray();
 				return new ScheduleInfo() { rows = rows };
 			}
