@@ -2,6 +2,7 @@
 using RimWorld;
 using RimWorld.Planet;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -14,6 +15,8 @@ namespace Puppeteer
 {
 	public static class Tools
 	{
+
+
 		public static bool IsLocalDev()
 		{
 			var path = Path.Combine(GenFilePaths.ConfigFolderPath, "PuppeteerLocalDevelopment.txt");
@@ -62,7 +65,7 @@ namespace Puppeteer
 		public static Pawn ColonistForThingID(int thingID)
 		{
 			return Find.Maps
-				.SelectMany(map => map.mapPawns.FreeColonists)
+				.SelectMany(map => FreeColonists.Get(map))
 				.FirstOrDefault(pawn => pawn.thingIDNumber == thingID);
 		}
 
@@ -96,7 +99,7 @@ namespace Puppeteer
 		static int colonistCounter = -1;
 		static Pawn ColonistRoundRobbin()
 		{
-			var colonists = Current.Game.Maps.SelectMany(map => map.mapPawns.FreeColonists).ToList();
+			var colonists = Current.Game.Maps.SelectMany(map => FreeColonists.Get(map)).ToList();
 			if (colonists.Count == 0) return null;
 			var delay = colonistEveryTicks / colonists.Count + 1;
 			colonistTicks++;
@@ -105,6 +108,27 @@ namespace Puppeteer
 			var idx = (colonistCounter + 1) % colonists.Count;
 			colonistCounter = idx;
 			return colonists[idx];
+		}
+
+		public static List<Pawn> AllColonists(Map forMap = null)
+		{
+			var colonists = new List<Pawn>();
+			Find.Maps.DoIf(map => forMap == null || map == forMap, map =>
+			{
+				var pawns = FreeColonists.Get(map);
+				PlayerPawnsDisplayOrderUtility.Sort(pawns);
+				colonists.AddRange(pawns);
+			});
+			if (forMap == null)
+				Find.WorldObjects.Caravans
+					.Where(caravan => caravan.IsPlayerControlled)
+					.OrderBy(caravan => caravan.ID).Do(caravan =>
+					{
+						var pawns = caravan.PawnsListForReading;
+						PlayerPawnsDisplayOrderUtility.Sort(pawns);
+						colonists.AddRange(pawns);
+					});
+			return colonists;
 		}
 
 		public static void SetColonistNickname(Pawn pawn, string nick)

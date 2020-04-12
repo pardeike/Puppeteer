@@ -236,4 +236,31 @@ namespace Puppeteer
 		public string id;
 		public string info; // json
 	}
+
+	public class PrioritiyInfo
+	{
+		public class Priorities
+		{
+			public string pawn;
+			public bool yours;
+			public int[] val; // valus from 00-24 [Passion(0-2)][Priority(0-4)] and -1 for disabled
+		}
+
+		public string[] columns;
+		public bool manual;
+		public int norm;
+		public int max;
+		public Priorities[] rows;
+	}
+
+	public class ScheduleInfo
+	{
+		public class Schedules
+		{
+			public string pawn;
+			public string val;
+		}
+
+		public Schedules[] rows;
+	}
 }

@@ -69,7 +69,7 @@ namespace Puppeteer
 
 		public static void Postfix()
 		{
-			Puppeteer.instance.SetEvent(Event.AreasUpdated);
+			Puppeteer.instance.SetEvent(Event.AreasChanged);
 		}
 	}
 

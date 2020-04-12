@@ -1,8 +1,11 @@
 ﻿using HarmonyLib;
 using Newtonsoft.Json;
+using RimWorld;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Verse;
 
 namespace Puppeteer
 {
@@ -92,24 +95,91 @@ namespace Puppeteer
 			});
 		}
 
-		public void SendAreas(Connection connection, Viewer forViewer = null)
+		void SendStates<T>(Connection connection, string key, Func<Pawn, T> valueFunction, Viewer forViewer = null)
 		{
-			void SendArea(Viewer viewer)
+			void SendState(Viewer viewer)
 			{
 				var pawn = viewer.controlling;
 				if (pawn != null)
 				{
-					var areas = pawn.Map.areaManager.AllAreas.Where(a => a.AssignableAsAllowed()).Select(a => a.Label).ToArray();
-					connection.Send(new OutgoingState<string[]>() { viewer = viewer.vID, key = "zones", val = areas });
+					connection.Send(new OutgoingState<T>() { viewer = viewer.vID, key = key, val = valueFunction(viewer.controlling) });
 				}
 			}
 
 			if (forViewer != null)
 			{
-				SendArea(forViewer);
+				SendState(forViewer);
 				return;
 			}
-			state.DoIf(viewer => viewer.Value.connected, pair => SendArea(pair.Value));
+			state.DoIf(viewer => viewer.Value.connected, pair => SendState(pair.Value));
+		}
+
+		public void SendAreas(Connection connection, Viewer forViewer = null)
+		{
+			string[] GetResult(Pawn pawn)
+			{
+				return pawn.Map.areaManager.AllAreas
+					.Where(a => a.AssignableAsAllowed())
+					.Select(a => a.Label).ToArray();
+			}
+			SendStates(connection, "zones", GetResult, forViewer);
+		}
+
+		public void SendPriorities(Connection connection)
+		{
+			PrioritiyInfo GetResult(Pawn pawn)
+			{
+				int[] GetValues(Pawn p)
+				{
+					return Integrations.GetWorkTypeDefs().Select(def =>
+					{
+						var priority = p.workSettings.GetPriority(def);
+						var passion = (int)p.skills.MaxPassionOfRelevantSkillsFor(def);
+						var disabled = def.relevantSkills.Any(skill => p.skills.GetSkill(skill).TotallyDisabled);
+						return disabled ? -1 : passion * 100 + priority;
+					})
+					.ToArray();
+				}
+
+				var columns = Integrations.GetWorkTypeDefs().Select(def => def.labelShort).ToArray();
+				var rows = Tools.AllColonists()
+					.Select(colonist => new PrioritiyInfo.Priorities() { pawn = colonist.LabelShortCap, yours = colonist == pawn, val = GetValues(colonist) })
+					.ToArray();
+				return new PrioritiyInfo()
+				{
+					columns = columns,
+					manual = Current.Game.playSettings.useWorkPriorities,
+					norm = Integrations.defaultPriority,
+					max = Integrations.maxPriority,
+					rows = rows
+				};
+			}
+			SendStates(connection, "priorities", GetResult, null);
+		}
+
+		static readonly Dictionary<TimeAssignmentDef, string> assignments = new Dictionary<TimeAssignmentDef, string>()
+		{
+			{ TimeAssignmentDefOf.Anything, "A" },
+			{ TimeAssignmentDefOf.Work, "W" },
+			{ TimeAssignmentDefOf.Joy, "J" },
+			{ TimeAssignmentDefOf.Sleep, "S" },
+		};
+
+		public void SendSchedules(Connection connection)
+		{
+			ScheduleInfo GetResult(Pawn _unusedp)
+			{
+				string GetValues(Pawn p)
+				{
+					var schedules = Enumerable.Range(0, 24).Select(hour => p.timetable.GetAssignment(hour)).ToArray();
+					return schedules.Join(s => assignments[s], "");
+				}
+				var rows = Tools.AllColonists()
+					.Select(colonist => new ScheduleInfo.Schedules() { pawn = colonist.LabelShortCap, val = GetValues(colonist) })
+					.ToArray();
+				return new ScheduleInfo() { rows = rows };
+			}
+			SendStates(connection, "schedules", GetResult, null);
 		}
 
 		public void SendAllState(Connection connection, Viewer viewer)
@@ -117,6 +187,8 @@ namespace Puppeteer
 			SendEarned(connection, viewer);
 			SendPortrait(connection, viewer);
 			SendAreas(connection, viewer);
+			SendPriorities(connection);
+			SendSchedules(connection);
 		}
 	}
 }

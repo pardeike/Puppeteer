@@ -26,6 +26,22 @@ namespace Puppeteer
 		}
 	}
 
+	[HarmonyPatch(typeof(Map))]
+	[HarmonyPatch(nameof(Map.MapUpdate))]
+	static class Map_MapUpdate_Patch
+	{
+		public static void Prefix(Map __instance)
+		{
+			FreeColonists.Update(__instance);
+		}
+
+		public static void Postfix()
+		{
+			Puppeteer.instance.SetEvent(Event.SendChangedPriorities);
+			Puppeteer.instance.SetEvent(Event.SendChangedSchedules);
+		}
+	}
+
 	[HarmonyPatch]
 	static class GameDataSaveLoader_SaveGame_Patch
 	{

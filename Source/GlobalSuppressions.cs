@@ -6,3 +6,4 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Performance", "CA1810:Initialize reference type static fields inline", Justification = "<Pending>", Scope = "member", Target = "~M:Puppeteer.FileWatcher.#cctor")]
+[assembly: SuppressMessage("Performance", "CA1810:Initialize reference type static fields inline", Justification = "<Pending>", Scope = "member", Target = "~M:Puppeteer.Integrations.#cctor")]

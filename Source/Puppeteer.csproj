@@ -52,8 +52,11 @@
     <Compile Include="Jobs\Fight.cs" />
     <Compile Include="Misc\ConcurrentQueue.cs" />
     <Compile Include="Misc\FileWatcher.cs" />
+    <Compile Include="Misc\FreeColonists.cs" />
+    <Compile Include="Misc\Integrations.cs" />
     <Compile Include="Misc\JSONConvertable.cs" />
     <Compile Include="Misc\MatrixTools.cs" />
+    <Compile Include="Misc\Settings.cs" />
     <Compile Include="Models\Colonist.cs" />
     <Compile Include="Core\Colonists.cs" />
     <Compile Include="Misc\Connection.cs" />

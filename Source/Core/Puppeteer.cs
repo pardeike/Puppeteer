@@ -17,7 +17,11 @@ namespace Puppeteer
 		GameExited,
 		Save,
 		ColonistsChanged,
-		AreasUpdated
+		AreasChanged,
+		PrioritiesChanged,
+		SendChangedPriorities,
+		SchedulesChanged,
+		SendChangedSchedules,
 	}
 
 	public interface ICommandProcessor
@@ -40,6 +44,8 @@ namespace Puppeteer
 		readonly Viewers viewers;
 		readonly Colonists colonists;
 		bool firstTime = true;
+		bool prioritiesChanged = false;
+		bool schedulesChanged = false;
 
 		static Func<Pawn, bool, IEnumerable<IGrouping<BodyPartRecord, Hediff>>> VisibleHediffGroupsInOrder;
 
@@ -91,8 +97,28 @@ namespace Puppeteer
 						colonists.SendAllColonists(connection);
 					firstTime = false;
 					break;
-				case Event.AreasUpdated:
+				case Event.AreasChanged:
 					viewers.SendAreas(connection);
+					break;
+				case Event.PrioritiesChanged:
+					prioritiesChanged = true;
+					break;
+				case Event.SendChangedPriorities:
+					if (prioritiesChanged)
+					{
+						prioritiesChanged = false;
+						viewers.SendPriorities(connection);
+					}
+					break;
+				case Event.SchedulesChanged:
+					schedulesChanged = true;
+					break;
+				case Event.SendChangedSchedules:
+					if (schedulesChanged)
+					{
+						schedulesChanged = false;
+						viewers.SendSchedules(connection);
+					}
 					break;
 			}
 		}

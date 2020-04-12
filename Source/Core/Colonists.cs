@@ -49,23 +49,7 @@ namespace Puppeteer
 		public void SendAllColonists(Connection connection)
 		{
 			if (connection == null) return;
-			var allPawns = new List<Pawn>();
-			Find.Maps.Do(map =>
-			{
-				var pawns = map.mapPawns.FreeColonists.ToList();
-				PlayerPawnsDisplayOrderUtility.Sort(pawns);
-				allPawns.AddRange(pawns);
-			});
-			Find.WorldObjects.Caravans
-				.Where(caravan => caravan.IsPlayerControlled)
-				.OrderBy(caravan => caravan.ID).Do(caravan =>
-				{
-					var pawns = caravan.PawnsListForReading;
-					PlayerPawnsDisplayOrderUtility.Sort(pawns);
-					allPawns.AddRange(pawns);
-				});
-
-			var colonists = allPawns.Select(p =>
+			var colonists = Tools.AllColonists().Select(p =>
 			{
 				ViewerID controller = null;
 				if (state.TryGetValue("" + p.thingIDNumber, out var colonist))
@@ -169,8 +153,23 @@ namespace Puppeteer
 						}
 					});
 					break;
+				case "priority":
+					var val = Convert.ToInt32(state.val);
+					var idx = val / 100;
+					var prio = val % 100;
+					OperationQueue.Add(OperationType.SetState, () =>
+					{
+						var pawn = entry.GetPawn();
+						if (pawn != null)
+						{
+							var defs = Integrations.GetWorkTypeDefs().ToArray();
+							if (idx >= 0 && idx < defs.Length)
+								pawn.workSettings.SetPriority(defs[idx], prio);
+						}
+					});
+					break;
 				default:
-					Log.Warning($"Unknown set value operation with key ${state.key}");
+					Log.Warning($"Unknown set value operation with key {state.key}");
 					break;
 			}
 		}

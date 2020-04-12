@@ -67,4 +67,34 @@ namespace Puppeteer
 			Puppeteer.instance.SetEvent(Event.ColonistsChanged);
 		}
 	}
+
+	[HarmonyPatch(typeof(Pawn_WorkSettings))]
+	[HarmonyPatch(nameof(Pawn_WorkSettings.SetPriority))]
+	static class Pawn_WorkSettings_SetPriority_Patch
+	{
+		public static void Postfix()
+		{
+			Puppeteer.instance.SetEvent(Event.PrioritiesChanged);
+		}
+	}
+
+	[HarmonyPatch(typeof(Pawn_WorkSettings))]
+	[HarmonyPatch(nameof(Pawn_WorkSettings.Notify_UseWorkPrioritiesChanged))]
+	static class Pawn_WorkSettings_Notify_UseWorkPrioritiesChanged_Patch
+	{
+		public static void Postfix()
+		{
+			Puppeteer.instance.SetEvent(Event.PrioritiesChanged);
+		}
+	}
+
+	[HarmonyPatch(typeof(Pawn_TimetableTracker))]
+	[HarmonyPatch(nameof(Pawn_TimetableTracker.SetAssignment))]
+	static class Pawn_TimetableTracker_SetPriority_Patch
+	{
+		public static void Postfix()
+		{
+			Puppeteer.instance.SetEvent(Event.SchedulesChanged);
+		}
+	}
 }
