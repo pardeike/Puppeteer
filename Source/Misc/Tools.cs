@@ -6,17 +6,17 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using UnityEngine;
 using Verse;
+using Verse.AI;
 
 namespace Puppeteer
 {
 	public static class Tools
 	{
-
-
 		public static bool IsLocalDev()
 		{
 			var path = Path.Combine(GenFilePaths.ConfigFolderPath, "PuppeteerLocalDevelopment.txt");
@@ -77,8 +77,15 @@ namespace Puppeteer
 		public static Pawn ColonistForThingID(int thingID)
 		{
 			return Find.Maps
-				.SelectMany(map => FreeColonists.Get(map))
+				.SelectMany(map => PlayerPawns.FreeColonists(map))
 				.FirstOrDefault(pawn => pawn.thingIDNumber == thingID);
+		}
+
+		static readonly MethodInfo m_HasRangedAttack = AccessTools.Method(typeof(AttackTargetFinder), "HasRangedAttack");
+		static readonly FastInvokeHandler d_HasRangedAttack = MethodInvoker.GetHandler(m_HasRangedAttack);
+		public static bool HasRangedAttack(Pawn pawn)
+		{
+			return (bool)d_HasRangedAttack(null, new object[] { pawn });
 		}
 
 		public static void SetCurrentMapDirectly(Map map)
@@ -114,12 +121,20 @@ namespace Puppeteer
 			return i < 0 || i > 15 ? "?" : directions16[i];
 		}
 
+		public static T GetThingFromArgs<T>(Pawn pawn, string[] args, int idx) where T : Thing
+		{
+			var map = pawn?.Map;
+			if (map == null) return null;
+			var thingID = int.Parse(args[idx]);
+			return map.listerThings.AllThings.OfType<T>().FirstOrDefault(p => p.thingIDNumber == thingID) as T;
+		}
+
 		static int colonistTicks = 0;
 		const float colonistEveryTicks = 60f;
 		static int colonistCounter = -1;
 		static Pawn ColonistRoundRobbin()
 		{
-			var colonists = Current.Game.Maps.SelectMany(map => FreeColonists.Get(map)).ToList();
+			var colonists = Current.Game.Maps.SelectMany(map => PlayerPawns.FreeColonists(map)).ToList();
 			if (colonists.Count == 0) return null;
 			var delay = colonistEveryTicks / colonists.Count + 1;
 			colonistTicks++;
@@ -130,12 +145,23 @@ namespace Puppeteer
 			return colonists[idx];
 		}
 
+		public static double GetPathingTime(Pawn pawn, IntVec3 destination)
+		{
+			var pos = pawn.Position;
+			var traverseParams = TraverseParms.For(pawn, Danger.Deadly, TraverseMode.PassDoors, false);
+			var path = pawn.Map.pathFinder.FindPath(pawn.Position, destination, traverseParams, PathEndMode.Touch);
+			var cost = path.TotalCost;
+			var min = Math.Floor(cost * 60f / GenDate.TicksPerHour);
+			path.ReleaseToPool();
+			return min;
+		}
+
 		public static List<Pawn> AllColonists(Map forMap = null)
 		{
 			var colonists = new List<Pawn>();
 			Find.Maps.DoIf(map => forMap == null || map == forMap, map =>
 			{
-				var pawns = FreeColonists.Get(map);
+				var pawns = PlayerPawns.FreeColonists(map);
 				PlayerPawnsDisplayOrderUtility.Sort(pawns);
 				colonists.AddRange(pawns);
 			});

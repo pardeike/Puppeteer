@@ -40,6 +40,30 @@ namespace Puppeteer
 					RunOnQueue(AttackTarget);
 					break;
 
+				case "get-weapons":
+					RunOnQueue(GetWeapons);
+					break;
+
+				case "select-weapon":
+					RunOnQueue(SelectWeapon);
+					break;
+
+				case "get-rest":
+					RunOnQueue(GetRest);
+					break;
+
+				case "do-rest":
+					RunOnQueue(DoRest);
+					break;
+
+				case "get-tend":
+					RunOnQueue(GetTend);
+					break;
+
+				case "do-tend":
+					RunOnQueue(DoTend);
+					break;
+
 				default:
 					Log.Warning($"unknown job method '{job.method}'");
 					break;
@@ -53,6 +77,9 @@ namespace Puppeteer
 
 			if (args.Length != 1) return "need-1-arg";
 			var melee = bool.Parse(args[0]);
+
+			if (melee == false && Tools.HasRangedAttack(pawn) == false)
+				return new AttackResult() { results = new List<AttackResult.Result>() };
 
 			var map = pawn.Map;
 			var results = map?.attackTargetsCache
@@ -71,7 +98,7 @@ namespace Puppeteer
 				.OrderBy(pair => pair.Second)
 				.Select(pair => new AttackResult.Result()
 				{
-					name = $"{pair.First.LabelCap} ({Tools.GetDirectionalString(pawn, pair.First)})",
+					name = $"{pair.First.LabelCap} ({Tools.GetPathingTime(pawn, pair.First.Position)}m {Tools.GetDirectionalString(pawn, pair.First)})",
 					id = pair.First.thingIDNumber
 				})
 				.ToList() ?? new List<AttackResult.Result>();
@@ -85,17 +112,14 @@ namespace Puppeteer
 			try
 			{
 				if (args.Length != 2) return "need-2-args";
-				var thingID = int.Parse(args[0]);
-				var melee = bool.Parse(args[1]);
-				if (pawn == null) return "no-colonist";
-				var map = pawn.Map;
-				if (map == null) return "no-map";
+
+				var target = Tools.GetThingFromArgs<Pawn>(pawn, args, 0);
+				if (target == null) return "no";
 
 				if (pawn.Drafted == false)
 					pawn.drafter.Drafted = true;
 
-				var target = map.listerThings.AllThings.OfType<Pawn>().FirstOrDefault(p => p.thingIDNumber == thingID);
-
+				var melee = bool.Parse(args[1]);
 				if (melee == false)
 				{
 					var giver = new FightEnemy(target);
@@ -117,6 +141,109 @@ namespace Puppeteer
 			{
 				return "err";
 			}
+		}
+
+		static object GetWeapons(Pawn pawn, string[] args)
+		{
+			var map = pawn.Map;
+			if (map == null) return new List<ItemResult.Result>();
+
+			if (args.Length != 1) return "need-1-arg";
+			var selector = args[0];
+
+			var things = map.listerThings
+				.ThingsInGroup(ThingRequestGroup.Weapon);
+
+			if (selector == "best")
+				things.Sort(new MarketValueSorter());
+			if (selector == "near")
+				things.Sort(new DistanceSorter(pawn.Position));
+
+			var weapons = new List<Thing>();
+			var knownDefs = new HashSet<ThingDef>();
+			foreach (var thing in things)
+			{
+				if (knownDefs.Contains(thing.def) == false)
+				{
+					_ = knownDefs.Add(thing.def);
+					weapons.Add(thing);
+				}
+			}
+
+			var results = weapons.Select(thing => new ItemResult.Result()
+			{
+				name = $"{thing.LabelCap} ({Tools.GetPathingTime(pawn, thing.Position)}m {Tools.GetDirectionalString(pawn, thing)})",
+				id = thing.thingIDNumber
+			});
+			return new ItemResult() { results = results.ToList() };
+		}
+
+		static object SelectWeapon(Pawn pawn, string[] args)
+		{
+			var weapon = Tools.GetThingFromArgs<Thing>(pawn, args, 0);
+			if (weapon == null) return "no";
+			return pawn.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.Equip, weapon), JobTag.Misc) ? "ok" : "no";
+		}
+
+		static object GetRest(Pawn pawn, string[] args)
+		{
+			var map = pawn.Map;
+			if (map == null) return new List<ItemResult.Result>();
+
+			var bedInfos = map.listerThings
+				.ThingsInGroup(ThingRequestGroup.Bed)
+				.OfType<Building_Bed>()
+				.Where(bed => bed.Medical)
+				.Select(bed =>
+				{
+					var info = bed.LabelShortCap;
+					var occupant = bed.CurOccupants.FirstOrDefault();
+					if (occupant != null) info += $", used by {occupant.LabelShortCap}";
+					return new Pair<Building_Bed, string>(bed, info);
+				});
+
+			var results = bedInfos.Select(pair =>
+			{
+				var bed = pair.First;
+				var info = pair.Second;
+				return new ItemResult.Result()
+				{
+					name = $"{info} ({Tools.GetPathingTime(pawn, bed.Position)}m {Tools.GetDirectionalString(pawn, bed)})",
+					id = bed.thingIDNumber
+				};
+			});
+			return new ItemResult() { results = results.ToList() };
+		}
+
+		static object DoRest(Pawn pawn, string[] args)
+		{
+			var bed = Tools.GetThingFromArgs<Building_Bed>(pawn, args, 0);
+			if (bed == null) return "no";
+			if (pawn.Drafted)
+				pawn.drafter.Drafted = false;
+			return pawn.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.LayDown, bed), JobTag.Misc) ? "ok" : "no";
+		}
+
+		static object GetTend(Pawn pawn, string[] args)
+		{
+			var pawns = PlayerPawns.AllPawns(pawn.Map)
+				.Where(p => p != pawn && p.health.HasHediffsNeedingTendByPlayer(false) && p.CurrentBed() != null);
+
+			var results = pawns.Select(injured => new ItemResult.Result()
+			{
+				name = $"{injured.LabelCap} ({Tools.GetPathingTime(pawn, injured.Position)}m {Tools.GetDirectionalString(pawn, injured)})",
+				id = injured.thingIDNumber
+			});
+			return new ItemResult() { results = results.ToList() };
+		}
+
+		static object DoTend(Pawn pawn, string[] args)
+		{
+			var injured = Tools.GetThingFromArgs<Pawn>(pawn, args, 0);
+			if (injured == null) return "no";
+			if (pawn.Drafted)
+				pawn.drafter.Drafted = false;
+			return pawn.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.TendPatient, injured), JobTag.Misc) ? "ok" : "no";
 		}
 	}
 }

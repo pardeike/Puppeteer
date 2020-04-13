@@ -32,7 +32,7 @@ namespace Puppeteer
 	{
 		public static void Prefix(Map __instance)
 		{
-			FreeColonists.Update(__instance);
+			PlayerPawns.Update(__instance);
 		}
 
 		public static void Postfix()

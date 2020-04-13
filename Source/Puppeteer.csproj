@@ -50,9 +50,10 @@
     <Compile Include="Core\Renderer.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Jobs\Fight.cs" />
+    <Compile Include="Misc\Comparers.cs" />
     <Compile Include="Misc\ConcurrentQueue.cs" />
     <Compile Include="Misc\FileWatcher.cs" />
-    <Compile Include="Misc\FreeColonists.cs" />
+    <Compile Include="Misc\PlayerPawns.cs" />
     <Compile Include="Misc\Integrations.cs" />
     <Compile Include="Misc\JSONConvertable.cs" />
     <Compile Include="Misc\MatrixTools.cs" />
