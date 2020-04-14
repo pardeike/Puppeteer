@@ -39,18 +39,11 @@ namespace Puppeteer
 
 		public static void PawnScreenRender(Pawn pawn, float radius)
 		{
-			var camera = Find.Camera;
-			var rememberFarClipPlane = camera.farClipPlane;
-			var rememberPosition = camera.transform.position;
-			var rememberOrthographicSize = camera.orthographicSize;
-
-			// var camera = ColonistCameraManager.Camera;
-			var subCameras = subcamerasRef(Current.SubcameraDriver);
+			var camera = RenderCamera.camera;
+			if (camera == null) return;
 
 			var cameraPos = new Vector3(renderOffset + pawn.DrawPos.x, 40f, pawn.DrawPos.z);
 			SetCamera(camera, ref cameraPos, radius);
-			for (var i = 0; i < subCameras.Length; i++)
-				SetCamera(subCameras[i], ref cameraPos, radius);
 
 			var renderTexture = RenderTexture.GetTemporary(imageSize, imageSize, 24);
 			camera.targetTexture = renderTexture;
@@ -63,12 +56,8 @@ namespace Puppeteer
 			camera.targetTexture = null;
 			RenderTexture.active = null;
 
-			SetCamera(camera, ref rememberPosition, rememberOrthographicSize);
-			camera.farClipPlane = rememberFarClipPlane;
-
 			var jpgData = imageTexture.EncodeToJPG(60);
 			Puppeteer.instance.PawnOnMap(pawn, jpgData);
-			Puppeteer.instance.UpdateColonist(pawn); // TODO: send only when changed
 		}
 	}
 }

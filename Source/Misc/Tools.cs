@@ -15,8 +15,15 @@ using Verse.AI;
 
 namespace Puppeteer
 {
+	[StaticConstructorOnStartup]
 	public static class Tools
 	{
+		static Tools()
+		{
+			RoundRobbin.Create("update-colonist", 5f);
+			RoundRobbin.Create("render-colonist", 30f);
+		}
+
 		public static bool IsLocalDev()
 		{
 			var path = Path.Combine(GenFilePaths.ConfigFolderPath, "PuppeteerLocalDevelopment.txt");
@@ -129,22 +136,6 @@ namespace Puppeteer
 			return map.listerThings.AllThings.OfType<T>().FirstOrDefault(p => p.thingIDNumber == thingID) as T;
 		}
 
-		static int colonistTicks = 0;
-		const float colonistEveryTicks = 60f;
-		static int colonistCounter = -1;
-		static Pawn ColonistRoundRobbin()
-		{
-			var colonists = Current.Game.Maps.SelectMany(map => PlayerPawns.FreeColonists(map)).ToList();
-			if (colonists.Count == 0) return null;
-			var delay = colonistEveryTicks / colonists.Count + 1;
-			colonistTicks++;
-			if (colonistTicks < delay) return null;
-			colonistTicks = 0;
-			var idx = (colonistCounter + 1) % colonists.Count;
-			colonistCounter = idx;
-			return colonists[idx];
-		}
-
 		public static double GetPathingTime(Pawn pawn, IntVec3 destination)
 		{
 			var pos = pawn.Position;
@@ -185,9 +176,16 @@ namespace Puppeteer
 				pawn.Name = new NameTriple(name3.First, nick ?? name3.First, name3.Last);
 		}
 
+		public static void UpdateColonists()
+		{
+			var pawn = RoundRobbin.NextColonist("update-colonist");
+			if (pawn != null)
+				Puppeteer.instance.UpdateColonist(pawn);
+		}
+
 		public static void RenderColonists()
 		{
-			var pawn = ColonistRoundRobbin();
+			var pawn = RoundRobbin.NextColonist("render-colonist");
 			if (pawn == null) return;
 			var map = pawn.Map;
 			if (map == null) return;

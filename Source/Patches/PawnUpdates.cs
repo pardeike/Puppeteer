@@ -136,8 +136,9 @@ namespace Puppeteer
 	{
 		public static void Postfix()
 		{
-			Tools.RenderColonists();
 			OperationQueue.Process(OperationType.Portrait);
+			Tools.RenderColonists();
+			Tools.UpdateColonists();
 		}
 	}
 
