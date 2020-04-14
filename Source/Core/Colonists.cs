@@ -46,10 +46,10 @@ namespace Puppeteer
 			return entry.GetPawn();
 		}
 
-		public void SendAllColonists(Connection connection)
+		public void SendAllColonists(Connection connection, bool forceUpdate)
 		{
 			if (connection == null) return;
-			var colonists = Tools.AllColonists().Select(p =>
+			var colonists = Tools.AllColonists(forceUpdate).Select(p =>
 			{
 				ViewerID controller = null;
 				if (state.TryGetValue("" + p.thingIDNumber, out var colonist))
@@ -138,7 +138,7 @@ namespace Puppeteer
 					OperationQueue.Add(OperationType.SetState, () =>
 					{
 						var pawn = entry.GetPawn();
-						if (pawn != null)
+						if (pawn != null && pawn.Spawned)
 							pawn.drafter.Drafted = drafted;
 					});
 					break;

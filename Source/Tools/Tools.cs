@@ -84,7 +84,7 @@ namespace Puppeteer
 		public static Pawn ColonistForThingID(int thingID)
 		{
 			return Find.Maps
-				.SelectMany(map => PlayerPawns.FreeColonists(map))
+				.SelectMany(map => PlayerPawns.FreeColonists(map, false))
 				.FirstOrDefault(pawn => pawn.thingIDNumber == thingID);
 		}
 
@@ -93,6 +93,23 @@ namespace Puppeteer
 		public static bool HasRangedAttack(Pawn pawn)
 		{
 			return (bool)d_HasRangedAttack(null, new object[] { pawn });
+		}
+
+		public static bool CannotMoveOrDo(Pawn pawn)
+		{
+			return pawn.Spawned == false
+				|| pawn.Downed
+				|| pawn.health.capacities.CapableOf(PawnCapacityDefOf.Manipulation) == false
+				|| pawn.InMentalState;
+		}
+
+		public static Pawn GetCarrier(Pawn pawn)
+		{
+			if (pawn == null) return null;
+			if (pawn.Spawned) return null;
+			var thingID = pawn.thingIDNumber;
+			return Find.Maps.SelectMany(map => map.mapPawns.AllPawns)
+				.FirstOrDefault(carrier => carrier.carryTracker.CarriedThing.thingIDNumber == thingID);
 		}
 
 		public static void SetCurrentMapDirectly(Map map)
@@ -147,12 +164,12 @@ namespace Puppeteer
 			return min;
 		}
 
-		public static List<Pawn> AllColonists(Map forMap = null)
+		public static List<Pawn> AllColonists(bool forceUpdate, Map forMap = null)
 		{
 			var colonists = new List<Pawn>();
 			Find.Maps.DoIf(map => forMap == null || map == forMap, map =>
 			{
-				var pawns = PlayerPawns.FreeColonists(map);
+				var pawns = PlayerPawns.FreeColonists(map, forceUpdate);
 				PlayerPawnsDisplayOrderUtility.Sort(pawns);
 				colonists.AddRange(pawns);
 			});
@@ -176,8 +193,15 @@ namespace Puppeteer
 				pawn.Name = new NameTriple(name3.First, nick ?? name3.First, name3.Last);
 		}
 
-		public static void UpdateColonists()
+		public static void UpdateColonists(bool updateAll)
 		{
+			if (updateAll)
+			{
+				Current.Game.Maps.SelectMany(map => PlayerPawns.FreeColonists(map, false))
+					.Do(p => Puppeteer.instance.UpdateColonist(p));
+				return;
+			}
+
 			var pawn = RoundRobbin.NextColonist("update-colonist");
 			if (pawn != null)
 				Puppeteer.instance.UpdateColonist(pawn);
@@ -186,6 +210,10 @@ namespace Puppeteer
 		public static void RenderColonists()
 		{
 			var pawn = RoundRobbin.NextColonist("render-colonist");
+			var colonist = Puppeteer.instance.colonists.FindColonist(pawn);
+
+			pawn = GetCarrier(pawn) ?? pawn;
+
 			if (pawn == null) return;
 			var map = pawn.Map;
 			if (map == null) return;
@@ -198,7 +226,7 @@ namespace Puppeteer
 				var visible = viewRect.Contains(pawn.Position);
 				if (visible)
 				{
-					Renderer.PawnScreenRender(pawn, 1.5f);
+					Renderer.PawnScreenRender(colonist, pawn.DrawPos, 1.5f);
 					return;
 				}
 			}
@@ -231,7 +259,7 @@ namespace Puppeteer
 			map.designationManager.DrawDesignations();
 			map.overlayDrawer.DrawAllOverlays();
 
-			Renderer.PawnScreenRender(pawn, 1.5f);
+			Renderer.PawnScreenRender(colonist, pawn.DrawPos, 1.5f);
 
 			Renderer.fakeViewRect = CellRect.Empty;
 			Renderer.renderOffset = 0f;

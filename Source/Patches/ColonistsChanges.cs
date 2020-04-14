@@ -2,8 +2,6 @@
 using RimWorld;
 using RimWorld.Planet;
 using System;
-using System.Collections.Generic;
-using System.Reflection;
 using Verse;
 
 namespace Puppeteer
@@ -29,15 +27,41 @@ namespace Puppeteer
 		}
 	}
 
-	[HarmonyPatch]
-	static class Pawn_DeSpawn_Kill_Patch
+	[HarmonyPatch(typeof(Thing))]
+	[HarmonyPatch(nameof(Thing.SplitOff))]
+	static class Thing_SplitOff_Patch
 	{
-		public static IEnumerable<MethodBase> TargetMethods()
+		public static bool inSplitOff = false;
+
+		static void Prefix()
 		{
-			yield return AccessTools.Method(typeof(Pawn), nameof(Pawn.DeSpawn));
-			yield return AccessTools.Method(typeof(Pawn), nameof(Pawn.Kill));
+			inSplitOff = true;
 		}
 
+		static void Postfix()
+		{
+			inSplitOff = false;
+		}
+	}
+
+	[HarmonyPatch(typeof(Pawn))]
+	[HarmonyPatch(nameof(Pawn.DeSpawn))]
+	static class Pawn_DeSpawn_Patch
+	{
+		public static void Postfix(Pawn __instance)
+		{
+			if (__instance.IsColonist && Thing_SplitOff_Patch.inSplitOff == false)
+			{
+				Puppeteer.instance.PawnUnavailable(__instance);
+				Puppeteer.instance.SetEvent(Event.ColonistsChanged);
+			}
+		}
+	}
+
+	[HarmonyPatch(typeof(Pawn))]
+	[HarmonyPatch(nameof(Pawn.Kill))]
+	static class Pawn_Kill_Patch
+	{
 		public static void Postfix(Pawn __instance)
 		{
 			if (__instance.IsColonist)

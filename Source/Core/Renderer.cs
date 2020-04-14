@@ -1,7 +1,6 @@
 ﻿using RimWorld;
 using UnityEngine;
 using Verse;
-using static HarmonyLib.AccessTools;
 
 namespace Puppeteer
 {
@@ -12,7 +11,6 @@ namespace Puppeteer
 		public static Vector3 RenderOffsetVector => new Vector3(renderOffset, 0f, 0f);
 		public static CellRect fakeViewRect = CellRect.Empty;
 		public static bool fakeZoom = false;
-		static readonly FieldRef<SubcameraDriver, Camera[]> subcamerasRef = FieldRefAccess<SubcameraDriver, Camera[]>("subcameras");
 
 		public static byte[] GetPawnPortrait(Pawn pawn, Vector2 boundings)
 		{
@@ -37,12 +35,12 @@ namespace Puppeteer
 			camera.transform.position = position;
 		}
 
-		public static void PawnScreenRender(Pawn pawn, float radius)
+		public static void PawnScreenRender(Colonist colonist, Vector3 drawPos, float radius)
 		{
 			var camera = RenderCamera.camera;
 			if (camera == null) return;
 
-			var cameraPos = new Vector3(renderOffset + pawn.DrawPos.x, 40f, pawn.DrawPos.z);
+			var cameraPos = new Vector3(renderOffset + drawPos.x, 40f, drawPos.z);
 			SetCamera(camera, ref cameraPos, radius);
 
 			var renderTexture = RenderTexture.GetTemporary(imageSize, imageSize, 24);
@@ -57,7 +55,7 @@ namespace Puppeteer
 			RenderTexture.active = null;
 
 			var jpgData = imageTexture.EncodeToJPG(60);
-			Puppeteer.instance.PawnOnMap(pawn, jpgData);
+			Puppeteer.instance.PawnOnMap(colonist, jpgData);
 		}
 	}
 }

@@ -74,12 +74,14 @@ namespace Puppeteer
 		static object GetAttackTargets(Pawn pawn, string[] args)
 		{
 			const int maxDistance = 30;
+			var emptyTargets = new AttackResult() { results = new List<AttackResult.Result>() };
 
 			if (args.Length != 1) return "need-1-arg";
 			var melee = bool.Parse(args[0]);
 
-			if (melee == false && Tools.HasRangedAttack(pawn) == false)
-				return new AttackResult() { results = new List<AttackResult.Result>() };
+			if (pawn.WorkTagIsDisabled(WorkTags.Violent)) return "non-violent";
+			if (Tools.CannotMoveOrDo(pawn)) return "no-action";
+			if (melee == false && Tools.HasRangedAttack(pawn) == false) return "no-ranged-attack";
 
 			var map = pawn.Map;
 			var results = map?.attackTargetsCache
@@ -114,7 +116,7 @@ namespace Puppeteer
 				if (args.Length != 2) return "need-2-args";
 
 				var target = Tools.GetThingFromArgs<Pawn>(pawn, args, 0);
-				if (target == null) return "no";
+				if (target == null) return "no-target";
 
 				if (pawn.Drafted == false)
 					pawn.drafter.Drafted = true;
@@ -143,10 +145,13 @@ namespace Puppeteer
 			}
 		}
 
+		// get-weapons(best/near)
 		static object GetWeapons(Pawn pawn, string[] args)
 		{
 			var map = pawn.Map;
-			if (map == null) return new List<ItemResult.Result>();
+			if (map == null) return "no-pawn";
+			if (pawn.WorkTagIsDisabled(WorkTags.Violent)) return "no-violence";
+			if (Tools.CannotMoveOrDo(pawn)) return "no-action";
 
 			if (args.Length != 1) return "need-1-arg";
 			var selector = args[0];
@@ -178,6 +183,7 @@ namespace Puppeteer
 			return new ItemResult() { results = results.ToList() };
 		}
 
+		// select-weapon(thingID=#)
 		static object SelectWeapon(Pawn pawn, string[] args)
 		{
 			var weapon = Tools.GetThingFromArgs<Thing>(pawn, args, 0);
@@ -185,10 +191,12 @@ namespace Puppeteer
 			return pawn.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.Equip, weapon), JobTag.Misc) ? "ok" : "no";
 		}
 
-		static object GetRest(Pawn pawn, string[] args)
+		// get-rest()
+		static object GetRest(Pawn pawn, string[] _args)
 		{
 			var map = pawn.Map;
-			if (map == null) return new List<ItemResult.Result>();
+			if (map == null) return "no-pawn";
+			if (Tools.CannotMoveOrDo(pawn)) return "no-action";
 
 			var bedInfos = map.listerThings
 				.ThingsInGroup(ThingRequestGroup.Bed)
@@ -215,17 +223,22 @@ namespace Puppeteer
 			return new ItemResult() { results = results.ToList() };
 		}
 
+		// do-rest(thingID=#)
 		static object DoRest(Pawn pawn, string[] args)
 		{
 			var bed = Tools.GetThingFromArgs<Building_Bed>(pawn, args, 0);
-			if (bed == null) return "no";
+			if (bed == null) return "no-bed";
 			if (pawn.Drafted)
 				pawn.drafter.Drafted = false;
 			return pawn.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.LayDown, bed), JobTag.Misc) ? "ok" : "no";
 		}
 
-		static object GetTend(Pawn pawn, string[] args)
+		// get-tend()
+		static object GetTend(Pawn pawn, string[] _args)
 		{
+			if (pawn.WorkTagIsDisabled(WorkTags.Caring)) return "no-caring";
+			if (Tools.CannotMoveOrDo(pawn)) return "no-action";
+
 			var pawns = PlayerPawns.AllPawns(pawn.Map)
 				.Where(p => p != pawn && p.health.HasHediffsNeedingTendByPlayer(false) && p.CurrentBed() != null);
 
@@ -237,10 +250,11 @@ namespace Puppeteer
 			return new ItemResult() { results = results.ToList() };
 		}
 
+		// do-tend(thingID=#)
 		static object DoTend(Pawn pawn, string[] args)
 		{
 			var injured = Tools.GetThingFromArgs<Pawn>(pawn, args, 0);
-			if (injured == null) return "no";
+			if (injured == null) return "not-injured";
 			if (pawn.Drafted)
 				pawn.drafter.Drafted = false;
 			return pawn.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.TendPatient, injured), JobTag.Misc) ? "ok" : "no";

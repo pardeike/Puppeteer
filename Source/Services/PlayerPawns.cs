@@ -16,8 +16,11 @@ namespace Puppeteer
 			return new List<Pawn>();
 		}
 
-		public static List<Pawn> FreeColonists(Map map)
+		public static List<Pawn> FreeColonists(Map map, bool forceUpdatep)
 		{
+			if (forceUpdatep)
+				Update(map);
+
 			if (freeColonists.TryGetValue(map, out var result))
 				return result;
 			return new List<Pawn>();

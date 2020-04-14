@@ -138,7 +138,7 @@ namespace Puppeteer
 		{
 			OperationQueue.Process(OperationType.Portrait);
 			Tools.RenderColonists();
-			Tools.UpdateColonists();
+			Tools.UpdateColonists(false);
 		}
 	}
 

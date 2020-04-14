@@ -26,7 +26,7 @@ namespace Puppeteer
 			if (robbin.ticks < robbin.delay) return null;
 			robbin.ticks = 0;
 
-			var colonists = Current.Game.Maps.SelectMany(map => PlayerPawns.FreeColonists(map)).ToList();
+			var colonists = Current.Game.Maps.SelectMany(map => PlayerPawns.FreeColonists(map, false)).ToList();
 			if (colonists.Count == 0) return null;
 			robbin.delay = robbin.interval / colonists.Count + 1;
 

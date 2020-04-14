@@ -42,7 +42,7 @@ namespace Puppeteer
 
 		public Connection connection;
 		readonly Viewers viewers;
-		readonly Colonists colonists;
+		public readonly Colonists colonists;
 		bool firstTime = true;
 		bool prioritiesChanged = false;
 		bool schedulesChanged = false;
@@ -94,7 +94,7 @@ namespace Puppeteer
 					break;
 				case Event.ColonistsChanged:
 					if (firstTime == false)
-						colonists.SendAllColonists(connection);
+						colonists.SendAllColonists(connection, true);
 					firstTime = false;
 					break;
 				case Event.AreasChanged:
@@ -123,31 +123,17 @@ namespace Puppeteer
 			}
 		}
 
-		public ViewerInfo GetViewerInfo(Pawn pawn)
-		{
-			var colonist = colonists.FindColonist(pawn);
-			if (colonist == null || colonist.controller == null) return null;
-			var viewer = viewers.FindViewer(colonist.controller);
-			if (viewer == null || viewer.controlling == null) return null;
-			return new ViewerInfo()
-			{
-				controller = colonist.controller,
-				pawn = viewer.controlling,
-				connected = viewer.connected
-			};
-		}
-
 		public void Message(byte[] msg)
 		{
 			if (connection == null) return;
 			try
 			{
 				var cmd = SimpleCmd.Create(msg);
-				// Log.Warning($"MSG {cmd.type}");
+				Log.Warning($"MSG {cmd.type}");
 				switch (cmd.type)
 				{
 					case "welcome":
-						colonists.SendAllColonists(connection);
+						colonists.SendAllColonists(connection, true);
 						break;
 					case "join":
 						var join = Join.Create(msg);
@@ -160,7 +146,7 @@ namespace Puppeteer
 					case "assign":
 						var assign = Assign.Create(msg);
 						colonists.Assign($"{assign.colonistID}", assign.viewer, connection);
-						colonists.SendAllColonists(connection);
+						colonists.SendAllColonists(connection, false);
 						break;
 					case "state":
 						var state = IncomingState.Create(msg);
@@ -176,7 +162,7 @@ namespace Puppeteer
 						break;
 				}
 			}
-			catch (System.Exception e)
+			catch (Exception e)
 			{
 				Log.Warning($"While handling {msg}: {e}");
 			}
@@ -187,10 +173,18 @@ namespace Puppeteer
 			colonists.Assign("" + pawn.thingIDNumber, null, connection);
 		}
 
-		public void PawnOnMap(Pawn pawn, byte[] image)
+		public void PawnOnMap(Colonist colonist, byte[] image)
 		{
 			if (connection == null) return;
-			var viewerInfo = GetViewerInfo(pawn);
+			if (colonist == null || colonist.controller == null) return;
+			var viewer = viewers.FindViewer(colonist.controller);
+			if (viewer == null || viewer.controlling == null) return;
+			var viewerInfo = new ViewerInfo()
+			{
+				controller = colonist.controller,
+				pawn = viewer.controlling,
+				connected = viewer.connected
+			};
 			if (viewerInfo == null || viewerInfo.controller == null) return;
 			connection.Send(new OnMap() { viewer = viewerInfo.controller, info = new OnMap.Info() { image = image } });
 		}
@@ -329,41 +323,40 @@ namespace Puppeteer
 			if (colonist == null || colonist.controller == null) return;
 			var viewer = viewers.FindViewer(colonist.controller);
 			if (viewer == null || viewer.controlling == null) return;
+			var carrier = Tools.GetCarrier(pawn);
 
-			var inspect = Array.Empty<string>();
-			var info = new ColonistBaseInfo.Info();
-			if (pawn.Spawned && pawn.Map != null)
+			var info = new ColonistBaseInfo.Info
 			{
-				inspect = pawn.GetInspectString().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-				info.name = pawn.Name.ToStringFull;
-				info.x = pawn.Position.x;
-				info.y = pawn.Position.z;
-				info.mx = pawn.Map.Size.x;
-				info.my = pawn.Map.Size.z;
-				info.inspect = inspect;
-				info.health = new ColonistBaseInfo.Percentage()
+				name = pawn.Name.ToStringFull,
+				x = (carrier ?? pawn).Position.x,
+				y = (carrier ?? pawn).Position.z,
+				mx = (carrier ?? pawn).Map.Size.x,
+				my = (carrier ?? pawn).Map.Size.z,
+				inspect = carrier != null ? Array.Empty<string>() : pawn.GetInspectString().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None),
+				health = new ColonistBaseInfo.Percentage()
 				{
 					label = HealthUtility.GetGeneralConditionLabel(pawn, true),
 					percent = pawn.health.summaryHealth.SummaryHealthPercent
-				};
-				info.mood = new ColonistBaseInfo.Percentage()
+				},
+				mood = new ColonistBaseInfo.Percentage()
 				{
 					label = pawn.needs.mood.MoodString.CapitalizeFirst(),
 					percent = pawn.needs.mood.CurLevelPercentage
-				};
-				info.restrict = new ColonistBaseInfo.Value(pawn.timetable.CurrentAssignment.LabelCap, pawn.timetable.CurrentAssignment.color);
-				info.area = new ColonistBaseInfo.Value(AreaUtility.AreaAllowedLabel(pawn), pawn.playerSettings?.EffectiveAreaRestriction?.Color ?? Color.gray);
-				info.drafted = pawn.Drafted;
-				info.response = pawn.playerSettings.hostilityResponse.GetLabel();
-				info.needs = GetNeeds(pawn);
-				info.thoughts = GetThoughts(pawn);
-				info.capacities = GetCapacities(pawn);
-				info.bleedingRate = (int)(pawn.health.hediffSet.BleedRateTotal * 100f + 0.5f);
-				var ticksUntilDeath = HealthUtility.TicksUntilDeathDueToBloodLoss(pawn);
-				info.deathIn = (int)(((float)ticksUntilDeath / GenDate.TicksPerHour) + 0.5f);
-				info.injuries = GetInjuries(pawn);
-				info.skills = GetSkills(pawn);
-			}
+				},
+				restrict = new ColonistBaseInfo.Value(pawn.timetable.CurrentAssignment.LabelCap, pawn.timetable.CurrentAssignment.color),
+				area = new ColonistBaseInfo.Value(AreaUtility.AreaAllowedLabel(pawn), pawn.playerSettings?.EffectiveAreaRestriction?.Color ?? Color.gray),
+				drafted = pawn.Drafted,
+				response = pawn.playerSettings.hostilityResponse.GetLabel(),
+				needs = GetNeeds(pawn),
+				thoughts = GetThoughts(pawn),
+				capacities = GetCapacities(pawn),
+				bleedingRate = (int)(pawn.health.hediffSet.BleedRateTotal * 100f + 0.5f)
+			};
+			var ticksUntilDeath = HealthUtility.TicksUntilDeathDueToBloodLoss(pawn);
+			info.deathIn = (int)(((float)ticksUntilDeath / GenDate.TicksPerHour) + 0.5f);
+			info.injuries = GetInjuries(pawn);
+			info.skills = GetSkills(pawn);
+
 			connection.Send(new ColonistBaseInfo() { viewer = viewer.vID, info = info });
 		}
 	}

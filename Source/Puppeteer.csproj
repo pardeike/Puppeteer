@@ -44,28 +44,26 @@
 		</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Core\ColonistCamera.cs" />
-    <Compile Include="Core\Jobs.cs" />
-    <Compile Include="Core\OperationQueue.cs" />
+    <Compile Include="Services\Jobs.cs" />
+    <Compile Include="Tools\OperationQueue.cs" />
     <Compile Include="Core\Renderer.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Jobs\Fight.cs" />
-    <Compile Include="Misc\Comparers.cs" />
-    <Compile Include="Misc\ConcurrentQueue.cs" />
-    <Compile Include="Misc\FileWatcher.cs" />
-    <Compile Include="Misc\PlayerPawns.cs" />
-    <Compile Include="Misc\Integrations.cs" />
-    <Compile Include="Misc\JSONConvertable.cs" />
-    <Compile Include="Misc\MatrixTools.cs" />
-    <Compile Include="Misc\RenderCamera.cs" />
-    <Compile Include="Misc\RoundRobbin.cs" />
-    <Compile Include="Misc\Settings.cs" />
+    <Compile Include="Tools\Comparers.cs" />
+    <Compile Include="Tools\ConcurrentQueue.cs" />
+    <Compile Include="Tools\FileWatcher.cs" />
+    <Compile Include="Services\PlayerPawns.cs" />
+    <Compile Include="Services\Integrations.cs" />
+    <Compile Include="Comm\JSONConvertable.cs" />
+    <Compile Include="Tools\MatrixTools.cs" />
+    <Compile Include="Services\RenderCamera.cs" />
+    <Compile Include="Services\RoundRobbin.cs" />
+    <Compile Include="Mod\Settings.cs" />
     <Compile Include="Models\Colonist.cs" />
     <Compile Include="Core\Colonists.cs" />
-    <Compile Include="Misc\Connection.cs" />
+    <Compile Include="Comm\Connection.cs" />
     <Compile Include="Misc\CrossPromotion.cs" />
-    <Compile Include="Misc\GlobalSuppressions.cs" />
-    <Compile Include="Misc\Main.cs" />
+    <Compile Include="Mod\Main.cs" />
     <Compile Include="Models\JobResult.cs" />
     <Compile Include="Models\PawnUpdates.cs" />
     <Compile Include="Models\Commands.cs" />
@@ -75,7 +73,7 @@
     <Compile Include="Patches\PawnUpdates.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Core\Puppeteer.cs" />
-    <Compile Include="Misc\Tools.cs" />
+    <Compile Include="Tools\Tools.cs" />
     <Compile Include="Models\Viewer.cs" />
     <Compile Include="Core\Viewers.cs" />
   </ItemGroup>

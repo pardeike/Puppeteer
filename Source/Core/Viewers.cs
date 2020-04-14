@@ -141,7 +141,7 @@ namespace Puppeteer
 				}
 
 				var columns = Integrations.GetWorkTypeDefs().Select(def => def.labelShort).ToArray();
-				var rows = Tools.AllColonists()
+				var rows = Tools.AllColonists(false)
 					.Select(colonist => new PrioritiyInfo.Priorities() { pawn = colonist.LabelShortCap, yours = colonist == pawn, val = GetValues(colonist) })
 					.ToArray();
 				return new PrioritiyInfo()
@@ -165,7 +165,7 @@ namespace Puppeteer
 					var schedules = Enumerable.Range(0, 24).Select(hour => p.timetable.GetAssignment(hour)).ToArray();
 					return schedules.Join(s => Tools.Assignments[s], "");
 				}
-				var rows = Tools.AllColonists()
+				var rows = Tools.AllColonists(false)
 					.Select(colonist => new ScheduleInfo.Schedules() { pawn = colonist.LabelShortCap, yours = colonist == pawn, val = GetValues(colonist) })
 					.ToArray();
 				return new ScheduleInfo() { rows = rows };
@@ -176,6 +176,7 @@ namespace Puppeteer
 		public void SendAllState(Connection connection, Viewer viewer)
 		{
 			SendEarned(connection, viewer);
+			Tools.UpdateColonists(true);
 			SendPortrait(connection, viewer);
 			SendAreas(connection, viewer);
 			SendPriorities(connection);
