@@ -84,13 +84,14 @@ namespace Puppeteer
 
 		public static void SendPortrait(Connection connection, Viewer viewer)
 		{
-			if (viewer.controlling == null)
-				return;
-
 			OperationQueue.Add(OperationType.Portrait, () =>
 			{
-				var portrait = Renderer.GetPawnPortrait(viewer.controlling, new Vector2(35f, 55f));
-				connection.Send(new Portrait() { viewer = viewer.vID, info = new Portrait.Info() { image = portrait } });
+				var pawn = viewer.controlling;
+				if (pawn != null)
+				{
+					var portrait = Renderer.GetPawnPortrait(pawn, new Vector2(35f, 55f));
+					connection.Send(new Portrait() { viewer = viewer.vID, info = new Portrait.Info() { image = portrait } });
+				}
 			});
 		}
 

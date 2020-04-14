@@ -129,7 +129,7 @@ namespace Puppeteer
 			try
 			{
 				var cmd = SimpleCmd.Create(msg);
-				Log.Warning($"MSG {cmd.type}");
+				// Log.Warning($"MSG {cmd.type}");
 				switch (cmd.type)
 				{
 					case "welcome":

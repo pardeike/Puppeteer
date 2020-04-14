@@ -158,6 +158,7 @@ namespace Puppeteer
 			var pos = pawn.Position;
 			var traverseParams = TraverseParms.For(pawn, Danger.Deadly, TraverseMode.PassDoors, false);
 			var path = pawn.Map.pathFinder.FindPath(pawn.Position, destination, traverseParams, PathEndMode.Touch);
+			if (path == PawnPath.NotFound) return 999999;
 			var cost = path.TotalCost;
 			var min = Math.Floor(cost * 60f / GenDate.TicksPerHour);
 			path.ReleaseToPool();

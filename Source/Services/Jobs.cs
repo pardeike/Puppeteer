@@ -73,9 +73,7 @@ namespace Puppeteer
 		// get-attack-targets(melee=true/false)
 		static object GetAttackTargets(Pawn pawn, string[] args)
 		{
-			const int maxDistance = 30;
-			var emptyTargets = new AttackResult() { results = new List<AttackResult.Result>() };
-
+			if (pawn == null) return "no-pawn";
 			if (args.Length != 1) return "need-1-arg";
 			var melee = bool.Parse(args[0]);
 
@@ -84,23 +82,19 @@ namespace Puppeteer
 			if (melee == false && Tools.HasRangedAttack(pawn) == false) return "no-ranged-attack";
 
 			var map = pawn.Map;
-			var results = map?.attackTargetsCache
+			if (map == null) return "no-map";
+			var results = map.attackTargetsCache
 				.GetPotentialTargetsFor(pawn)
-				.Where(target => target.ThreatDisabled(pawn) == false) // maybe skip this
+				.Where(target => target != null && target.ThreatDisabled(pawn) == false) // maybe skip this
 				.OfType<Pawn>()
 				.Distinct()
-				.Select(enemy => new Pair<Pawn, int>(enemy, enemy.Position.DistanceToSquared(pawn.Position)))
-				.Where(pair =>
-				{
-					var enemy = pair.First;
-					var distance = pair.Second;
-					if (distance > maxDistance * maxDistance) return false;
-					return pawn.CanReach(enemy, PathEndMode.OnCell, Danger.Deadly, false, TraverseMode.ByPawn);
-				})
+				.Where(enemy => enemy != null)
+				.Select(enemy => new Pair<Pawn, double>(enemy, Tools.GetPathingTime(pawn, enemy.Position)))
+				.Where(pair => pair.Second != 999999)
 				.OrderBy(pair => pair.Second)
 				.Select(pair => new AttackResult.Result()
 				{
-					name = $"{pair.First.LabelCap} ({Tools.GetPathingTime(pawn, pair.First.Position)}m {Tools.GetDirectionalString(pawn, pair.First)})",
+					name = $"{pair.First.LabelCap} ({pair.Second}m {Tools.GetDirectionalString(pawn, pair.First)})",
 					id = pair.First.thingIDNumber
 				})
 				.ToList() ?? new List<AttackResult.Result>();
@@ -125,10 +119,15 @@ namespace Puppeteer
 				if (melee == false)
 				{
 					var giver = new FightEnemy(target);
-					var thinkResult = giver.TryIssueJobPackage(pawn, new JobIssueParams());
-					if (thinkResult.Job != null)
+					var thinkResult = giver.TryIssueJobPackage(pawn, new JobIssueParams() { maxDistToSquadFlag = 99999 });
+					var job = thinkResult.Job;
+					if (job != null)
 					{
-						pawn.jobs.StartJob(thinkResult.Job, JobCondition.None, null, false, true, null, null, false, false);
+						job.endIfCantShootTargetFromCurPos = false;
+						job.expiryInterval = 0;
+						job.playerForced = true;
+						job.expireRequiresEnemiesNearby = false;
+						pawn.jobs.StartJob(job, JobCondition.None, null, false, true, null, null, false, false);
 						return "ok";
 					}
 					return "no-job-package";
