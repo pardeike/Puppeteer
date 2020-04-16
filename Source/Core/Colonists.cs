@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Verse;
+using Verse.AI;
 
 namespace Puppeteer
 {
@@ -118,7 +119,7 @@ namespace Puppeteer
 			SendAssignment(viewer, true);
 		}
 
-		public void SetState(IncomingState state)
+		public void SetState(Connection connection, IncomingState state)
 		{
 			var entry = FindEntry(state.user);
 			if (entry == null) return;
@@ -189,10 +190,75 @@ namespace Puppeteer
 					}
 					break;
 				}
+				case "grid":
+				{
+					var gridSize = Convert.ToInt32(state.val);
+					entry.colonist.gridSize = gridSize;
+					if (gridSize > 0)
+					{
+						var pawn = entry.GetPawn();
+						connection.Send(new GridUpdate()
+						{
+							controller = entry.colonist.controller,
+							info = new GridUpdate.Info()
+							{
+								px = pawn.Position.x,
+								pz = pawn.Position.z,
+								val = GridUpdater.GetGrid(pawn, gridSize)
+							}
+						});
+					}
+					break;
+				}
+				case "goto":
+				{
+					var val = Convert.ToString(state.val);
+					var coordinates = val.Split(',').Select(v => { if (int.TryParse(v, out var n)) return n; else return -1000; }).ToArray();
+					if (coordinates.Length == 2)
+					{
+						var pawn = entry.GetPawn();
+						if (pawn != null)
+						{
+							var cell = new IntVec3(coordinates[0], 0, coordinates[1]);
+							if (cell.InBounds(pawn.Map) && cell.Standable(pawn.Map))
+							{
+								var job = JobMaker.MakeJob(JobDefOf.Goto, cell);
+								pawn.drafter.Drafted = true;
+								pawn.jobs.StartJob(job, JobCondition.InterruptForced);
+							}
+						}
+					}
+					break;
+				}
 				default:
 					Log.Warning($"Unknown set value operation with key {state.key}");
 					break;
 			}
+		}
+
+		public void UpdateGrids(Connection connection)
+		{
+			if (connection == null) return;
+			var actions = state.Select(pair =>
+			{
+				var pawn = Tools.ColonistForThingID(int.Parse(pair.Key));
+				var colonist = pair.Value;
+				if (colonist.controller == null || colonist.gridSize == 0) return (Action)null;
+				return () =>
+				{
+					connection.Send(new GridUpdate()
+					{
+						controller = colonist.controller,
+						info = new GridUpdate.Info()
+						{
+							px = pawn.Position.x,
+							pz = pawn.Position.z,
+							val = GridUpdater.GetGrid(pawn, colonist.gridSize)
+						}
+					});
+				};
+			}).OfType<Action>().ToList();
+			Tools.RunEvery(15, actions);
 		}
 	}
 }

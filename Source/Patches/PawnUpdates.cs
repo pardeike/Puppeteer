@@ -139,6 +139,8 @@ namespace Puppeteer
 			OperationQueue.Process(OperationType.Portrait);
 			Tools.RenderColonists();
 			Tools.UpdateColonists(false);
+			if (Find.TickManager.Paused == false)
+				Puppeteer.instance.SetEvent(Event.GridUpdate);
 		}
 	}
 

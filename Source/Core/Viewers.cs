@@ -36,6 +36,7 @@ namespace Puppeteer
 				{
 					viewer.connected = true;
 					var info = colonists.FindEntry(viewer.vID);
+					info.colonist.gridSize = 0;
 					viewer.controlling = info?.thingID == null ? null : Tools.ColonistForThingID(info.thingID);
 				}
 				else
@@ -66,6 +67,11 @@ namespace Puppeteer
 			if (state.TryGetValue(vID.Identifier, out var viewer))
 				return viewer;
 			return null;
+		}
+
+		static void SendGameInfo(Connection connection, Viewer viewer)
+		{
+			connection.Send(new GameInfo() { viewer = viewer.vID, info = new GameInfo.Info() { terrain = GridUpdater.ColorList() } });
 		}
 
 		public void Earn(Connection connection, int amount)
@@ -176,6 +182,7 @@ namespace Puppeteer
 
 		public void SendAllState(Connection connection, Viewer viewer)
 		{
+			SendGameInfo(connection, viewer);
 			SendEarned(connection, viewer);
 			Tools.UpdateColonists(true);
 			SendPortrait(connection, viewer);

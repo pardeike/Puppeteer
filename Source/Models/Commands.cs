@@ -17,6 +17,20 @@ namespace Puppeteer
 		public bool game = true;
 	}
 
+
+
+	public class GameInfo : JSONConvertable<GameInfo>
+	{
+		public class Info
+		{
+			public string[] terrain;
+		}
+
+		public string type = "game-info";
+		public ViewerID viewer;
+		public Info info;
+	}
+
 	public class Earned : JSONConvertable<Earned>
 	{
 		public class Info
@@ -263,5 +277,19 @@ namespace Puppeteer
 		}
 
 		public Schedules[] rows;
+	}
+
+	public class GridUpdate : JSONConvertable<GridUpdate>
+	{
+		public class Info
+		{
+			public int px;
+			public int pz;
+			public byte[] val;
+		}
+
+		public string type = "grid";
+		public ViewerID controller;
+		public Info info;
 	}
 }

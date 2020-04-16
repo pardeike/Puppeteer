@@ -22,6 +22,7 @@ namespace Puppeteer
 		SendChangedPriorities,
 		SchedulesChanged,
 		SendChangedSchedules,
+		GridUpdate,
 	}
 
 	public interface ICommandProcessor
@@ -120,6 +121,9 @@ namespace Puppeteer
 						viewers.SendSchedules(connection);
 					}
 					break;
+				case Event.GridUpdate:
+					colonists.UpdateGrids(connection);
+					break;
 			}
 		}
 
@@ -150,7 +154,7 @@ namespace Puppeteer
 						break;
 					case "state":
 						var state = IncomingState.Create(msg);
-						colonists.SetState(state);
+						colonists.SetState(connection, state);
 						break;
 					case "job":
 						var job = IncomingJob.Create(msg);

@@ -165,6 +165,18 @@ namespace Puppeteer
 			return min;
 		}
 
+		public static void RunEvery(int tickInterval, List<Action> actions)
+		{
+			var len = actions.Count;
+			var ticks = GenTicks.TicksAbs;
+			for (var i = 0; i < len; i++)
+			{
+				var offset = len > 1 ? i + i * ((tickInterval - len) / len) : 0;
+				if (offset % tickInterval == ticks % tickInterval)
+					actions[i]();
+			}
+		}
+
 		public static List<Pawn> AllColonists(bool forceUpdate, Map forMap = null)
 		{
 			var colonists = new List<Pawn>();

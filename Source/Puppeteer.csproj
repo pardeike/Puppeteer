@@ -44,6 +44,7 @@
 		</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Services\GridUpdater.cs" />
     <Compile Include="Services\Jobs.cs" />
     <Compile Include="Tools\OperationQueue.cs" />
     <Compile Include="Core\Renderer.cs" />
@@ -73,6 +74,7 @@
     <Compile Include="Patches\PawnUpdates.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Core\Puppeteer.cs" />
+    <Compile Include="Tools\Colors.cs" />
     <Compile Include="Tools\Tools.cs" />
     <Compile Include="Models\Viewer.cs" />
     <Compile Include="Core\Viewers.cs" />
