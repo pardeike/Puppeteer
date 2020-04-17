@@ -27,11 +27,20 @@ namespace Puppeteer
 	}
 
 	[HarmonyPatch(typeof(MainMenuDrawer))]
-	[HarmonyPatch(nameof(MainMenuDrawer.DoMainMenuControls))]
-	static class MainMenuDrawer_DoMainMenuControls_Patch
+	[HarmonyPatch(nameof(MainMenuDrawer.MainMenuOnGUI))]
+	static class MainMenuDrawer_MainMenuOnGUI_Patch
 	{
+		static int firstTimeCounter = 120;
+
 		public static void Postfix()
 		{
+			if (firstTimeCounter >= 0)
+			{
+				firstTimeCounter--;
+				if (firstTimeCounter == 0)
+					Puppet.Say("Hello");
+			}
+
 			Puppet.Update();
 		}
 	}

@@ -63,6 +63,9 @@ namespace Puppeteer
 
 			if (puppetOut >= 0.8f)
 			{
+				var oldFont = Text.Font;
+				var oldColor = GUI.color;
+
 				Text.Font = GameFont.Small;
 				for (var n = 0; n < 20; n++)
 				{
@@ -92,6 +95,9 @@ namespace Puppeteer
 						break;
 					}
 				}
+
+				Text.Font = oldFont;
+				GUI.color = oldColor;
 			}
 		}
 	}
