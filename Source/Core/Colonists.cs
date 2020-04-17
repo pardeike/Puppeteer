@@ -231,7 +231,7 @@ namespace Puppeteer
 					break;
 				}
 				default:
-					Log.Warning($"Unknown set value operation with key {state.key}");
+					Tools.ShowWarning($"Unknown set value operation with key {state.key}");
 					break;
 			}
 		}

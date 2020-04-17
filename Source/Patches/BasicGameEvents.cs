@@ -26,6 +26,26 @@ namespace Puppeteer
 		}
 	}
 
+	[HarmonyPatch(typeof(MainMenuDrawer))]
+	[HarmonyPatch(nameof(MainMenuDrawer.DoMainMenuControls))]
+	static class MainMenuDrawer_DoMainMenuControls_Patch
+	{
+		public static void Postfix()
+		{
+			Puppet.Update();
+		}
+	}
+
+	[HarmonyPatch(typeof(UIRoot))]
+	[HarmonyPatch(nameof(UIRoot.UIRootOnGUI))]
+	static class UIRoot_UIRootOnGUI_Patch
+	{
+		public static void Postfix()
+		{
+			Puppet.Update();
+		}
+	}
+
 	[HarmonyPatch(typeof(Current))]
 	[HarmonyPatch(nameof(Current.Notify_LoadedSceneChanged))]
 	class Current_Notify_LoadedSceneChanged_Patch

@@ -152,6 +152,7 @@ namespace Puppeteer
 		{
 			OperationQueue.Process(OperationType.Job);
 			OperationQueue.Process(OperationType.SetState);
+			OperationQueue.Process(OperationType.Log);
 		}
 	}
 

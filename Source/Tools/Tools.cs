@@ -53,6 +53,22 @@ namespace Puppeteer
 			}
 		}
 
+		public static void ShowWarning(string message)
+		{
+			OperationQueue.Add(OperationType.Log, () =>
+			{
+				Puppet.Say(message);
+			});
+		}
+
+		public static void ShowError(string message)
+		{
+			OperationQueue.Add(OperationType.Log, () =>
+			{
+				Puppet.Say($"Error: {message}");
+			});
+		}
+
 		public static int[] GetRGB(Color color)
 		{
 			return new[] { (int)(255 * color.r), (int)(255 * color.g), (int)(255 * color.b) };
@@ -109,7 +125,7 @@ namespace Puppeteer
 			if (pawn.Spawned) return null;
 			var thingID = pawn.thingIDNumber;
 			return Find.Maps.SelectMany(map => map.mapPawns.AllPawns)
-				.FirstOrDefault(carrier => carrier.carryTracker.CarriedThing.thingIDNumber == thingID);
+				.FirstOrDefault(carrier => carrier?.carryTracker?.CarriedThing?.thingIDNumber == thingID);
 		}
 
 		public static void SetCurrentMapDirectly(Map map)

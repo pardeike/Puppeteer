@@ -7,7 +7,8 @@ namespace Puppeteer
 	{
 		Portrait,
 		SetState,
-		Job
+		Job,
+		Log
 	}
 
 	public static class OperationQueue

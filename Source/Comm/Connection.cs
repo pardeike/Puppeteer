@@ -1,5 +1,4 @@
 ﻿using System;
-using Verse;
 using WebSocketSharp;
 
 namespace Puppeteer
@@ -32,7 +31,7 @@ namespace Puppeteer
 			{
 				if (file == tokenFilename)
 				{
-					Log.Warning("Token file changed");
+					Tools.ShowWarning("Token file changed");
 					ws.Close();
 				}
 			});
@@ -42,15 +41,17 @@ namespace Puppeteer
 
 		void Connect()
 		{
-			var token = ReadToken();
-			if (token != null && token.Length > 0)
-			{
-				Log.Warning("Token found");
-				ws.SetCookie(new WebSocketSharp.Net.Cookie("id_token", token));
-			}
-			Log.Warning("Connecting...");
-			ws.ConnectAsync();
 			nextRetry = new DateTime().AddSeconds(5);
+			var token = ReadToken();
+			if (token == null || token.Length == 0)
+			{
+				Tools.ShowWarning("No token found");
+				return;
+			}
+
+			ws.SetCookie(new WebSocketSharp.Net.Cookie("id_token", token));
+			Tools.ShowWarning("Token found, connecting...");
+			ws.ConnectAsync();
 		}
 
 		static string ReadToken()
@@ -65,7 +66,7 @@ namespace Puppeteer
 
 			//var json = parts[1].Base64Decode();
 			//var token = TokenJSON.Create(json);
-			// Log.Warning($"Token {token}");
+			// Tools.SafeWarning($"Token {token}");
 			return tokenContent;
 		}
 
@@ -110,7 +111,7 @@ namespace Puppeteer
 		private void Ws_OnOpen(object sender, EventArgs e)
 		{
 			isConnected = true;
-			Log.Warning("Connected");
+			Tools.ShowWarning("Connected");
 
 			ws.SendAsync("{\"type\":\"hello\"}", null);
 		}
@@ -118,7 +119,7 @@ namespace Puppeteer
 		private void Ws_OnClose(object sender, CloseEventArgs e)
 		{
 			isConnected = false;
-			Log.Warning("Disconnected");
+			Tools.ShowWarning("Disconnected");
 
 			// 1005 = server closed, was connectable
 			// 1006 server did not send close, probably no connection
@@ -133,7 +134,10 @@ namespace Puppeteer
 
 		private void Ws_OnError(object sender, ErrorEventArgs e)
 		{
-			Log.Warning($"# Error: {e.Message} [HResult={e.Exception?.HResult}] [Exception.Message={e.Exception?.Message ?? ""}]");
+			var hresult = e.Exception?.HResult;
+			var message = e.Exception?.Message ?? "";
+			if (hresult != null && message != "")
+				Tools.ShowWarning($"# Error: {e.Message} [HResult={hresult}] [Exception.Message={message}]");
 		}
 	}
 }

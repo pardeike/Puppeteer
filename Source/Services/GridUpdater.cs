@@ -24,7 +24,7 @@ namespace Puppeteer
 					{
 						terrains[def] = colors.Count;
 						colors.Add(color.Value);
-						// Log.Warning($"#{terrains[def]} {def.defName} {color.Value.r} {color.Value.g} {color.Value.b}");
+						// Tools.SafeWarning($"#{terrains[def]} {def.defName} {color.Value.r} {color.Value.g} {color.Value.b}");
 					}
 				}
 			});

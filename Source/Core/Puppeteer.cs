@@ -162,13 +162,13 @@ namespace Puppeteer
 						Jobs.Run(connection, colonist, job);
 						break;
 					default:
-						Log.Warning($"unknown command '{cmd.type}'");
+						Tools.ShowWarning($"unknown command '{cmd.type}'");
 						break;
 				}
 			}
 			catch (Exception e)
 			{
-				Log.Warning($"While handling {msg}: {e}");
+				Tools.ShowWarning($"While handling {msg}: {e}");
 			}
 		}
 
