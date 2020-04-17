@@ -8,8 +8,7 @@ namespace Puppeteer
 		public const string tokenFilename = "PuppeteerToken.txt";
 		public static string token = ReadToken();
 
-		public readonly WebSocket ws;
-		public readonly Action<string, string> action;
+		public WebSocket ws;
 		readonly string endpoint;
 		readonly ICommandProcessor processor;
 
@@ -20,21 +19,25 @@ namespace Puppeteer
 		{
 			this.processor = processor;
 			endpoint = Tools.IsLocalDev() ? "ws://localhost:3000" : "wss://puppeteer-central.herokuapp.com";
+			TryConnect();
+		}
+
+		public void TryConnect()
+		{
+			ws?.Close();
+
+			var token = ReadToken();
+			if (token.Length == 0)
+			{
+				Tools.LogWarning("No token found");
+				return;
+			}
 
 			ws = new WebSocket(endpoint + "/connect") { Compression = CompressionMethod.Deflate };
 			ws.OnOpen += Ws_OnOpen;
 			ws.OnMessage += Ws_OnMessage;
 			ws.OnError += Ws_OnError;
 			ws.OnClose += Ws_OnClose;
-
-			action = FileWatcher.AddListener((action, file) =>
-			{
-				if (file == tokenFilename)
-				{
-					Tools.ShowWarning("Token file changed");
-					ws.Close();
-				}
-			});
 
 			Connect();
 		}
@@ -43,14 +46,14 @@ namespace Puppeteer
 		{
 			nextRetry = new DateTime().AddSeconds(5);
 			var token = ReadToken();
-			if (token == null || token.Length == 0)
+			if (token.Length == 0)
 			{
-				Tools.ShowWarning("No token found");
+				Tools.LogWarning("No token found");
 				return;
 			}
 
 			ws.SetCookie(new WebSocketSharp.Net.Cookie("id_token", token));
-			Tools.ShowWarning("Token found, connecting...");
+			Tools.LogWarning("Token found, connecting...");
 			ws.ConnectAsync();
 		}
 
@@ -64,9 +67,6 @@ namespace Puppeteer
 			if (parts.Length != 3)
 				return "";
 
-			//var json = parts[1].Base64Decode();
-			//var token = TokenJSON.Create(json);
-			// Tools.SafeWarning($"Token {token}");
 			return tokenContent;
 		}
 
@@ -74,12 +74,6 @@ namespace Puppeteer
 		{
 			if (callback == null)
 				callback = delegate { };
-
-			/*if (isConnected == false)
-			{
-				callback(false);
-				return;
-			}*/
 
 			if (ws?.ReadyState == WebSocketState.Closed)
 			{
@@ -96,7 +90,6 @@ namespace Puppeteer
 				return;
 			}
 
-			//LongEventHandler.QueueLongEvent(() => Log.Warning($"SEND {obj.GetData().Length} {obj.GetType().Name}"), "PuppeteerLog", false, null, false);
 			ws?.SendAsync(obj.GetData(), callback);
 		}
 
@@ -104,14 +97,12 @@ namespace Puppeteer
 		{
 			if (ws != null && ws.ReadyState == WebSocketState.Open)
 				ws.CloseAsync(CloseStatusCode.Normal);
-
-			FileWatcher.RemoveListener(action);
 		}
 
 		private void Ws_OnOpen(object sender, EventArgs e)
 		{
 			isConnected = true;
-			Tools.ShowWarning("Connected");
+			Tools.LogWarning("Connected!");
 
 			ws.SendAsync("{\"type\":\"hello\"}", null);
 		}
@@ -119,12 +110,7 @@ namespace Puppeteer
 		private void Ws_OnClose(object sender, CloseEventArgs e)
 		{
 			isConnected = false;
-			Tools.ShowWarning("Disconnected");
-
-			// 1005 = server closed, was connectable
-			// 1006 server did not send close, probably no connection
-			if (e.Code == 1005) { }
-			if (e.Code == 1006) { }
+			Tools.LogWarning(ErrorDescription(e.Code));
 		}
 
 		private void Ws_OnMessage(object sender, MessageEventArgs e)
@@ -134,10 +120,36 @@ namespace Puppeteer
 
 		private void Ws_OnError(object sender, ErrorEventArgs e)
 		{
-			var hresult = e.Exception?.HResult;
-			var message = e.Exception?.Message ?? "";
-			if (hresult != null && message != "")
-				Tools.ShowWarning($"# Error: {e.Message} [HResult={hresult}] [Exception.Message={message}]");
+			Tools.LogWarning(e.Exception.ToString());
+		}
+
+		static string ErrorDescription(int code)
+		{
+			if (code == 1000)
+				return "Connection closed";
+			else if (code == 1001)
+				return "Server gone";
+			else if (code == 1002)
+				return "Protocol error";
+			else if (code == 1003)
+				return "Bad data";
+			else if (code == 1005)
+				return "Disconnected";
+			else if (code == 1006)
+				return "Closed abnormally";
+			else if (code == 1007)
+				return "Malformed data";
+			else if (code == 1008)
+				return "Policy violation";
+			else if (code == 1009)
+				return "Message too large";
+			else if (code == 1010)
+				return "Handshake failed";
+			else if (code == 1011)
+				return "Unexpected condition";
+			else if (code == 1015)
+				return "TLS failed";
+			return $"Unknown({code})";
 		}
 	}
 }

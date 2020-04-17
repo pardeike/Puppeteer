@@ -52,6 +52,18 @@ namespace Puppeteer
 
 		public Puppeteer()
 		{
+			_ = FileWatcher.AddListener((action, file) =>
+			{
+				if (file == Connection.tokenFilename)
+				{
+					Tools.LogWarning("Token file changed");
+					var timer = new Timer(1000);
+					timer.Elapsed += (_sender, _evnt) => connection?.TryConnect();
+					timer.AutoReset = false;
+					timer.Start();
+				}
+			});
+
 			earnTimer.Elapsed += new ElapsedEventHandler((sender, e) =>
 			{
 				if (Find.CurrentMap != null)
@@ -162,13 +174,13 @@ namespace Puppeteer
 						Jobs.Run(connection, colonist, job);
 						break;
 					default:
-						Tools.ShowWarning($"unknown command '{cmd.type}'");
+						Tools.LogWarning($"unknown command '{cmd.type}'");
 						break;
 				}
 			}
 			catch (Exception e)
 			{
-				Tools.ShowWarning($"While handling {msg}: {e}");
+				Tools.LogWarning($"While handling {msg}: {e}");
 			}
 		}
 

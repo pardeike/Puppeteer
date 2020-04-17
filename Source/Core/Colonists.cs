@@ -139,7 +139,7 @@ namespace Puppeteer
 					OperationQueue.Add(OperationType.SetState, () =>
 					{
 						var pawn = entry.GetPawn();
-						if (pawn != null && pawn.Spawned)
+						if (Tools.CannotMoveOrDo(pawn) == false)
 							pawn.drafter.Drafted = drafted;
 					});
 					break;
@@ -217,7 +217,7 @@ namespace Puppeteer
 					if (coordinates.Length == 2)
 					{
 						var pawn = entry.GetPawn();
-						if (pawn != null)
+						if (Tools.CannotMoveOrDo(pawn) == false)
 						{
 							var cell = new IntVec3(coordinates[0], 0, coordinates[1]);
 							if (cell.InBounds(pawn.Map) && cell.Standable(pawn.Map))
@@ -231,7 +231,7 @@ namespace Puppeteer
 					break;
 				}
 				default:
-					Tools.ShowWarning($"Unknown set value operation with key {state.key}");
+					Tools.LogWarning($"Unknown set value operation with key {state.key}");
 					break;
 			}
 		}

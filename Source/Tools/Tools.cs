@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using Verse;
 using Verse.AI;
@@ -53,19 +54,23 @@ namespace Puppeteer
 			}
 		}
 
-		public static void ShowWarning(string message)
+		public static void LogWarning(string message)
 		{
+			message = message.Split('\n', '\r').Select(line => Regex.Replace(line, @" \[0x[0-9a-fA-F]+\] in <[0-9a-fA-F]+>:\d+ ", "")).Join(null, "\n");
+			Puppet.Say(message);
 			OperationQueue.Add(OperationType.Log, () =>
 			{
-				Puppet.Say(message);
+				Log.Warning(message);
 			});
 		}
 
-		public static void ShowError(string message)
+		public static void LogError(string message)
 		{
+			message = message.Split('\n', '\r').Select(line => Regex.Replace(line, @" \[0x[0-9a-fA-F]+\] in <[0-9a-fA-F]+>:\d+ ", "")).Join(null, "\n");
+			Puppet.Say($"Error: {message}");
 			OperationQueue.Add(OperationType.Log, () =>
 			{
-				Puppet.Say($"Error: {message}");
+				Log.Error(message);
 			});
 		}
 
@@ -113,7 +118,8 @@ namespace Puppeteer
 
 		public static bool CannotMoveOrDo(Pawn pawn)
 		{
-			return pawn.Spawned == false
+			return pawn == null
+				|| pawn.IsColonistPlayerControlled == false
 				|| pawn.Downed
 				|| pawn.health.capacities.CapableOf(PawnCapacityDefOf.Manipulation) == false
 				|| pawn.InMentalState;

@@ -32,10 +32,13 @@ namespace Puppeteer
 		{
 			if (vID.IsValid)
 			{
+				Tools.LogWarning($"{vID.name} joined");
+
 				if (state.TryGetValue(vID.Identifier, out var viewer))
 				{
 					viewer.connected = true;
 					var info = colonists.FindEntry(viewer.vID);
+					if (info == null) return;
 					info.colonist.gridSize = 0;
 					viewer.controlling = info?.thingID == null ? null : Tools.ColonistForThingID(info.thingID);
 				}
@@ -52,12 +55,17 @@ namespace Puppeteer
 
 		public void Leave(ViewerID vID)
 		{
-			if (state.TryGetValue(vID.Identifier, out var viewer))
+			if (vID.IsValid)
 			{
-				viewer.connected = false;
-				Tools.SetColonistNickname(viewer.controlling, null);
-				viewer.controlling = null;
-				Save();
+				if (state.TryGetValue(vID.Identifier, out var viewer))
+				{
+					Tools.LogWarning($"{vID.name} left");
+
+					viewer.connected = false;
+					Tools.SetColonistNickname(viewer.controlling, null);
+					viewer.controlling = null;
+					Save();
+				}
 			}
 		}
 

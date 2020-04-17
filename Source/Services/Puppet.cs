@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Threading;
+using System.Timers;
 using UnityEngine;
 using Verse;
+using WebSocketSharp;
 
 namespace Puppeteer
 {
 	[StaticConstructorOnStartup]
 	public static class Puppet
 	{
-		const float puppetOutIncrement = 1 / 60f;
+		const float puppetOutIncrement = 1 / 60f * 2f;
 		const int bPadding = 10;
 		const int bRightMargin = 19;
 		const int bBottomMargin = 11;
@@ -22,31 +23,30 @@ namespace Puppeteer
 		static Timer puppetOutTimer = null;
 
 		static string text = "";
+		public static bool IsShowing => puppetOut > 0;
 
 		public static void Say(string message, int? secs = null)
 		{
-			text = message;
-			puppetOutDesired = 1;
-			var seconds = 2 + message.Length / 70;
-			var s = secs ?? seconds;
-			if (puppetOutTimer != null)
-				_ = puppetOutTimer.Change(s * 1000, Timeout.Infinite);
-			else
-				puppetOutTimer = new Timer((_) => puppetOutDesired = 0, null, s * 1000, Timeout.Infinite);
+			if (message.IsNullOrEmpty()) return;
+			lock (text)
+			{
+				text = message;
+				puppetOutDesired = 1;
+				var seconds = 2 + message.Length / 80;
+				var s = secs ?? seconds;
+				if (puppetOutTimer != null)
+				{
+					puppetOutTimer.Stop();
+					puppetOutTimer = null;
+				}
+				puppetOutTimer = new Timer(s * 1000);
+				puppetOutTimer.Elapsed += (sender, e) => puppetOutDesired = 0;
+				puppetOutTimer.Start();
+			}
 		}
 
 		public static void Update()
 		{
-			/* TODO: for testing
-			if (Widgets.ButtonText(new Rect(100, 100, 80, 20), "Connect"))
-				Say("Connecting");
-			if (Widgets.ButtonText(new Rect(100, 130, 80, 20), "Little"))
-				Say("This mod is powered by Harmony - your favorite moddling library");
-			if (Widgets.ButtonText(new Rect(100, 160, 80, 20), "Yay!"))
-				Say("Yay!");
-			if (Widgets.ButtonText(new Rect(100, 190, 80, 20), "Much"))
-				Say("Maybe you're doing it the wrong way. You're getting the width of the text because the width doesn't change when the text overflows, but there's a way to make it change according to the text width (so the overflow configuration is not needed). Add a Content Size Fitter component to the same game object with the Text component, and set Horizontal Fit to Preferred size. The gameObject's size will change according to the pivot, set pivot.x to 0.5 and it will be centered.");*/
-
 			puppetOut += puppetOutIncrement * Math.Sign(puppetOutDesired - puppetOut);
 			if (puppetOut < 0) puppetOut = 0;
 			if (puppetOut > 1) puppetOut = 1;
@@ -67,13 +67,13 @@ namespace Puppeteer
 				var oldColor = GUI.color;
 
 				Text.Font = GameFont.Small;
-				for (var n = 0; n < 20; n++)
+				for (var n = 0; n < 10; n++)
 				{
-					var bWidth = 160 + 40 * n;
+					var bWidth = 120 + 40 * n;
 					var maxWidth = bWidth - 2 * bPadding - bRightMargin;
 					var textHeight = Text.CalcHeight(text, maxWidth);
 					var bHeight = textHeight + 2 * bPadding + bBottomMargin;
-					if (bHeight < bWidth / 3)
+					if (textHeight < 25 || bHeight < bWidth / 3)
 					{
 						var xMax = xPos + 35;
 						var zMax = yPos + height - 24;

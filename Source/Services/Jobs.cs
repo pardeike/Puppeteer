@@ -65,7 +65,7 @@ namespace Puppeteer
 					break;
 
 				default:
-					Tools.ShowWarning($"unknown job method '{job.method}'");
+					Tools.LogWarning($"unknown job method '{job.method}'");
 					break;
 			}
 		}

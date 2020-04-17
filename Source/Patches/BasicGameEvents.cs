@@ -6,13 +6,17 @@ using Verse;
 
 namespace Puppeteer
 {
-	[HarmonyPatch(typeof(Game))]
-	[HarmonyPatch(nameof(Game.FinalizeInit))]
-	static class Game_FinalizeInit_Patch
+	[HarmonyPatch(typeof(Root_Play))]
+	[HarmonyPatch(nameof(Root_Play.Start))]
+	static class Root_Play_Start_Patch
 	{
 		public static void Postfix()
 		{
-			Puppeteer.instance.SetEvent(Event.GameEntered);
+			LongEventHandler.QueueLongEvent(delegate ()
+			{
+				Puppeteer.instance.SetEvent(Event.GameExited);
+				Puppeteer.instance.SetEvent(Event.GameEntered);
+			}, null, false, null, false);
 		}
 	}
 
@@ -26,9 +30,19 @@ namespace Puppeteer
 		}
 	}
 
-	[HarmonyPatch(typeof(MainMenuDrawer))]
-	[HarmonyPatch(nameof(MainMenuDrawer.MainMenuOnGUI))]
-	static class MainMenuDrawer_MainMenuOnGUI_Patch
+	[HarmonyPatch(typeof(LearningReadout))]
+	[HarmonyPatch(nameof(LearningReadout.LearningReadoutOnGUI))]
+	static class LearningReadout_WindowOnGUI_Patch
+	{
+		public static bool Prefix()
+		{
+			return Puppet.IsShowing == false;
+		}
+	}
+
+	[HarmonyPatch(typeof(Root))]
+	[HarmonyPatch(nameof(Root.OnGUI))]
+	static class Root_OnGUI_Patch
 	{
 		static int firstTimeCounter = 120;
 
@@ -38,20 +52,11 @@ namespace Puppeteer
 			{
 				firstTimeCounter--;
 				if (firstTimeCounter == 0)
-					Puppet.Say("Hello");
+					Tools.LogWarning("Hello");
 			}
 
 			Puppet.Update();
-		}
-	}
-
-	[HarmonyPatch(typeof(UIRoot))]
-	[HarmonyPatch(nameof(UIRoot.UIRootOnGUI))]
-	static class UIRoot_UIRootOnGUI_Patch
-	{
-		public static void Postfix()
-		{
-			Puppet.Update();
+			OperationQueue.Process(OperationType.Log);
 		}
 	}
 
