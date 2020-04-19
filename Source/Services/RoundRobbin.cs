@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Verse;
 
 namespace Puppeteer
 {
@@ -18,7 +17,7 @@ namespace Puppeteer
 			state[name] = new RoundRobbin() { interval = interval, delay = interval };
 		}
 
-		public static Pawn NextColonist(string name)
+		public static State.Puppeteer NextColonist(string name)
 		{
 			if (state.TryGetValue(name, out var robbin) == false) return null;
 
@@ -26,13 +25,13 @@ namespace Puppeteer
 			if (robbin.ticks < robbin.delay) return null;
 			robbin.ticks = 0;
 
-			var colonists = Current.Game.Maps.SelectMany(map => PlayerPawns.FreeColonists(map, false)).ToList();
-			if (colonists.Count == 0) return null;
-			robbin.delay = robbin.interval / colonists.Count + 1;
+			var puppeteers = State.instance.ConnectedPuppeteers().ToList();
+			if (puppeteers.Count == 0) return null;
+			robbin.delay = robbin.interval / puppeteers.Count + 1;
 
-			var idx = (robbin.counter + 1) % colonists.Count;
+			var idx = (robbin.counter + 1) % puppeteers.Count;
 			robbin.counter = idx;
-			return colonists[idx];
+			return puppeteers[idx];
 		}
 	}
 }

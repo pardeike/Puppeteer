@@ -138,7 +138,7 @@ namespace Puppeteer
 		{
 			OperationQueue.Process(OperationType.Portrait);
 			Tools.RenderColonists();
-			Tools.UpdateColonists(false);
+			Tools.UpdateColonists();
 			if (Find.TickManager.Paused == false)
 				PuppeteerController.instance.SetEvent(Event.GridUpdate);
 		}

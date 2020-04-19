@@ -12,8 +12,11 @@ namespace Puppeteer
 {
 	public static class Jobs
 	{
-		public static void Run(Connection connection, Pawn pawn, IncomingJob job)
+		public static void Run(Connection connection, State.Puppeteer puppeteer, IncomingJob job)
 		{
+			var pawn = puppeteer.puppet?.pawn;
+			if (pawn == null) return;
+
 			void RunOnQueue(Func<Pawn, string[], object> action)
 			{
 				var result = new OutgoingJobResult() { id = job.id, viewer = job.user };

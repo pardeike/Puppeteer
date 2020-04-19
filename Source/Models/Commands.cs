@@ -225,7 +225,6 @@ namespace Puppeteer
 		public int id;
 		public string name;
 		public ViewerID controller;
-		public string lastSeen;
 	}
 
 	public class AllColonists : JSONConvertable<AllColonists>

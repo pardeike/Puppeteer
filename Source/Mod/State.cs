@@ -1,44 +1,16 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
 using Verse;
 
 namespace Puppeteer
 {
-	[TypeConverter(typeof(PawnConverter))]
-	public class SPawn : Pawn { }
-
-	[TypeConverter(typeof(PawnConverter))]
-	public class PawnConverter : TypeConverter
-	{
-		public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-		{
-			if (sourceType == typeof(string)) return true;
-			return base.CanConvertFrom(context, sourceType);
-		}
-
-		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-		{
-			var thingID = Tools.SafeParse(value as string);
-			if (thingID.HasValue)
-				return Tools.ColonistForThingID(thingID.Value);
-			return base.ConvertFrom(context, culture, value);
-		}
-
-		public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
-		{
-			var pawn = value as Pawn;
-			if (pawn != null && destinationType == typeof(string)) { return pawn.ThingID; }
-			return base.ConvertTo(context, culture, value, destinationType);
-		}
-	}
-
 	public class State
 	{
 		const string saveFileName = "PuppeteerState.json";
+
+		public static State instance = Load();
 
 		public class Puppet
 		{
@@ -48,11 +20,13 @@ namespace Puppeteer
 
 		public class Puppeteer
 		{
+			public ViewerID vID;
 			public Puppet puppet; // optional
 			public bool connected;
 			public DateTime lastCommandIssued;
 			public string lastCommand;
 			public int coinsEarned;
+			public int gridSize;
 		}
 
 		// new associations are automatically create for:
@@ -60,12 +34,12 @@ namespace Puppeteer
 		//  Viewer  ---creates--->  Puppeteer  ---optionally-has--->  Puppet
 		//  Pawn    ---creates--->  Puppet     ---optionally-has--->  Puppeteer
 		//
-		readonly Dictionary<SPawn, Puppet> pawnToPuppet = new Dictionary<SPawn, Puppet>();
-		readonly Dictionary<ViewerID, Puppeteer> viewerToPuppeteer = new Dictionary<ViewerID, Puppeteer>();
+		public Dictionary<Pawn, Puppet> pawnToPuppet = new Dictionary<Pawn, Puppet>(); // int == pawn.thingID
+		public Dictionary<ViewerID, Puppeteer> viewerToPuppeteer = new Dictionary<ViewerID, Puppeteer>();
 
 		//
 
-		public static State Load()
+		static State Load()
 		{
 			var data = saveFileName.ReadConfig();
 			if (data == null) return new State();
@@ -75,6 +49,7 @@ namespace Puppeteer
 		public void Save()
 		{
 			var data = JsonConvert.SerializeObject(this);
+			PuppetCommentator.Say($"Saving {data.Length} bytes");
 			saveFileName.WriteConfig(data);
 		}
 
@@ -90,14 +65,24 @@ namespace Puppeteer
 		{
 			var puppeteer = new Puppeteer()
 			{
-				puppet = null,
-				connected = false,
+				vID = vID,
 				lastCommandIssued = DateTime.Now,
-				lastCommand = "Became a puppeteer",
-				coinsEarned = 0
+				lastCommand = "Became a puppeteer"
 			};
 			viewerToPuppeteer.Add(vID, puppeteer);
 			return puppeteer;
+		}
+
+		public IEnumerable<ViewerID> AllViewers()
+		{
+			return viewerToPuppeteer.Keys;
+		}
+
+		public IEnumerable<ViewerID> ConnectedViewers()
+		{
+			return viewerToPuppeteer
+				.Where(pair => pair.Value.connected)
+				.Select(pair => pair.Key);
 		}
 
 		public IEnumerable<ViewerID> AvailableViewers()
@@ -107,13 +92,20 @@ namespace Puppeteer
 				.Select(pair => pair.Key);
 		}
 
+		public IEnumerable<Puppeteer> ConnectedPuppeteers()
+		{
+			return viewerToPuppeteer.Values
+				.Where(puppeteer => puppeteer.connected);
+		}
+
 		public bool HasPuppet(ViewerID vID)
 		{
 			return PuppeteerForViewer(vID)?.puppet != null;
 		}
 
-		public void Assign(ViewerID vID, SPawn pawn)
+		public void Assign(ViewerID vID, Pawn pawn)
 		{
+			if (pawn == null) return;
 			var puppet = PuppetForPawn(pawn);
 			if (puppet == null) return;
 			var puppeteer = PuppeteerForViewer(vID);
@@ -135,27 +127,41 @@ namespace Puppeteer
 		{
 			var puppeteer = PuppeteerForViewer(vID) ?? CreatePuppeteerForViewer(vID);
 			puppeteer.connected = connected;
+			var pawn = puppeteer.puppet?.pawn;
+			if (pawn != null)
+				Tools.SetColonistNickname(pawn, connected ? vID.name : null);
 		}
 
 		// pawns
 
-		public Puppet PuppetForPawn(SPawn pawn)
+		public Puppet PuppetForPawn(Pawn pawn)
 		{
+			if (pawn == null) return null;
 			_ = pawnToPuppet.TryGetValue(pawn, out var puppet);
 			return puppet;
 		}
 
-		public void AddPawn(SPawn pawn)
+		public void AddPawn(Pawn pawn)
 		{
-			pawnToPuppet[pawn] = new Puppet()
+			if (pawn == null) return;
+			pawnToPuppet.Add(pawn, new Puppet()
 			{
 				pawn = pawn,
 				puppeteer = null
-			};
+			});
 		}
 
-		public bool? IsConnected(SPawn pawn)
+		public void RemovePawn(Pawn pawn)
 		{
+			if (pawn == null) return;
+			if (pawnToPuppet.TryGetValue(pawn, out var puppet) && puppet.puppeteer != null)
+				puppet.puppeteer.puppet = null;
+			_ = pawnToPuppet.Remove(pawn);
+		}
+
+		public bool? IsConnected(Pawn pawn)
+		{
+			if (pawn == null) return null;
 			var puppet = PuppetForPawn(pawn);
 			var puppeteer = puppet?.puppeteer;
 			if (puppeteer == null) return null;

@@ -199,6 +199,12 @@ namespace Puppeteer
 			}
 		}
 
+		public static void MapInit(Map map)
+		{
+			AllColonists(true, map).Do(pawn => State.instance.AddPawn(pawn));
+			State.instance.Save();
+		}
+
 		public static List<Pawn> AllColonists(bool forceUpdate, Map forMap = null)
 		{
 			var colonists = new List<Pawn>();
@@ -228,40 +234,32 @@ namespace Puppeteer
 				pawn.Name = new NameTriple(name3.First, nick ?? name3.First, name3.Last);
 		}
 
-		public static void UpdateColonists(bool updateAll)
+		public static void UpdateColonists()
 		{
-			if (updateAll)
-			{
-				Current.Game.Maps.SelectMany(map => PlayerPawns.FreeColonists(map, false))
-					.Do(p => PuppeteerController.instance.UpdateColonist(p));
-				return;
-			}
-
-			var pawn = RoundRobbin.NextColonist("update-colonist");
-			if (pawn != null)
-				PuppeteerController.instance.UpdateColonist(pawn);
+			var puppeteer = RoundRobbin.NextColonist("update-colonist");
+			if (puppeteer != null)
+				PuppeteerController.instance.UpdateColonist(puppeteer);
 		}
 
 		public static void RenderColonists()
 		{
-			var pawn = RoundRobbin.NextColonist("render-colonist");
-			var colonist = PuppeteerController.instance.colonists.FindColonist(pawn);
+			var puppeteer = RoundRobbin.NextColonist("render-colonist");
+			var pawn = puppeteer?.puppet?.pawn;
+			if (pawn == null) return;
 
 			pawn = GetCarrier(pawn) ?? pawn;
-
-			if (pawn == null) return;
 			var map = pawn.Map;
+
 			if (map == null) return;
 			var currentMap = Find.CurrentMap;
 			var isVisibleMap = map == currentMap && WorldRendererUtility.WorldRenderedNow == false;
-
 			if (isVisibleMap)
 			{
 				var viewRect = Find.CameraDriver.CurrentViewRect.ContractedBy(2);
 				var visible = viewRect.Contains(pawn.Position);
 				if (visible)
 				{
-					Renderer.PawnScreenRender(colonist, pawn.DrawPos, 1.5f);
+					Renderer.PawnScreenRender(puppeteer.vID, pawn.DrawPos, 1.5f);
 					return;
 				}
 			}
@@ -294,7 +292,7 @@ namespace Puppeteer
 			map.designationManager.DrawDesignations();
 			map.overlayDrawer.DrawAllOverlays();
 
-			Renderer.PawnScreenRender(colonist, pawn.DrawPos, 1.5f);
+			Renderer.PawnScreenRender(puppeteer.vID, pawn.DrawPos, 1.5f);
 
 			Renderer.fakeViewRect = CellRect.Empty;
 			Renderer.renderOffset = 0f;

@@ -6,24 +6,14 @@ using Verse;
 
 namespace Puppeteer
 {
-	[HarmonyPatch(typeof(Pawn))]
-	[HarmonyPatch(nameof(Pawn.SpawnSetup))]
-	static class Pawn_SpawnSetup_Patch
-	{
-		public static void Postfix(Pawn __instance, bool respawningAfterLoad)
-		{
-			if (respawningAfterLoad == false && __instance.Spawned && __instance.IsColonist)
-				PuppeteerController.instance.SetEvent(Event.ColonistsChanged);
-		}
-	}
-
 	[HarmonyPatch(typeof(Map))]
 	[HarmonyPatch(nameof(Map.FinalizeLoading))]
 	static class Map_FinalizeLoading_Patch
 	{
-		public static void Postfix()
+		public static void Postfix(Map __instance)
 		{
 			PuppeteerController.instance.SetEvent(Event.ColonistsChanged);
+			Tools.MapInit(__instance);
 		}
 	}
 
@@ -41,6 +31,20 @@ namespace Puppeteer
 		static void Postfix()
 		{
 			inSplitOff = false;
+		}
+	}
+
+	[HarmonyPatch(typeof(Pawn))]
+	[HarmonyPatch(nameof(Pawn.SpawnSetup))]
+	static class Pawn_SpawnSetup_Patch
+	{
+		public static void Postfix(Pawn __instance, bool respawningAfterLoad)
+		{
+			if (respawningAfterLoad == false && __instance.Spawned && __instance.IsColonist)
+			{
+				PuppeteerController.PawnAvailable(__instance);
+				PuppeteerController.instance.SetEvent(Event.ColonistsChanged);
+			}
 		}
 	}
 

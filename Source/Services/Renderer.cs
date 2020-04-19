@@ -35,7 +35,7 @@ namespace Puppeteer
 			camera.transform.position = position;
 		}
 
-		public static void PawnScreenRender(Colonist colonist, Vector3 drawPos, float radius)
+		public static void PawnScreenRender(ViewerID vID, Vector3 drawPos, float radius)
 		{
 			var camera = RenderCamera.camera;
 			if (camera == null) return;
@@ -55,7 +55,7 @@ namespace Puppeteer
 			RenderTexture.active = null;
 
 			var jpgData = imageTexture.EncodeToJPG(60);
-			PuppeteerController.instance.PawnOnMap(colonist, jpgData);
+			PuppeteerController.instance.PawnOnMap(vID, jpgData);
 		}
 	}
 }

@@ -1,150 +1,92 @@
 ﻿using HarmonyLib;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Verse;
 
 namespace Puppeteer
 {
-	public class Viewers
+	public static class Viewers
 	{
-		const string saveFileName = "PuppeteerViewers.json";
-
-		// keys: "{Service}:{ID}" (ViewerID.Identifier)
-		public Dictionary<string, Viewer> state = new Dictionary<string, Viewer>();
-
-		public Viewers()
-		{
-			var data = saveFileName.ReadConfig();
-			if (data != null)
-				state = JsonConvert.DeserializeObject<Dictionary<string, Viewer>>(data);
-		}
-
-		public void Save()
-		{
-			var data = JsonConvert.SerializeObject(state);
-			saveFileName.WriteConfig(data);
-		}
-
-		public void Join(Connection connection, Colonists colonists, ViewerID vID)
+		public static void Join(Connection connection, ViewerID vID)
 		{
 			if (vID.IsValid)
 			{
 				Tools.LogWarning($"{vID.name} joined");
-
-				if (state.TryGetValue(vID.Identifier, out var viewer))
-				{
-					viewer.connected = true;
-					var info = colonists.FindEntry(viewer.vID);
-					if (info == null) return;
-					info.colonist.gridSize = 0;
-					viewer.controlling = info?.thingID == null ? null : Tools.ColonistForThingID(info.thingID);
-				}
-				else
-				{
-					viewer = new Viewer() { vID = vID, connected = true };
-					state[vID.Identifier] = viewer;
-				}
-				Save();
-				Tools.SetColonistNickname(viewer.controlling, vID.name);
-				SendAllState(connection, viewer);
+				State.instance.SetConnected(vID, true);
+				State.instance.Save();
+				SendAllState(connection, vID);
 			}
 		}
 
-		public void Leave(ViewerID vID)
+		public static void Leave(ViewerID vID)
 		{
 			if (vID.IsValid)
 			{
-				if (state.TryGetValue(vID.Identifier, out var viewer))
-				{
-					Tools.LogWarning($"{vID.name} left");
-
-					viewer.connected = false;
-					Tools.SetColonistNickname(viewer.controlling, null);
-					viewer.controlling = null;
-					Save();
-				}
+				Tools.LogWarning($"{vID.name} left");
+				State.instance.SetConnected(vID, false);
+				State.instance.Save();
 			}
 		}
 
-		public List<Viewer> Available()
+		/*public static IEnumerable<ViewerID> Available()
 		{
-			return state.Values
-				.Where(viewer => viewer.controlling == null)
-				.OrderBy(viewer => viewer.vID.name)
-				.ToList();
+			return State.instance.AvailableViewers();
+		}*/
+
+		static void SendGameInfo(Connection connection, ViewerID vID)
+		{
+			connection.Send(new GameInfo() { viewer = vID, info = new GameInfo.Info() { terrain = GridUpdater.ColorList() } });
 		}
 
-		public bool? ConnectedState(Pawn pawn)
+		public static void SendEarnToAll(Connection connection, int amount)
 		{
-			if (pawn == null) return null;
-			var result = state.Where(p => p.Value.controlling == pawn);
-			if (result.Any() == false) return null;
-			return result.First().Value.connected;
-		}
-
-		public Viewer FindViewer(ViewerID vID)
-		{
-			if (vID == null) return null;
-			if (state.TryGetValue(vID.Identifier, out var viewer))
-				return viewer;
-			return null;
-		}
-
-		static void SendGameInfo(Connection connection, Viewer viewer)
-		{
-			connection.Send(new GameInfo() { viewer = viewer.vID, info = new GameInfo.Info() { terrain = GridUpdater.ColorList() } });
-		}
-
-		public void Earn(Connection connection, int amount)
-		{
-			state.DoIf(viewer => viewer.Value.connected, viewer =>
+			var puppeteers = State.instance.ConnectedPuppeteers();
+			puppeteers.Do(puppeteer =>
 			{
-				viewer.Value.coins += amount;
-				SendEarned(connection, viewer.Value);
+				puppeteer.coinsEarned += amount;
+				SendEarned(connection, puppeteer);
 			});
 		}
 
-		static void SendEarned(Connection connection, Viewer viewer)
+		static void SendEarned(Connection connection, State.Puppeteer puppeteer)
 		{
-			connection.Send(new Earned() { viewer = viewer.vID, info = new Earned.Info() { amount = viewer.coins } });
+			connection.Send(new Earned() { viewer = puppeteer.vID, info = new Earned.Info() { amount = puppeteer.coinsEarned } });
 		}
 
-		public static void SendPortrait(Connection connection, Viewer viewer)
+		public static void SendPortrait(Connection connection, State.Puppeteer puppeteer)
 		{
-			OperationQueue.Add(OperationType.Portrait, () =>
-			{
-				var pawn = viewer.controlling;
-				if (pawn != null)
+			var vID = puppeteer?.vID;
+			var pawn = puppeteer?.puppet?.pawn;
+			if (vID != null && pawn != null)
+				OperationQueue.Add(OperationType.Portrait, () =>
 				{
 					var portrait = Renderer.GetPawnPortrait(pawn, new Vector2(35f, 55f));
-					connection.Send(new Portrait() { viewer = viewer.vID, info = new Portrait.Info() { image = portrait } });
-				}
-			});
+					connection.Send(new Portrait() { viewer = vID, info = new Portrait.Info() { image = portrait } });
+				});
 		}
 
-		void SendStates<T>(Connection connection, string key, Func<Pawn, T> valueFunction, Viewer forViewer = null)
+		static void SendStates<T>(Connection connection, string key, Func<Pawn, T> valueFunction, State.Puppeteer forPuppeteer = null)
 		{
-			void SendState(Viewer viewer)
+			void SendState(State.Puppeteer puppeteer)
 			{
-				var pawn = viewer.controlling;
+				var vID = puppeteer?.vID;
+				var pawn = puppeteer?.puppet?.pawn;
+
 				if (pawn != null)
-				{
-					connection.Send(new OutgoingState<T>() { viewer = viewer.vID, key = key, val = valueFunction(viewer.controlling) });
-				}
+					connection.Send(new OutgoingState<T>() { viewer = vID, key = key, val = valueFunction(pawn) });
 			}
 
-			if (forViewer != null)
+			if (forPuppeteer != null)
 			{
-				SendState(forViewer);
+				SendState(forPuppeteer);
 				return;
 			}
-			state.DoIf(viewer => viewer.Value.connected, pair => SendState(pair.Value));
+			var puppeteers = State.instance.ConnectedPuppeteers();
+			puppeteers.Do(p => SendState(p));
 		}
 
-		public void SendAreas(Connection connection, Viewer forViewer = null)
+		public static void SendAreas(Connection connection, State.Puppeteer forPuppeteer = null)
 		{
 			string[] GetResult(Pawn pawn)
 			{
@@ -152,10 +94,10 @@ namespace Puppeteer
 					.Where(a => a.AssignableAsAllowed())
 					.Select(a => a.Label).ToArray();
 			}
-			SendStates(connection, "zones", GetResult, forViewer);
+			SendStates(connection, "zones", GetResult, forPuppeteer);
 		}
 
-		public void SendPriorities(Connection connection)
+		public static void SendPriorities(Connection connection)
 		{
 			PrioritiyInfo GetResult(Pawn pawn)
 			{
@@ -187,7 +129,7 @@ namespace Puppeteer
 			SendStates(connection, "priorities", GetResult, null);
 		}
 
-		public void SendSchedules(Connection connection)
+		public static void SendSchedules(Connection connection)
 		{
 			ScheduleInfo GetResult(Pawn pawn)
 			{
@@ -204,13 +146,14 @@ namespace Puppeteer
 			SendStates(connection, "schedules", GetResult, null);
 		}
 
-		public void SendAllState(Connection connection, Viewer viewer)
+		public static void SendAllState(Connection connection, ViewerID vID)
 		{
-			SendGameInfo(connection, viewer);
-			SendEarned(connection, viewer);
-			Tools.UpdateColonists(true);
-			SendPortrait(connection, viewer);
-			SendAreas(connection, viewer);
+			var puppeteer = State.instance.PuppeteerForViewer(vID);
+
+			SendGameInfo(connection, vID);
+			SendEarned(connection, puppeteer);
+			SendPortrait(connection, puppeteer);
+			SendAreas(connection, puppeteer);
 			SendPriorities(connection);
 			SendSchedules(connection);
 		}

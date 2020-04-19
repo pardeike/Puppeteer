@@ -1,144 +1,73 @@
-﻿using HarmonyLib;
-using Newtonsoft.Json;
-using RimWorld;
+﻿using RimWorld;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Verse;
 using Verse.AI;
 
 namespace Puppeteer
 {
-	public class ColonistEntry
+	public static class Colonists
 	{
-		public int thingID;
-		public Colonist colonist;
-
-		public Pawn GetPawn()
-		{
-			return Tools.ColonistForThingID(thingID);
-		}
-	}
-
-	public class Colonists
-	{
-		const string saveFileName = "PuppeteerColonists.json";
-
-		// keys: ""+thingIDNumber
-		public Dictionary<string, Colonist> state = new Dictionary<string, Colonist>();
-
-		public Colonists()
-		{
-			var data = saveFileName.ReadConfig();
-			if (data != null)
-				state = JsonConvert.DeserializeObject<Dictionary<string, Colonist>>(data);
-		}
-
-		public void Save()
-		{
-			var data = JsonConvert.SerializeObject(state);
-			saveFileName.WriteConfig(data);
-		}
-
-		public Pawn GetColonist(ViewerID viewer)
-		{
-			var entry = FindEntry(viewer);
-			if (entry == null) return null;
-			return entry.GetPawn();
-		}
-
-		public void SendAllColonists(Connection connection, bool forceUpdate)
+		public static void SendAllColonists(Connection connection)
 		{
 			if (connection == null) return;
-			var colonists = Tools.AllColonists(forceUpdate).Select(p =>
-			{
-				ViewerID controller = null;
-				if (state.TryGetValue("" + p.thingIDNumber, out var colonist))
-					controller = colonist.controller;
-				return new ColonistInfo()
+			var colonists = State.instance.AssignedPuppets()
+				.Select(puppet =>
 				{
-					id = p.thingIDNumber,
-					name = p.Name.ToStringShort,
-					controller = controller,
-					lastSeen = colonist?.lastSeen ?? ""
-				};
-			}).ToList();
+					var pawn = puppet.pawn;
+					return new ColonistInfo()
+					{
+						id = pawn.thingIDNumber,
+						name = pawn.Name.ToStringShort,
+						controller = puppet.puppeteer.vID,
+					};
+				})
+				.ToList();
 			connection.Send(new AllColonists() { colonists = colonists });
 		}
 
-		public ColonistEntry FindEntry(ViewerID viewer)
-		{
-			return state
-				.Where(pair => pair.Value.controller == viewer)
-				.Select(pair => new ColonistEntry() { thingID = int.Parse(pair.Key), colonist = pair.Value })
-				.FirstOrDefault();
-		}
-
-		public Colonist FindColonist(Pawn pawn)
-		{
-			if (pawn == null) return null;
-			if (state.TryGetValue("" + pawn.thingIDNumber, out var colonist))
-				return colonist;
-			return null;
-		}
-
-		public void Assign(string colonistID, ViewerID viewer, Connection connection)
+		public static void Assign(Connection connection, int thingID, ViewerID vID)
 		{
 			void SendAssignment(ViewerID v, bool state) => connection.Send(new Assignment() { viewer = v, state = state });
 
-			if (viewer == null)
+			var pawn = Tools.ColonistForThingID(thingID);
+			if (pawn == null) return;
+			if (vID == null)
 			{
-				if (state.TryGetValue(colonistID, out var current))
-				{
-					var controller = current?.controller;
-					if (controller != null)
-					{
-						var entry = FindEntry(controller);
-						Tools.SetColonistNickname(entry?.GetPawn(), null);
-						SendAssignment(current.controller, false);
-					}
-				}
-				_ = state.Remove(colonistID);
-				Save();
+				State.instance.Unassign(vID);
+				State.instance.Save();
+				Tools.SetColonistNickname(pawn, null);
+				SendAssignment(vID, false);
 				return;
 			}
-			state.DoIf(pair => pair.Value.controller == viewer, pair => SendAssignment(pair.Value.controller, false));
-			_ = state.RemoveAll(pair => pair.Value.controller == viewer);
-
-			if (state.TryGetValue(colonistID, out var colonist))
-			{
-				colonist.controller = viewer;
-				Save();
-				SendAssignment(viewer, true);
-				return;
-			}
-
-			colonist = new Colonist() { controller = viewer };
-			state[colonistID] = colonist;
-			Save();
-			SendAssignment(viewer, true);
+			State.instance.Assign(vID, pawn);
+			State.instance.Save();
+			Tools.SetColonistNickname(pawn, vID.name);
+			SendAssignment(vID, true);
 		}
 
-		public void SetState(Connection connection, IncomingState state)
+		public static void SetState(Connection connection, IncomingState state)
 		{
-			var entry = FindEntry(state.user);
-			if (entry == null) return;
+			if (connection == null) return;
+			var vID = state.user;
+			if (vID == null) return;
+			var puppeteer = State.instance.PuppeteerForViewer(vID);
+			var pawn = puppeteer?.puppet?.pawn;
+			if (pawn == null) return;
+
 			switch (state.key)
 			{
 				case "hostile-response":
 					var responseMode = (HostilityResponseMode)Enum.Parse(typeof(HostilityResponseMode), state.val.ToString());
 					OperationQueue.Add(OperationType.SetState, () =>
 					{
-						var pawn = entry.GetPawn();
-						if (pawn != null)
-							pawn.playerSettings.hostilityResponse = responseMode;
+						pawn.playerSettings.hostilityResponse = responseMode;
 					});
 					break;
 				case "drafted":
 					var drafted = Convert.ToBoolean(state.val);
 					OperationQueue.Add(OperationType.SetState, () =>
 					{
-						var pawn = entry.GetPawn();
 						if (Tools.CannotMoveOrDo(pawn) == false)
 							pawn.drafter.Drafted = drafted;
 					});
@@ -146,12 +75,8 @@ namespace Puppeteer
 				case "zone":
 					OperationQueue.Add(OperationType.SetState, () =>
 					{
-						var pawn = entry.GetPawn();
-						if (pawn != null)
-						{
-							var area = pawn.Map.areaManager.AllAreas.Where(a => a.AssignableAsAllowed()).FirstOrDefault(a => a.Label == state.val.ToString());
-							pawn.playerSettings.AreaRestriction = area;
-						}
+						var area = pawn.Map.areaManager.AllAreas.Where(a => a.AssignableAsAllowed()).FirstOrDefault(a => a.Label == state.val.ToString());
+						pawn.playerSettings.AreaRestriction = area;
 					});
 					break;
 				case "priority":
@@ -161,13 +86,9 @@ namespace Puppeteer
 					var prio = val % 100;
 					OperationQueue.Add(OperationType.SetState, () =>
 					{
-						var pawn = entry.GetPawn();
-						if (pawn != null)
-						{
-							var defs = Integrations.GetWorkTypeDefs().ToArray();
-							if (idx >= 0 && idx < defs.Length)
-								pawn.workSettings.SetPriority(defs[idx], prio);
-						}
+						var defs = Integrations.GetWorkTypeDefs().ToArray();
+						if (idx >= 0 && idx < defs.Length)
+							pawn.workSettings.SetPriority(defs[idx], prio);
 					});
 					break;
 				}
@@ -182,9 +103,7 @@ namespace Puppeteer
 							var type = Tools.Assignments.FirstOrDefault(ass => ass.Value == pair[1]).Key;
 							OperationQueue.Add(OperationType.SetState, () =>
 							{
-								var pawn = entry.GetPawn();
-								if (pawn != null)
-									pawn.timetable.SetAssignment(idx.Value, type);
+								pawn.timetable.SetAssignment(idx.Value, type);
 							});
 						}
 					}
@@ -193,13 +112,12 @@ namespace Puppeteer
 				case "grid":
 				{
 					var gridSize = Convert.ToInt32(state.val);
-					entry.colonist.gridSize = gridSize;
+					puppeteer.gridSize = gridSize;
 					if (gridSize > 0)
 					{
-						var pawn = entry.GetPawn();
 						connection.Send(new GridUpdate()
 						{
-							controller = entry.colonist.controller,
+							controller = vID,
 							info = new GridUpdate.Info()
 							{
 								px = pawn.Position.x,
@@ -216,7 +134,6 @@ namespace Puppeteer
 					var coordinates = val.Split(',').Select(v => { if (int.TryParse(v, out var n)) return n; else return -1000; }).ToArray();
 					if (coordinates.Length == 2)
 					{
-						var pawn = entry.GetPawn();
 						if (Tools.CannotMoveOrDo(pawn) == false)
 						{
 							var cell = new IntVec3(coordinates[0], 0, coordinates[1]);
@@ -236,28 +153,33 @@ namespace Puppeteer
 			}
 		}
 
-		public void UpdateGrids(Connection connection)
+		public static void UpdateGrids(Connection connection)
 		{
 			if (connection == null) return;
-			var actions = state.Select(pair =>
-			{
-				var pawn = Tools.ColonistForThingID(int.Parse(pair.Key));
-				var colonist = pair.Value;
-				if (colonist.controller == null || colonist.gridSize == 0) return (Action)null;
-				return () =>
-				{
-					connection.Send(new GridUpdate()
+
+			var actions = State.instance.ConnectedPuppeteers()
+					.Select(puppeteer =>
 					{
-						controller = colonist.controller,
-						info = new GridUpdate.Info()
+						var pawn = puppeteer.puppet?.pawn;
+						var gridSize = puppeteer.gridSize;
+						if (gridSize == 0) return (Action)null;
+						var vID = puppeteer.vID;
+						return () =>
 						{
-							px = pawn.Position.x,
-							pz = pawn.Position.z,
-							val = GridUpdater.GetGrid(pawn, colonist.gridSize)
-						}
-					});
-				};
-			}).OfType<Action>().ToList();
+							connection.Send(new GridUpdate()
+							{
+								controller = vID,
+								info = new GridUpdate.Info()
+								{
+									px = pawn.Position.x,
+									pz = pawn.Position.z,
+									val = GridUpdater.GetGrid(pawn, gridSize)
+								}
+							});
+						};
+					})
+					.OfType<Action>()
+					.ToList();
 			Tools.RunEvery(15, actions);
 		}
 	}
