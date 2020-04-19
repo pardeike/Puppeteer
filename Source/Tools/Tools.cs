@@ -199,9 +199,9 @@ namespace Puppeteer
 			}
 		}
 
-		public static void MapInit(Map map)
+		public static void GameInit()
 		{
-			AllColonists(true, map).Do(pawn => State.instance.AddPawn(pawn));
+			AllColonists(true, null).Do(pawn => State.instance.UpdatePawn(pawn));
 			State.instance.Save();
 		}
 
@@ -238,7 +238,7 @@ namespace Puppeteer
 		{
 			var puppeteer = RoundRobbin.NextColonist("update-colonist");
 			if (puppeteer != null)
-				PuppeteerController.instance.UpdateColonist(puppeteer);
+				Controller.instance.UpdateColonist(puppeteer);
 		}
 
 		public static void RenderColonists()

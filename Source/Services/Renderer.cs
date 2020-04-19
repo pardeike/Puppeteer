@@ -55,7 +55,7 @@ namespace Puppeteer
 			RenderTexture.active = null;
 
 			var jpgData = imageTexture.EncodeToJPG(60);
-			PuppeteerController.instance.PawnOnMap(vID, jpgData);
+			Controller.instance.PawnOnMap(vID, jpgData);
 		}
 	}
 }

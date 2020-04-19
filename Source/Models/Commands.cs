@@ -17,8 +17,6 @@ namespace Puppeteer
 		public bool game = true;
 	}
 
-
-
 	public class GameInfo : JSONConvertable<GameInfo>
 	{
 		public class Info

@@ -11,7 +11,7 @@ namespace Puppeteer
 		public static void SendAllColonists(Connection connection)
 		{
 			if (connection == null) return;
-			var colonists = State.instance.AssignedPuppets()
+			var colonists = State.instance.AllPuppets()
 				.Select(puppet =>
 				{
 					var pawn = puppet.pawn;
@@ -19,7 +19,7 @@ namespace Puppeteer
 					{
 						id = pawn.thingIDNumber,
 						name = pawn.Name.ToStringShort,
-						controller = puppet.puppeteer.vID,
+						controller = puppet.puppeteer?.vID,
 					};
 				})
 				.ToList();

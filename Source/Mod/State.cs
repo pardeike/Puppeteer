@@ -1,5 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿using HarmonyLib;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Verse;
@@ -14,14 +16,30 @@ namespace Puppeteer
 
 		public class Puppet
 		{
-			public Pawn pawn;
-			public Puppeteer puppeteer; // optional
+			[JsonProperty] internal int _id;
+			internal void Init(ref int id) { _id = ++id; }
+			internal void Update() { _pawn = pawn?.thingIDNumber ?? 0; _puppeteer = puppeteer?._id ?? 0; }
+			internal void Restore(State state) { pawn = Tools.ColonistForThingID(_pawn); puppeteer = state.viewerToPuppeteer.Values.FirstOrDefault(v => v._id == _puppeteer); }
+
+			[JsonIgnore] public Pawn pawn;
+			[JsonProperty] private int _pawn;
+
+			[JsonIgnore] public Puppeteer puppeteer; // optional
+			[JsonProperty] private int _puppeteer;
 		}
 
 		public class Puppeteer
 		{
+			[JsonProperty] internal int _id;
+			internal void Init(ref int id) { _id = ++id; }
+			internal void Update() { _puppet = puppet?._id ?? 0; }
+			internal void Restore(State state) { puppet = state.pawnToPuppet.Values.FirstOrDefault(v => v._id == _puppet); }
+
 			public ViewerID vID;
-			public Puppet puppet; // optional
+
+			[JsonIgnore] public Puppet puppet; // optional
+			[JsonProperty] private int _puppet;
+
 			public bool connected;
 			public DateTime lastCommandIssued;
 			public string lastCommand;
@@ -34,8 +52,8 @@ namespace Puppeteer
 		//  Viewer  ---creates--->  Puppeteer  ---optionally-has--->  Puppet
 		//  Pawn    ---creates--->  Puppet     ---optionally-has--->  Puppeteer
 		//
-		public Dictionary<Pawn, Puppet> pawnToPuppet = new Dictionary<Pawn, Puppet>(); // int == pawn.thingID
-		public Dictionary<ViewerID, Puppeteer> viewerToPuppeteer = new Dictionary<ViewerID, Puppeteer>();
+		public ConcurrentDictionary<int, Puppet> pawnToPuppet = new ConcurrentDictionary<int, Puppet>(); // int == pawn.thingID
+		public ConcurrentDictionary<string, Puppeteer> viewerToPuppeteer = new ConcurrentDictionary<string, Puppeteer>();
 
 		//
 
@@ -43,13 +61,20 @@ namespace Puppeteer
 		{
 			var data = saveFileName.ReadConfig();
 			if (data == null) return new State();
-			return JsonConvert.DeserializeObject<State>(data);
+			var state = JsonConvert.DeserializeObject<State>(data);
+			state.viewerToPuppeteer.Values.Do(p => p.Restore(state));
+			state.pawnToPuppet.Values.Do(p => p.Restore(state));
+			return state;
 		}
 
 		public void Save()
 		{
+			var id = 0;
+			viewerToPuppeteer.Values.Do(p => p.Init(ref id));
+			pawnToPuppet.Values.Do(p => p.Init(ref id));
+			viewerToPuppeteer.Values.Do(p => p.Update());
+			pawnToPuppet.Values.Do(p => p.Update());
 			var data = JsonConvert.SerializeObject(this);
-			PuppetCommentator.Say($"Saving {data.Length} bytes");
 			saveFileName.WriteConfig(data);
 		}
 
@@ -57,7 +82,7 @@ namespace Puppeteer
 
 		public Puppeteer PuppeteerForViewer(ViewerID vID)
 		{
-			_ = viewerToPuppeteer.TryGetValue(vID, out var puppeteer);
+			_ = viewerToPuppeteer.TryGetValue(vID.Identifier, out var puppeteer);
 			return puppeteer;
 		}
 
@@ -69,11 +94,11 @@ namespace Puppeteer
 				lastCommandIssued = DateTime.Now,
 				lastCommand = "Became a puppeteer"
 			};
-			viewerToPuppeteer.Add(vID, puppeteer);
+			_ = viewerToPuppeteer.TryAdd(vID.Identifier, puppeteer);
 			return puppeteer;
 		}
 
-		public IEnumerable<ViewerID> AllViewers()
+		/*public IEnumerable<ViewerID> AllViewers()
 		{
 			return viewerToPuppeteer.Keys;
 		}
@@ -90,7 +115,7 @@ namespace Puppeteer
 			return viewerToPuppeteer
 				.Where(pair => pair.Value.puppet == null)
 				.Select(pair => pair.Key);
-		}
+		}*/
 
 		public IEnumerable<Puppeteer> ConnectedPuppeteers()
 		{
@@ -137,14 +162,20 @@ namespace Puppeteer
 		public Puppet PuppetForPawn(Pawn pawn)
 		{
 			if (pawn == null) return null;
-			_ = pawnToPuppet.TryGetValue(pawn, out var puppet);
+			_ = pawnToPuppet.TryGetValue(pawn.thingIDNumber, out var puppet);
 			return puppet;
 		}
 
-		public void AddPawn(Pawn pawn)
+		public void UpdatePawn(Pawn pawn)
 		{
 			if (pawn == null) return;
-			pawnToPuppet.Add(pawn, new Puppet()
+			var puppet = PuppetForPawn(pawn);
+			if (puppet != null)
+			{
+				puppet.pawn = pawn;
+				return;
+			}
+			_ = pawnToPuppet.TryAdd(pawn.thingIDNumber, new Puppet()
 			{
 				pawn = pawn,
 				puppeteer = null
@@ -154,9 +185,8 @@ namespace Puppeteer
 		public void RemovePawn(Pawn pawn)
 		{
 			if (pawn == null) return;
-			if (pawnToPuppet.TryGetValue(pawn, out var puppet) && puppet.puppeteer != null)
+			if (pawnToPuppet.TryRemove(pawn.thingIDNumber, out var puppet))
 				puppet.puppeteer.puppet = null;
-			_ = pawnToPuppet.Remove(pawn);
 		}
 
 		public bool? IsConnected(Pawn pawn)

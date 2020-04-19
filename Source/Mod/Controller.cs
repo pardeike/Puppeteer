@@ -31,9 +31,9 @@ namespace Puppeteer
 	}
 
 	[StaticConstructorOnStartup]
-	public class PuppeteerController : ICommandProcessor
+	public class Controller : ICommandProcessor
 	{
-		public static PuppeteerController instance = new PuppeteerController();
+		public static Controller instance = new Controller();
 
 		readonly Timer earnTimer = new Timer(earnIntervalInSeconds * 1000) { AutoReset = true };
 		public Timer connectionRetryTimer = new Timer(10000) { AutoReset = true };
@@ -49,7 +49,7 @@ namespace Puppeteer
 		static readonly MethodInfo m_VisibleHediffGroupsInOrder = Method(typeof(HealthCardUtility), "VisibleHediffGroupsInOrder");
 		static readonly Func<Pawn, bool, IEnumerable<IGrouping<BodyPartRecord, Hediff>>> VisibleHediffGroupsInOrder = (Func<Pawn, bool, IEnumerable<IGrouping<BodyPartRecord, Hediff>>>)Delegate.CreateDelegate(typeof(Func<Pawn, bool, IEnumerable<IGrouping<BodyPartRecord, Hediff>>>), m_VisibleHediffGroupsInOrder);
 
-		public PuppeteerController()
+		public Controller()
 		{
 			_ = FileWatcher.AddListener((action, file) =>
 			{
@@ -77,7 +77,7 @@ namespace Puppeteer
 			connectionRetryTimer.Start();
 		}
 
-		~PuppeteerController()
+		~Controller()
 		{
 			connectionRetryTimer?.Stop();
 			earnTimer?.Stop();
@@ -192,7 +192,7 @@ namespace Puppeteer
 
 		public static void PawnAvailable(Pawn pawn)
 		{
-			State.instance.AddPawn(pawn);
+			State.instance.UpdatePawn(pawn);
 			State.instance.Save();
 		}
 

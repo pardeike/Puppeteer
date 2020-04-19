@@ -75,7 +75,7 @@
     <Compile Include="Patches\BasicGameEvents.cs" />
     <Compile Include="Patches\PawnUpdates.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Mod\PuppeteerController.cs" />
+    <Compile Include="Mod\Controller.cs" />
     <Compile Include="Tools\Colors.cs" />
     <Compile Include="Tools\Tools.cs" />
     <Compile Include="Core\Viewers.cs" />
