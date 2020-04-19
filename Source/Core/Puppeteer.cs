@@ -42,7 +42,7 @@ namespace Puppeteer
 		const int earnAmount = 10;
 
 		public Connection connection;
-		readonly Viewers viewers;
+		public readonly Viewers viewers;
 		public readonly Colonists colonists;
 		bool firstTime = true;
 		bool prioritiesChanged = false;

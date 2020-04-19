@@ -69,6 +69,22 @@ namespace Puppeteer
 			}
 		}
 
+		public List<Viewer> Available()
+		{
+			return state.Values
+				.Where(viewer => viewer.controlling == null)
+				.OrderBy(viewer => viewer.vID.name)
+				.ToList();
+		}
+
+		public bool? ConnectedState(Pawn pawn)
+		{
+			if (pawn == null) return null;
+			var result = state.Where(p => p.Value.controlling == pawn);
+			if (result.Any() == false) return null;
+			return result.First().Value.connected;
+		}
+
 		public Viewer FindViewer(ViewerID vID)
 		{
 			if (vID == null) return null;

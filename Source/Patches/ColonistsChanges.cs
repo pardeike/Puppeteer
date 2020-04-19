@@ -132,4 +132,41 @@ namespace Puppeteer
 			Puppeteer.instance.SetEvent(Event.SchedulesChanged);
 		}
 	}
+
+	/*
+	[HarmonyPatch(typeof(ColonistBarColonistDrawer))]
+	[HarmonyPatch(nameof(ColonistBarColonistDrawer.DrawColonist))]
+	static class ColonistBarColonistDrawer_DrawColonist_Patch
+	{
+		public static void Prefix(Rect rect, [HarmonyArgument("colonist")] Pawn pawn)
+		{
+			var puppeteer = Puppeteer.instance;
+			var colonist = puppeteer.colonists.FindColonist(pawn);
+			if (colonist != null)
+			{
+				var viewer = puppeteer.viewers.FindViewer(colonist.controller);
+				var connected = viewer != null ? 1 : 0;
+
+				var savedColor = GUI.color;
+				GUI.color = Color.white;
+				var tex = Assets.connected[connected];
+				var height = rect.width * tex.height / tex.width;
+				var r = new Rect(rect.xMin, rect.yMin - height + Find.ColonistBar.Scale, rect.width, height);
+				GUI.color = new Color(1f, 1f, 1f, Find.ColonistBar.GetEntryRectAlpha(r));
+				GUI.DrawTexture(r, tex);
+				GUI.color = savedColor;
+			}
+		}
+	}
+
+	[HarmonyPatch(typeof(ColonistBarDrawLocsFinder))]
+	[HarmonyPatch("GetDrawLoc")]
+	static class ColonistBarDrawLocsFinder_GetDrawLoc_Patch
+	{
+		public static void Postfix(ref Vector2 __result, float scale)
+		{
+			__result.y += 15 * scale;
+		}
+	}
+	*/
 }
