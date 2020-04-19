@@ -57,7 +57,7 @@ namespace Puppeteer
 		public static void LogWarning(string message)
 		{
 			message = message.Split('\n', '\r').Select(line => Regex.Replace(line, @" \[0x[0-9a-fA-F]+\] in <[0-9a-fA-F]+>:\d+ ", "")).Join(null, "\n");
-			Puppet.Say(message);
+			PuppetCommentator.Say(message);
 			OperationQueue.Add(OperationType.Log, () =>
 			{
 				Log.Warning(message);
@@ -67,7 +67,7 @@ namespace Puppeteer
 		public static void LogError(string message)
 		{
 			message = message.Split('\n', '\r').Select(line => Regex.Replace(line, @" \[0x[0-9a-fA-F]+\] in <[0-9a-fA-F]+>:\d+ ", "")).Join(null, "\n");
-			Puppet.Say($"Error: {message}");
+			PuppetCommentator.Say($"Error: {message}");
 			OperationQueue.Add(OperationType.Log, () =>
 			{
 				Log.Error(message);
@@ -233,19 +233,19 @@ namespace Puppeteer
 			if (updateAll)
 			{
 				Current.Game.Maps.SelectMany(map => PlayerPawns.FreeColonists(map, false))
-					.Do(p => Puppeteer.instance.UpdateColonist(p));
+					.Do(p => PuppeteerController.instance.UpdateColonist(p));
 				return;
 			}
 
 			var pawn = RoundRobbin.NextColonist("update-colonist");
 			if (pawn != null)
-				Puppeteer.instance.UpdateColonist(pawn);
+				PuppeteerController.instance.UpdateColonist(pawn);
 		}
 
 		public static void RenderColonists()
 		{
 			var pawn = RoundRobbin.NextColonist("render-colonist");
-			var colonist = Puppeteer.instance.colonists.FindColonist(pawn);
+			var colonist = PuppeteerController.instance.colonists.FindColonist(pawn);
 
 			pawn = GetCarrier(pawn) ?? pawn;
 

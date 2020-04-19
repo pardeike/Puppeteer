@@ -53,7 +53,7 @@ namespace Puppeteer
 		public static void Postfix(Pawn __instance)
 		{
 			if (__instance.IsColonist)
-				Puppeteer.instance.SetEvent(Event.ColonistsChanged);
+				PuppeteerController.instance.SetEvent(Event.ColonistsChanged);
 		}
 	}
 
@@ -69,7 +69,7 @@ namespace Puppeteer
 
 		public static void Postfix()
 		{
-			Puppeteer.instance.SetEvent(Event.AreasChanged);
+			PuppeteerController.instance.SetEvent(Event.AreasChanged);
 		}
 	}
 
@@ -140,7 +140,7 @@ namespace Puppeteer
 			Tools.RenderColonists();
 			Tools.UpdateColonists(false);
 			if (Find.TickManager.Paused == false)
-				Puppeteer.instance.SetEvent(Event.GridUpdate);
+				PuppeteerController.instance.SetEvent(Event.GridUpdate);
 		}
 	}
 
@@ -175,7 +175,7 @@ namespace Puppeteer
 	{
 		public static void Postfix(Pawn pawn)
 		{
-			Puppeteer.instance.UpdatePortrait(pawn);
+			PuppeteerController.instance.UpdatePortrait(pawn);
 		}
 	}
 
@@ -187,7 +187,7 @@ namespace Puppeteer
 
 		static void ObserveChanges(List<Pawn> changedPawns)
 		{
-			previousChangedPawns.DoIf(pawn => changedPawns.Contains(pawn) == false, pawn => Puppeteer.instance.UpdatePortrait(pawn));
+			previousChangedPawns.DoIf(pawn => changedPawns.Contains(pawn) == false, pawn => PuppeteerController.instance.UpdatePortrait(pawn));
 			previousChangedPawns.Clear(); // don't replace the lists directly
 			previousChangedPawns.AddRange(changedPawns);
 		}

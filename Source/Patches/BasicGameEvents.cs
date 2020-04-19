@@ -14,8 +14,8 @@ namespace Puppeteer
 		{
 			LongEventHandler.QueueLongEvent(delegate ()
 			{
-				Puppeteer.instance.SetEvent(Event.GameExited);
-				Puppeteer.instance.SetEvent(Event.GameEntered);
+				PuppeteerController.instance.SetEvent(Event.GameExited);
+				PuppeteerController.instance.SetEvent(Event.GameEntered);
 			}, null, false, null, false);
 		}
 	}
@@ -26,7 +26,7 @@ namespace Puppeteer
 	{
 		public static void Postfix()
 		{
-			Puppeteer.instance.SetEvent(Event.GameExited);
+			PuppeteerController.instance.SetEvent(Event.GameExited);
 		}
 	}
 
@@ -36,7 +36,7 @@ namespace Puppeteer
 	{
 		public static bool Prefix()
 		{
-			return Puppet.IsShowing == false;
+			return PuppetCommentator.IsShowing == false;
 		}
 	}
 
@@ -55,7 +55,7 @@ namespace Puppeteer
 					Tools.LogWarning("Hello");
 			}
 
-			Puppet.Update();
+			PuppetCommentator.Update();
 			OperationQueue.Process(OperationType.Log);
 		}
 	}
@@ -82,8 +82,8 @@ namespace Puppeteer
 
 		public static void Postfix()
 		{
-			Puppeteer.instance.SetEvent(Event.SendChangedPriorities);
-			Puppeteer.instance.SetEvent(Event.SendChangedSchedules);
+			PuppeteerController.instance.SetEvent(Event.SendChangedPriorities);
+			PuppeteerController.instance.SetEvent(Event.SendChangedSchedules);
 		}
 	}
 
@@ -99,7 +99,7 @@ namespace Puppeteer
 
 		public static void Postfix()
 		{
-			Puppeteer.instance.SetEvent(Event.Save);
+			PuppeteerController.instance.SetEvent(Event.Save);
 		}
 	}
 }

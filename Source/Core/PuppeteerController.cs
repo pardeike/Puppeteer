@@ -31,9 +31,9 @@ namespace Puppeteer
 	}
 
 	[StaticConstructorOnStartup]
-	public class Puppeteer : ICommandProcessor
+	public class PuppeteerController : ICommandProcessor
 	{
-		public static Puppeteer instance = new Puppeteer();
+		public static PuppeteerController instance = new PuppeteerController();
 
 		readonly Timer earnTimer = new Timer(earnIntervalInSeconds * 1000) { AutoReset = true };
 		public Timer connectionRetryTimer = new Timer(10000) { AutoReset = true };
@@ -50,7 +50,7 @@ namespace Puppeteer
 
 		static Func<Pawn, bool, IEnumerable<IGrouping<BodyPartRecord, Hediff>>> VisibleHediffGroupsInOrder;
 
-		public Puppeteer()
+		public PuppeteerController()
 		{
 			_ = FileWatcher.AddListener((action, file) =>
 			{
@@ -84,7 +84,7 @@ namespace Puppeteer
 			VisibleHediffGroupsInOrder = (Func<Pawn, bool, IEnumerable<IGrouping<BodyPartRecord, Hediff>>>)Delegate.CreateDelegate(typeof(Func<Pawn, bool, IEnumerable<IGrouping<BodyPartRecord, Hediff>>>), m_VisibleHediffGroupsInOrder);
 		}
 
-		~Puppeteer()
+		~PuppeteerController()
 		{
 			connectionRetryTimer?.Stop();
 			earnTimer?.Stop();

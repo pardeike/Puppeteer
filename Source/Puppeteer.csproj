@@ -44,9 +44,10 @@
 		</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Mod\State.cs" />
     <Compile Include="Services\GridUpdater.cs" />
     <Compile Include="Services\Jobs.cs" />
-    <Compile Include="Services\Puppet.cs" />
+    <Compile Include="Services\PuppetCommentator.cs" />
     <Compile Include="Tools\Assets.cs" />
     <Compile Include="Tools\OperationQueue.cs" />
     <Compile Include="Core\Renderer.cs" />
@@ -75,7 +76,7 @@
     <Compile Include="Patches\BasicGameEvents.cs" />
     <Compile Include="Patches\PawnUpdates.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Core\Puppeteer.cs" />
+    <Compile Include="Core\PuppeteerController.cs" />
     <Compile Include="Tools\Colors.cs" />
     <Compile Include="Tools\Tools.cs" />
     <Compile Include="Models\Viewer.cs" />

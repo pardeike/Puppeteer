@@ -8,7 +8,7 @@ using WebSocketSharp;
 namespace Puppeteer
 {
 	[StaticConstructorOnStartup]
-	public static class Puppet
+	public static class PuppetCommentator
 	{
 		const float puppetOutIncrement = 1 / 60f * 2f;
 		const int bPadding = 10;
