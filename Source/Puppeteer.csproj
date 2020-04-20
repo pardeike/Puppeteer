@@ -45,8 +45,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Mod\State.cs" />
+    <Compile Include="Services\Drawing.cs" />
     <Compile Include="Services\GridUpdater.cs" />
-    <Compile Include="Services\Jobs.cs" />
+    <Compile Include="Core\Jobs.cs" />
     <Compile Include="Services\PuppetCommentator.cs" />
     <Compile Include="Tools\Assets.cs" />
     <Compile Include="Tools\OperationQueue.cs" />
@@ -63,7 +64,7 @@
     <Compile Include="Services\RenderCamera.cs" />
     <Compile Include="Services\RoundRobbin.cs" />
     <Compile Include="Mod\Settings.cs" />
-    <Compile Include="Core\Colonists.cs" />
+    <Compile Include="Core\StateCommand.cs" />
     <Compile Include="Comm\Connection.cs" />
     <Compile Include="Misc\CrossPromotion.cs" />
     <Compile Include="Mod\Main.cs" />
@@ -78,7 +79,7 @@
     <Compile Include="Mod\Controller.cs" />
     <Compile Include="Tools\Colors.cs" />
     <Compile Include="Tools\Tools.cs" />
-    <Compile Include="Core\Viewers.cs" />
+    <Compile Include="Core\GeneralCommands.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="0Harmony, Version=2.0.0.8, Culture=neutral, processorArchitecture=MSIL">
