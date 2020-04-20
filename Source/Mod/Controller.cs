@@ -66,7 +66,7 @@ namespace Puppeteer
 			earnTimer.Elapsed += new ElapsedEventHandler((sender, e) =>
 			{
 				if (Find.CurrentMap != null)
-					Viewers.SendEarnToAll(connection, earnAmount);
+					GeneralCommands.SendEarnToAll(connection, earnAmount);
 			});
 			earnTimer.Start();
 
@@ -99,11 +99,11 @@ namespace Puppeteer
 					break;
 				case Event.ColonistsChanged:
 					if (firstTime == false)
-						Colonists.SendAllColonists(connection);
+						GeneralCommands.SendAllColonists(connection);
 					firstTime = false;
 					break;
 				case Event.AreasChanged:
-					Viewers.SendAreas(connection);
+					GeneralCommands.SendAreas(connection);
 					break;
 				case Event.PrioritiesChanged:
 					prioritiesChanged = true;
@@ -112,7 +112,7 @@ namespace Puppeteer
 					if (prioritiesChanged)
 					{
 						prioritiesChanged = false;
-						Viewers.SendPriorities(connection);
+						GeneralCommands.SendPriorities(connection);
 					}
 					break;
 				case Event.SchedulesChanged:
@@ -122,11 +122,11 @@ namespace Puppeteer
 					if (schedulesChanged)
 					{
 						schedulesChanged = false;
-						Viewers.SendSchedules(connection);
+						GeneralCommands.SendSchedules(connection);
 					}
 					break;
 				case Event.GridUpdate:
-					Colonists.UpdateGrids(connection);
+					GeneralCommands.UpdateGrids(connection);
 					break;
 			}
 		}
@@ -141,33 +141,29 @@ namespace Puppeteer
 				switch (cmd.type)
 				{
 					case "welcome":
-					{
-						Colonists.SendAllColonists(connection);
+						GeneralCommands.SendAllColonists(connection);
 						break;
-					}
 					case "join":
-					{
-						var join = Join.Create(msg);
-						Viewers.Join(connection, join.viewer);
+						GeneralCommands.Join(connection, Join.Create(msg).viewer);
 						break;
-					}
 					case "leave":
-					{
-						var leave = Leave.Create(msg);
-						Viewers.Leave(leave.viewer);
+						GeneralCommands.Leave(Leave.Create(msg).viewer);
 						break;
-					}
 					case "assign":
 					{
 						var assign = Assign.Create(msg);
-						Colonists.Assign(connection, assign.colonistID, assign.viewer);
-						Colonists.SendAllColonists(connection);
+						var pawn = Tools.ColonistForThingID(assign.colonistID);
+						GeneralCommands.Assign(connection, pawn, assign.viewer);
+						GeneralCommands.SendAllColonists(connection);
 						break;
 					}
 					case "state":
 					{
 						var state = IncomingState.Create(msg);
-						Colonists.SetState(connection, state);
+						OperationQueue.Add(OperationType.SetState, () =>
+						{
+							StateCommand.Set(connection, state);
+						});
 						break;
 					}
 					case "job":
@@ -198,9 +194,9 @@ namespace Puppeteer
 
 		public void PawnUnavailable(Pawn pawn)
 		{
+			GeneralCommands.Assign(connection, pawn, null);
 			State.instance.RemovePawn(pawn);
 			State.instance.Save();
-			Colonists.Assign(connection, pawn.thingIDNumber, null);
 		}
 
 		public void PawnOnMap(ViewerID vID, byte[] image)
@@ -211,7 +207,7 @@ namespace Puppeteer
 		public void UpdatePortrait(Pawn pawn)
 		{
 			var puppet = State.instance.PuppetForPawn(pawn);
-			Viewers.SendPortrait(connection, puppet?.puppeteer);
+			GeneralCommands.SendPortrait(connection, puppet?.puppeteer);
 		}
 
 		ColonistBaseInfo.NeedInfo[] GetNeeds(Pawn pawn)

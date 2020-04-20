@@ -18,8 +18,16 @@ namespace Puppeteer
 		{
 			[JsonProperty] internal int _id;
 			internal void Init(ref int id) { _id = ++id; }
-			internal void Update() { _pawn = pawn?.thingIDNumber ?? 0; _puppeteer = puppeteer?._id ?? 0; }
-			internal void Restore(State state) { pawn = Tools.ColonistForThingID(_pawn); puppeteer = state.viewerToPuppeteer.Values.FirstOrDefault(v => v._id == _puppeteer); }
+			internal void Update()
+			{
+				_pawn = pawn?.thingIDNumber ?? 0;
+				_puppeteer = puppeteer?._id ?? 0;
+			}
+			internal void Restore(State state)
+			{
+				pawn = Tools.ColonistForThingID(_pawn);
+				puppeteer = state.viewerToPuppeteer.Values.FirstOrDefault(v => v._id == _puppeteer);
+			}
 
 			[JsonIgnore] public Pawn pawn;
 			[JsonProperty] private int _pawn;
@@ -32,8 +40,16 @@ namespace Puppeteer
 		{
 			[JsonProperty] internal int _id;
 			internal void Init(ref int id) { _id = ++id; }
-			internal void Update() { _puppet = puppet?._id ?? 0; }
-			internal void Restore(State state) { puppet = state.pawnToPuppet.Values.FirstOrDefault(v => v._id == _puppet); }
+			internal void Update()
+			{
+				_puppet = puppet?._id ?? 0;
+			}
+			internal void Restore(State state)
+			{
+				puppet = state.pawnToPuppet.Values.FirstOrDefault(v => v._id == _puppet);
+				lastCommand = null;
+				lastCommandIssued = default;
+			}
 
 			public ViewerID vID;
 
@@ -82,17 +98,19 @@ namespace Puppeteer
 
 		public Puppeteer PuppeteerForViewer(ViewerID vID)
 		{
+			if (vID == null) return null;
 			_ = viewerToPuppeteer.TryGetValue(vID.Identifier, out var puppeteer);
 			return puppeteer;
 		}
 
 		Puppeteer CreatePuppeteerForViewer(ViewerID vID)
 		{
+			if (vID == null) return null;
 			var puppeteer = new Puppeteer()
 			{
 				vID = vID,
 				lastCommandIssued = DateTime.Now,
-				lastCommand = "Became a puppeteer"
+				lastCommand = "became-puppeteer"
 			};
 			_ = viewerToPuppeteer.TryAdd(vID.Identifier, puppeteer);
 			return puppeteer;
@@ -125,12 +143,13 @@ namespace Puppeteer
 
 		public bool HasPuppet(ViewerID vID)
 		{
+			if (vID == null) return false;
 			return PuppeteerForViewer(vID)?.puppet != null;
 		}
 
 		public void Assign(ViewerID vID, Pawn pawn)
 		{
-			if (pawn == null) return;
+			if (vID == null || pawn == null) return;
 			var puppet = PuppetForPawn(pawn);
 			if (puppet == null) return;
 			var puppeteer = PuppeteerForViewer(vID);
@@ -141,6 +160,7 @@ namespace Puppeteer
 
 		public void Unassign(ViewerID vID)
 		{
+			if (vID == null) return;
 			var puppeteer = PuppeteerForViewer(vID);
 			if (puppeteer == null) return;
 			if (puppeteer.puppet != null)
@@ -150,6 +170,7 @@ namespace Puppeteer
 
 		public void SetConnected(ViewerID vID, bool connected)
 		{
+			if (vID == null) return;
 			var puppeteer = PuppeteerForViewer(vID) ?? CreatePuppeteerForViewer(vID);
 			puppeteer.connected = connected;
 			var pawn = puppeteer.puppet?.pawn;
@@ -187,15 +208,6 @@ namespace Puppeteer
 			if (pawn == null) return;
 			if (pawnToPuppet.TryRemove(pawn.thingIDNumber, out var puppet))
 				puppet.puppeteer.puppet = null;
-		}
-
-		public bool? IsConnected(Pawn pawn)
-		{
-			if (pawn == null) return null;
-			var puppet = PuppetForPawn(pawn);
-			var puppeteer = puppet?.puppeteer;
-			if (puppeteer == null) return null;
-			return puppeteer.connected;
 		}
 
 		public HashSet<Puppet> AllPuppets()

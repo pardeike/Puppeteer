@@ -14,11 +14,16 @@ namespace Puppeteer
 	{
 		public static void Run(Connection connection, State.Puppeteer puppeteer, IncomingJob job)
 		{
-			var pawn = puppeteer.puppet?.pawn;
+			var pawn = puppeteer?.puppet?.pawn;
 			if (pawn == null) return;
 
-			void RunOnQueue(Func<Pawn, string[], object> action)
+			void RunOnQueue(Func<Pawn, string[], object> action, string actionName = null)
 			{
+				if (actionName != null)
+				{
+					puppeteer.lastCommandIssued = DateTime.Now;
+					puppeteer.lastCommand = actionName;
+				}
 				var result = new OutgoingJobResult() { id = job.id, viewer = job.user };
 				OperationQueue.Add(OperationType.Job, () =>
 				{
@@ -40,7 +45,7 @@ namespace Puppeteer
 					break;
 
 				case "attack-target":
-					RunOnQueue(AttackTarget);
+					RunOnQueue(AttackTarget, job.method);
 					break;
 
 				case "get-weapons":
@@ -48,7 +53,7 @@ namespace Puppeteer
 					break;
 
 				case "select-weapon":
-					RunOnQueue(SelectWeapon);
+					RunOnQueue(SelectWeapon, job.method);
 					break;
 
 				case "get-rest":
@@ -56,7 +61,7 @@ namespace Puppeteer
 					break;
 
 				case "do-rest":
-					RunOnQueue(DoRest);
+					RunOnQueue(DoRest, job.method);
 					break;
 
 				case "get-tend":
@@ -64,7 +69,7 @@ namespace Puppeteer
 					break;
 
 				case "do-tend":
-					RunOnQueue(DoTend);
+					RunOnQueue(DoTend, job.method);
 					break;
 
 				default:
