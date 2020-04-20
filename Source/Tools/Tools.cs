@@ -7,7 +7,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -298,35 +297,6 @@ namespace Puppeteer
 			Renderer.renderOffset = 0f;
 			SetCurrentMapDirectly(currentMap);
 			Renderer.fakeZoom = false;
-		}
-
-		public delegate ref T StaticFieldRef<T>();
-		public static StaticFieldRef<T> StaticFieldRefAccess<T>(Type type, string name)
-		{
-			var fieldInfo = AccessTools.Field(type, name);
-			if (fieldInfo == null)
-				throw new ArgumentNullException(nameof(fieldInfo));
-			if (!typeof(T).IsAssignableFrom(fieldInfo.FieldType))
-				throw new ArgumentException("FieldInfo type does not match FieldRefAccess return type.");
-			if (typeof(T) != typeof(object))
-				if (fieldInfo.DeclaringType == null || !fieldInfo.DeclaringType.IsAssignableFrom(type))
-					throw new MissingFieldException(type.Name, fieldInfo.Name);
-
-			var s_name = "__refget_" + type.Name + "_fi_" + fieldInfo.Name;
-
-			// workaround for using ref-return with DynamicMethod:
-			// a.) initialize with dummy return value
-			var dm = new DynamicMethod(s_name, typeof(T), Array.Empty<Type>(), type, true);
-
-			// b.) replace with desired 'ByRef' return value
-			var trv = Traverse.Create(dm);
-			_ = trv.Field("returnType").SetValue(typeof(T).MakeByRefType());
-			_ = trv.Field("m_returnType").SetValue(typeof(T).MakeByRefType());
-
-			var il = dm.GetILGenerator();
-			il.Emit(OpCodes.Ldsflda, fieldInfo);
-			il.Emit(OpCodes.Ret);
-			return (StaticFieldRef<T>)dm.CreateDelegate(typeof(StaticFieldRef<T>));
 		}
 	}
 }

@@ -49,6 +49,9 @@ namespace Puppeteer
 				puppet = state.pawnToPuppet.Values.FirstOrDefault(v => v._id == _puppet);
 				lastCommand = null;
 				lastCommandIssued = default;
+				connected = default;
+				lastCommandIssued = default;
+				lastCommand = default;
 			}
 
 			public ViewerID vID;

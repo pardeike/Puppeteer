@@ -32,10 +32,13 @@ namespace Puppeteer
 			GUI.color = new Color(1f, 1f, 1f, Find.ColonistBar.GetEntryRectAlpha(r));
 			GUI.DrawTexture(r, tex, ScaleMode.StretchToFill, true);
 
-			var u = r.width / tex.width;
-			var r2 = new Rect(r.xMin + 2 * u, r.yMin + 10 * u, 92 * u * f, 8 * u);
-			GUI.color = barColor;
-			GUI.DrawTexture(r2, BaseContent.WhiteTex);
+			if (puppeteer.connected)
+			{
+				var u = r.width / tex.width;
+				var r2 = new Rect(r.xMin + 2 * u, r.yMin + 10 * u, 92 * u * f, 8 * u);
+				GUI.color = barColor;
+				GUI.DrawTexture(r2, BaseContent.WhiteTex);
+			}
 
 			GUI.color = savedColor;
 		}
