@@ -49,6 +49,8 @@ namespace Puppeteer
 
 			var color32s = ProminentColor.GetColors32FromImage(outputTexture, resizedTo, maxColorAmount, colorLimiterPercentage, uniteColorsTolerance, minimiumColorPercentage);
 
+			UnityEngine.Object.Destroy(outputTexture);
+
 			if (color32s == null || color32s.Count == 0)
 				return Color.gray;
 

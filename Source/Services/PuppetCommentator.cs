@@ -47,42 +47,61 @@ namespace Puppeteer
 
 		public static void Update()
 		{
-			puppetOut += puppetOutIncrement * Math.Sign(puppetOutDesired - puppetOut);
-			if (puppetOut < 0) puppetOut = 0;
-			if (puppetOut > 1) puppetOut = 1;
-
-			var xPos = UI.screenWidth - (int)(puppetTex.width * Math.Sin(Math.PI / 2 * puppetOut));
-			var yPos = 80;
-			var width = puppetTex.width;
-			var height = puppetTex.height;
-			var rect = new Rect(xPos, yPos, puppetTex.width, puppetTex.height);
-			if (Widgets.ButtonImage(rect, puppetTex))
+			if (puppetOut > 0)
 			{
-				_ = Process.Start("https://puppeteer.rimworld.live");
+				var xPos = UI.screenWidth - (int)(puppetTex.width * Math.Sin(Math.PI / 2 * puppetOut));
+				var yPos = 80;
+				var width = puppetTex.width;
+				var height = puppetTex.height;
+				var winRect = new Rect(xPos, yPos, puppetTex.width, puppetTex.height);
+
+				DrawHead(winRect, () => _ = Process.Start("https://puppeteer.rimworld.live"));
+				if (puppetOut >= 0.8f)
+					DrawBubble(xPos, yPos, height);
 			}
+		}
 
-			if (puppetOut >= 0.8f)
+		static void DrawHead(Rect rect, Action clickAction)
+		{
+			Find.WindowStack.ImmediateWindow(1883894527, rect, WindowLayer.Super, () =>
 			{
-				var oldFont = Text.Font;
-				var oldColor = GUI.color;
+				rect = rect.AtZero();
 
-				Text.Font = GameFont.Small;
-				for (var n = 0; n < 10; n++)
+				puppetOut += puppetOutIncrement * Math.Sign(puppetOutDesired - puppetOut);
+				if (puppetOut < 0) puppetOut = 0;
+				if (puppetOut > 1) puppetOut = 1;
+
+
+				if (Widgets.ButtonImage(rect, puppetTex))
+					clickAction();
+			}, false, false, 0f);
+		}
+
+		static void DrawBubble(int xPos, int yPos, int height)
+		{
+			var oldFont = Text.Font;
+			var oldColor = GUI.color;
+
+			Text.Font = GameFont.Small;
+			for (var n = 0; n < 10; n++)
+			{
+				var bWidth = 120 + 40 * n;
+				var maxWidth = bWidth - 2 * bPadding - bRightMargin;
+				var textHeight = Text.CalcHeight(text, maxWidth);
+				var bHeight = textHeight + 2 * bPadding + bBottomMargin;
+				if (textHeight < 25 || bHeight < bWidth / 3)
 				{
-					var bWidth = 120 + 40 * n;
-					var maxWidth = bWidth - 2 * bPadding - bRightMargin;
-					var textHeight = Text.CalcHeight(text, maxWidth);
-					var bHeight = textHeight + 2 * bPadding + bBottomMargin;
-					if (textHeight < 25 || bHeight < bWidth / 3)
+					var xMax = xPos + 35;
+					var zMax = yPos + height - 24;
+					var xMin = xMax - bWidth;
+					var zMin = zMax - bHeight;
+					var winRect = new Rect(xMin, zMin, xMax - xMin, zMax - zMin);
+					Find.WindowStack.ImmediateWindow(1389452328, winRect, WindowLayer.Super, () =>
 					{
-						var xMax = xPos + 35;
-						var zMax = yPos + height - 24;
-						var xMin = xMax - bWidth;
-						var zMin = zMax - bHeight;
-						rect = new Rect(xMin, zMin, xMax - xMin, zMax - zMin);
+						var rect = winRect.AtZero();
+
 						GUI.color = new Color(1, 1, 1, (puppetOut - 0.8f) * 5f);
 						Widgets.DrawAtlas(rect, bubbleTex);
-						GUI.color = Color.white;
 
 						if (puppetOut == 1f)
 						{
@@ -91,13 +110,12 @@ namespace Puppeteer
 							GUI.color = Color.black;
 							Widgets.Label(textRect, text);
 						}
+					}, false, false, 0f);
 
-						break;
-					}
+					Text.Font = oldFont;
+					GUI.color = oldColor;
+					return;
 				}
-
-				Text.Font = oldFont;
-				GUI.color = oldColor;
 			}
 		}
 	}

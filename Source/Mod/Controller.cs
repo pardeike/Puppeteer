@@ -11,7 +11,7 @@ using static HarmonyLib.AccessTools;
 
 namespace Puppeteer
 {
-	public enum Event
+	public enum PuppeteerEvent
 	{
 		GameEntered,
 		GameExited,
@@ -83,49 +83,50 @@ namespace Puppeteer
 			earnTimer?.Stop();
 		}
 
-		public void SetEvent(Event evt)
+		public void SetEvent(PuppeteerEvent evt)
 		{
+			// Log.Warning($"SET EVENT {evt}");
 			switch (evt)
 			{
-				case Event.GameEntered:
+				case PuppeteerEvent.GameEntered:
 					connection = new Connection(this);
 					break;
-				case Event.GameExited:
+				case PuppeteerEvent.GameExited:
 					connection?.Disconnect();
 					connection = null;
 					break;
-				case Event.Save:
-					State.instance.Save();
+				case PuppeteerEvent.Save:
+					State.Save();
 					break;
-				case Event.ColonistsChanged:
+				case PuppeteerEvent.ColonistsChanged:
 					if (firstTime == false)
 						GeneralCommands.SendAllColonists(connection);
 					firstTime = false;
 					break;
-				case Event.AreasChanged:
+				case PuppeteerEvent.AreasChanged:
 					GeneralCommands.SendAreas(connection);
 					break;
-				case Event.PrioritiesChanged:
+				case PuppeteerEvent.PrioritiesChanged:
 					prioritiesChanged = true;
 					break;
-				case Event.SendChangedPriorities:
+				case PuppeteerEvent.SendChangedPriorities:
 					if (prioritiesChanged)
 					{
 						prioritiesChanged = false;
 						GeneralCommands.SendPriorities(connection);
 					}
 					break;
-				case Event.SchedulesChanged:
+				case PuppeteerEvent.SchedulesChanged:
 					schedulesChanged = true;
 					break;
-				case Event.SendChangedSchedules:
+				case PuppeteerEvent.SendChangedSchedules:
 					if (schedulesChanged)
 					{
 						schedulesChanged = false;
 						GeneralCommands.SendSchedules(connection);
 					}
 					break;
-				case Event.GridUpdate:
+				case PuppeteerEvent.GridUpdate:
 					GeneralCommands.UpdateGrids(connection);
 					break;
 			}
@@ -153,8 +154,7 @@ namespace Puppeteer
 					{
 						var assign = Assign.Create(msg);
 						var pawn = Tools.ColonistForThingID(assign.colonistID);
-						GeneralCommands.Assign(connection, pawn, assign.viewer);
-						GeneralCommands.SendAllColonists(connection);
+						AssignViewerToPawn(assign.viewer, pawn);
 						break;
 					}
 					case "state":
@@ -169,7 +169,7 @@ namespace Puppeteer
 					case "job":
 					{
 						var job = IncomingJob.Create(msg);
-						var puppeteer = State.instance.PuppeteerForViewer(job.user);
+						var puppeteer = State.Instance.PuppeteerForViewer(job.user);
 						Jobs.Run(connection, puppeteer, job);
 						break;
 					}
@@ -186,17 +186,19 @@ namespace Puppeteer
 			}
 		}
 
-		public static void PawnAvailable(Pawn pawn)
+		public void PawnAvailable(Pawn pawn)
 		{
-			State.instance.UpdatePawn(pawn);
-			State.instance.Save();
+			State.Instance.UpdatePawn(pawn);
+			State.Save();
+			GeneralCommands.SendAllColonists(connection);
 		}
 
 		public void PawnUnavailable(Pawn pawn)
 		{
 			GeneralCommands.Assign(connection, pawn, null);
-			State.instance.RemovePawn(pawn);
-			State.instance.Save();
+			if (State.Instance.RemovePawn(pawn))
+				State.Save();
+			GeneralCommands.SendAllColonists(connection);
 		}
 
 		public void PawnOnMap(ViewerID vID, byte[] image)
@@ -204,9 +206,15 @@ namespace Puppeteer
 			connection.Send(new OnMap() { viewer = vID, info = new OnMap.Info() { image = image } });
 		}
 
+		public void AssignViewerToPawn(ViewerID vID, Pawn pawn)
+		{
+			GeneralCommands.Assign(connection, pawn, vID);
+			GeneralCommands.SendAllColonists(connection);
+		}
+
 		public void UpdatePortrait(Pawn pawn)
 		{
-			var puppet = State.instance.PuppetForPawn(pawn);
+			var puppet = State.Instance.PuppetForPawn(pawn);
 			GeneralCommands.SendPortrait(connection, puppet?.puppeteer);
 		}
 

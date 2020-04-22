@@ -25,7 +25,7 @@ namespace Puppeteer
 			if (robbin.ticks < robbin.delay) return null;
 			robbin.ticks = 0;
 
-			var puppeteers = State.instance.ConnectedPuppeteers().ToList();
+			var puppeteers = State.Instance.ConnectedPuppeteers().ToList();
 			if (puppeteers.Count == 0) return null;
 			robbin.delay = robbin.interval / puppeteers.Count + 1;
 

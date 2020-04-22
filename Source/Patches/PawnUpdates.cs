@@ -53,7 +53,7 @@ namespace Puppeteer
 		public static void Postfix(Pawn __instance)
 		{
 			if (__instance.IsColonist)
-				Controller.instance.SetEvent(Event.ColonistsChanged);
+				Controller.instance.SetEvent(PuppeteerEvent.ColonistsChanged);
 		}
 	}
 
@@ -69,7 +69,7 @@ namespace Puppeteer
 
 		public static void Postfix()
 		{
-			Controller.instance.SetEvent(Event.AreasChanged);
+			Controller.instance.SetEvent(PuppeteerEvent.AreasChanged);
 		}
 	}
 
@@ -140,7 +140,7 @@ namespace Puppeteer
 			Tools.RenderColonists();
 			Tools.UpdateColonists();
 			if (Find.TickManager.Paused == false)
-				Controller.instance.SetEvent(Event.GridUpdate);
+				Controller.instance.SetEvent(PuppeteerEvent.GridUpdate);
 		}
 	}
 

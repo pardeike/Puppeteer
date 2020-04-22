@@ -18,16 +18,12 @@ namespace Puppeteer
 	[StaticConstructorOnStartup]
 	public static class Tools
 	{
+		public static bool IsLocalDev { get; } = File.Exists(Path.Combine(GenFilePaths.ConfigFolderPath, "PuppeteerLocalDevelopment.txt"));
+
 		static Tools()
 		{
 			RoundRobbin.Create("update-colonist", 5f);
 			RoundRobbin.Create("render-colonist", 30f);
-		}
-
-		public static bool IsLocalDev()
-		{
-			var path = Path.Combine(GenFilePaths.ConfigFolderPath, "PuppeteerLocalDevelopment.txt");
-			return File.Exists(path);
 		}
 
 		public static string Base64Decode(this string value)
@@ -81,6 +77,15 @@ namespace Puppeteer
 		public static string AsString(this DateTime dateTime)
 		{
 			return dateTime.ToString("yyyy'-'MM'-'dd' 'HH':'mm':'ss");
+		}
+
+		public static string OriginalName(this Pawn pawn)
+		{
+			if (pawn == null) return "";
+			var name = pawn.Name;
+			if (name is NameTriple triple)
+				return $"{triple.First} {triple.Last}";
+			return name.ToStringShort;
 		}
 
 		public static DateTime AsDateTime(this string date)
@@ -144,14 +149,6 @@ namespace Puppeteer
 			return 2000f * (1 + Current.Game.currentMapIndex);
 		}
 
-		public static readonly Dictionary<TimeAssignmentDef, string> Assignments = new Dictionary<TimeAssignmentDef, string>()
-		{
-			{ TimeAssignmentDefOf.Anything, "A" },
-			{ TimeAssignmentDefOf.Work, "W" },
-			{ TimeAssignmentDefOf.Joy, "J" },
-			{ TimeAssignmentDefOf.Sleep, "S" },
-		};
-
 		static readonly string[] directions16 = new[]
 		{
 			 "E", "E-SE", "SE", "S-SE", "S", "S-SW", "SW", "W-SW",
@@ -200,8 +197,8 @@ namespace Puppeteer
 
 		public static void GameInit()
 		{
-			AllColonists(true, null).Do(pawn => State.instance.UpdatePawn(pawn));
-			State.instance.Save();
+			AllColonists(true, null).Do(pawn => State.Instance.UpdatePawn(pawn));
+			State.Save();
 		}
 
 		public static List<Pawn> AllColonists(bool forceUpdate, Map forMap = null)
@@ -258,7 +255,7 @@ namespace Puppeteer
 				var visible = viewRect.Contains(pawn.Position);
 				if (visible)
 				{
-					Renderer.PawnScreenRender(puppeteer.vID, pawn.DrawPos, 1.5f);
+					Renderer.PawnScreenRender(puppeteer.vID, pawn.DrawPos);
 					return;
 				}
 			}
@@ -291,12 +288,40 @@ namespace Puppeteer
 			map.designationManager.DrawDesignations();
 			map.overlayDrawer.DrawAllOverlays();
 
-			Renderer.PawnScreenRender(puppeteer.vID, pawn.DrawPos, 1.5f);
+			Renderer.PawnScreenRender(puppeteer.vID, pawn.DrawPos);
 
 			Renderer.fakeViewRect = CellRect.Empty;
 			Renderer.renderOffset = 0f;
 			SetCurrentMapDirectly(currentMap);
 			Renderer.fakeZoom = false;
+		}
+
+		public static void AutoExposeDataWithDefaults<T>(this T settings) where T : new()
+		{
+			var defaults = new T();
+			AccessTools.GetFieldNames(settings).Do(name =>
+			{
+				var finfo = AccessTools.Field(settings.GetType(), name);
+				var value = finfo.GetValue(settings);
+				var type = value.GetType();
+				var defaultValue = Traverse.Create(defaults).Field(name).GetValue();
+				var m_Look = AccessTools.Method(typeof(Scribe_Values), "Look", null, new Type[] { type });
+				var arguments = new object[] { value, name, defaultValue, false };
+				_ = m_Look.Invoke(null, arguments);
+				finfo.SetValue(settings, arguments[0]);
+			});
+		}
+
+		public static string SafeTranslate(this string key, params NamedArgument[] args)
+		{
+			if (key == null) return "";
+			return key.Translate(args);
+		}
+
+		public static string TranslateHoursToText(float hours)
+		{
+			var ticks = (int)(GenDate.TicksPerHour * hours);
+			return ticks.ToStringTicksToPeriodVerbose(true, false);
 		}
 	}
 }

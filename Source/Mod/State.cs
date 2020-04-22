@@ -12,7 +12,15 @@ namespace Puppeteer
 	{
 		const string saveFileName = "PuppeteerState.json";
 
-		public static State instance = Load();
+		static State _instance;
+		public static State Instance
+		{
+			get
+			{
+				if (_instance == null) _instance = Load();
+				return _instance;
+			}
+		}
 
 		public class Puppet
 		{
@@ -86,14 +94,15 @@ namespace Puppeteer
 			return state;
 		}
 
-		public void Save()
+		public static void Save()
 		{
+			if (_instance == null) return;
 			var id = 0;
-			viewerToPuppeteer.Values.Do(p => p.Init(ref id));
-			pawnToPuppet.Values.Do(p => p.Init(ref id));
-			viewerToPuppeteer.Values.Do(p => p.Update());
-			pawnToPuppet.Values.Do(p => p.Update());
-			var data = JsonConvert.SerializeObject(this);
+			_instance.viewerToPuppeteer.Values.Do(p => p.Init(ref id));
+			_instance.pawnToPuppet.Values.Do(p => p.Init(ref id));
+			_instance.viewerToPuppeteer.Values.Do(p => p.Update());
+			_instance.pawnToPuppet.Values.Do(p => p.Update());
+			var data = JsonConvert.SerializeObject(_instance, Tools.IsLocalDev ? Formatting.Indented : Formatting.None);
 			saveFileName.WriteConfig(data);
 		}
 
@@ -138,6 +147,11 @@ namespace Puppeteer
 				.Select(pair => pair.Key);
 		}*/
 
+		public List<Puppeteer> AllPuppeteers()
+		{
+			return viewerToPuppeteer.Values.ToList();
+		}
+
 		public IEnumerable<Puppeteer> ConnectedPuppeteers()
 		{
 			return viewerToPuppeteer.Values
@@ -176,9 +190,10 @@ namespace Puppeteer
 			if (vID == null) return;
 			var puppeteer = PuppeteerForViewer(vID) ?? CreatePuppeteerForViewer(vID);
 			puppeteer.connected = connected;
-			var pawn = puppeteer.puppet?.pawn;
-			if (pawn != null)
-				Tools.SetColonistNickname(pawn, connected ? vID.name : null);
+			puppeteer.lastCommandIssued = DateTime.Now;
+			//var pawn = puppeteer.puppet?.pawn;
+			//if (pawn != null)
+			//	Tools.SetColonistNickname(pawn, connected ? vID.name : null);
 		}
 
 		// pawns
@@ -206,11 +221,16 @@ namespace Puppeteer
 			});
 		}
 
-		public void RemovePawn(Pawn pawn)
+		public bool RemovePawn(Pawn pawn)
 		{
-			if (pawn == null) return;
+			if (pawn == null) return false;
 			if (pawnToPuppet.TryRemove(pawn.thingIDNumber, out var puppet))
-				puppet.puppeteer.puppet = null;
+			{
+				if (puppet?.puppeteer != null)
+					puppet.puppeteer.puppet = null;
+				return true;
+			}
+			return false;
 		}
 
 		public HashSet<Puppet> AllPuppets()

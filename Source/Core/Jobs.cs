@@ -19,7 +19,7 @@ namespace Puppeteer
 
 			void RunOnQueue(Func<Pawn, string[], object> action, string actionName = null)
 			{
-				if (actionName != null)
+				if (actionName != null && actionName.StartsWith("get-") == false)
 				{
 					puppeteer.lastCommandIssued = DateTime.Now;
 					puppeteer.lastCommand = actionName;

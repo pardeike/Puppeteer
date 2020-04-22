@@ -18,7 +18,7 @@ namespace Puppeteer
 		public Connection(ICommandProcessor processor)
 		{
 			this.processor = processor;
-			endpoint = Tools.IsLocalDev() ? "ws://localhost:3000" : "wss://puppeteer-central.herokuapp.com";
+			endpoint = Tools.IsLocalDev ? "ws://localhost:3000" : "wss://puppeteer-central.herokuapp.com";
 			TryConnect();
 		}
 

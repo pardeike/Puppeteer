@@ -11,15 +11,15 @@ namespace Puppeteer
 		public static void SendAllColonists(Connection connection)
 		{
 			if (connection == null) return;
-			var colonists = State.instance.AllPuppets()
-				.Select(puppet =>
+			var colonists = Tools.AllColonists(false)
+				.Select(pawn =>
 				{
-					var pawn = puppet.pawn;
+					var puppet = State.Instance.PuppetForPawn(pawn);
 					return new ColonistInfo()
 					{
 						id = pawn.thingIDNumber,
-						name = pawn.Name.ToStringShort,
-						controller = puppet.puppeteer?.vID,
+						name = pawn.OriginalName(),
+						controller = puppet?.puppeteer?.vID,
 					};
 				})
 				.ToList();
@@ -31,8 +31,10 @@ namespace Puppeteer
 			if (vID.IsValid)
 			{
 				Tools.LogWarning($"{vID.name} joined");
-				State.instance.SetConnected(vID, true);
-				State.instance.Save();
+				State.Instance.SetConnected(vID, true);
+				var pawn = State.Instance.PuppeteerForViewer(vID)?.puppet?.pawn;
+				if (pawn != null) Tools.SetColonistNickname(pawn, vID.name);
+				State.Save();
 				SendAllState(connection, vID);
 			}
 		}
@@ -42,8 +44,8 @@ namespace Puppeteer
 			if (vID.IsValid)
 			{
 				Tools.LogWarning($"{vID.name} left");
-				State.instance.SetConnected(vID, false);
-				State.instance.Save();
+				State.Instance.SetConnected(vID, false);
+				State.Save();
 			}
 		}
 
@@ -55,22 +57,27 @@ namespace Puppeteer
 			{
 				if (pawn == null) return;
 				Tools.SetColonistNickname(pawn, null);
-				Tools.LogWarning($"{pawn.LabelCap} lost control");
-				vID = State.instance.PuppetForPawn(pawn)?.puppeteer?.vID;
-				State.instance.Unassign(vID);
+				Tools.LogWarning($"{pawn.OriginalName()} lost control");
+				vID = State.Instance.PuppetForPawn(pawn)?.puppeteer?.vID;
+				State.Instance.Unassign(vID);
 				if (vID != null) SendAssignment(vID, false);
-				State.instance.Save();
+				State.Save();
 				return;
 			}
 
-			var oldPawn = State.instance.PuppeteerForViewer(vID)?.puppet?.pawn;
+			var oldPawn = State.Instance.PuppeteerForViewer(vID)?.puppet?.pawn;
 			Tools.SetColonistNickname(oldPawn, null);
-			State.instance.Unassign(vID);
-			State.instance.Assign(vID, pawn);
+			State.Instance.Unassign(vID);
+
+			var oldPuppeteer = State.Instance.PuppetForPawn(pawn)?.puppeteer;
+			State.Instance.Unassign(oldPuppeteer?.vID);
+
+			State.Instance.Assign(vID, pawn);
 			Tools.SetColonistNickname(pawn, vID.name);
-			Tools.LogWarning($"{pawn.LabelCap} is now controlled by ${vID.name}");
+
+			Tools.LogWarning($"{pawn.OriginalName()} is now controlled by {vID.name}");
 			SendAssignment(vID, true);
-			State.instance.Save();
+			State.Save();
 		}
 
 		/*public static IEnumerable<ViewerID> Available()
@@ -85,7 +92,7 @@ namespace Puppeteer
 
 		public static void SendEarnToAll(Connection connection, int amount)
 		{
-			var puppeteers = State.instance.ConnectedPuppeteers();
+			var puppeteers = State.Instance.ConnectedPuppeteers();
 			puppeteers.Do(puppeteer =>
 			{
 				puppeteer.coinsEarned += amount;
@@ -126,7 +133,7 @@ namespace Puppeteer
 				SendState(forPuppeteer);
 				return;
 			}
-			var puppeteers = State.instance.ConnectedPuppeteers();
+			var puppeteers = State.Instance.ConnectedPuppeteers();
 			puppeteers.Do(p => SendState(p));
 		}
 
@@ -180,7 +187,7 @@ namespace Puppeteer
 				string GetValues(Pawn p)
 				{
 					var schedules = Enumerable.Range(0, 24).Select(hour => p.timetable.GetAssignment(hour)).ToArray();
-					return schedules.Join(s => Tools.Assignments[s], "");
+					return schedules.Join(s => Defs.Assignments[s], "");
 				}
 				var rows = Tools.AllColonists(false)
 					.Select(colonist => new ScheduleInfo.Schedules() { pawn = colonist.LabelShortCap, yours = colonist == pawn, val = GetValues(colonist) })
@@ -192,7 +199,7 @@ namespace Puppeteer
 
 		public static void SendAllState(Connection connection, ViewerID vID)
 		{
-			var puppeteer = State.instance.PuppeteerForViewer(vID);
+			var puppeteer = State.Instance.PuppeteerForViewer(vID);
 
 			SendGameInfo(connection, vID);
 			SendEarned(connection, puppeteer);
@@ -206,12 +213,13 @@ namespace Puppeteer
 		{
 			if (connection == null) return;
 
-			var actions = State.instance.ConnectedPuppeteers()
+			var actions = State.Instance.ConnectedPuppeteers()
 					.Select(puppeteer =>
 					{
 						var pawn = puppeteer.puppet?.pawn;
+						if (pawn == null) return (Action)null;
 						var gridSize = puppeteer.gridSize;
-						if (gridSize == 0) return (Action)null;
+						if (gridSize == 0) return null;
 						var vID = puppeteer.vID;
 						return () =>
 						{

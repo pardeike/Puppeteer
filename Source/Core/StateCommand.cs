@@ -13,7 +13,7 @@ namespace Puppeteer
 			if (connection == null) return;
 			var vID = state.user;
 			if (vID == null) return;
-			var puppeteer = State.instance.PuppeteerForViewer(vID);
+			var puppeteer = State.Instance.PuppeteerForViewer(vID);
 			var pawn = puppeteer?.puppet?.pawn;
 			if (pawn == null) return;
 
@@ -56,7 +56,7 @@ namespace Puppeteer
 						var idx = Tools.SafeParse(pair[0]);
 						if (idx.HasValue)
 						{
-							var type = Tools.Assignments.FirstOrDefault(ass => ass.Value == pair[1]).Key;
+							var type = Defs.Assignments.FirstOrDefault(ass => ass.Value == pair[1]).Key;
 							pawn.timetable.SetAssignment(idx.Value, type);
 						}
 					}

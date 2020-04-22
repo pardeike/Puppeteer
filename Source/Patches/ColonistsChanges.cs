@@ -13,7 +13,7 @@ namespace Puppeteer
 	{
 		public static void Postfix()
 		{
-			Controller.instance.SetEvent(Event.ColonistsChanged);
+			Controller.instance.SetEvent(PuppeteerEvent.ColonistsChanged);
 			Tools.GameInit();
 		}
 	}
@@ -43,8 +43,7 @@ namespace Puppeteer
 		{
 			if (respawningAfterLoad == false && __instance.Spawned && __instance.IsColonist)
 			{
-				Controller.PawnAvailable(__instance);
-				Controller.instance.SetEvent(Event.ColonistsChanged);
+				Controller.instance.PawnAvailable(__instance);
 			}
 		}
 	}
@@ -58,7 +57,6 @@ namespace Puppeteer
 			if (__instance.IsColonist && Thing_SplitOff_Patch.inSplitOff == false)
 			{
 				Controller.instance.PawnUnavailable(__instance);
-				Controller.instance.SetEvent(Event.ColonistsChanged);
 			}
 		}
 	}
@@ -72,7 +70,6 @@ namespace Puppeteer
 			if (__instance.IsColonist)
 			{
 				Controller.instance.PawnUnavailable(__instance);
-				Controller.instance.SetEvent(Event.ColonistsChanged);
 			}
 		}
 	}
@@ -84,7 +81,7 @@ namespace Puppeteer
 		public static void Postfix(Pawn pawn)
 		{
 			if (pawn.IsColonist)
-				Controller.instance.SetEvent(Event.ColonistsChanged);
+				Controller.instance.SetEvent(PuppeteerEvent.ColonistsChanged);
 		}
 	}
 
@@ -94,7 +91,7 @@ namespace Puppeteer
 	{
 		public static void Postfix()
 		{
-			Controller.instance.SetEvent(Event.ColonistsChanged);
+			Controller.instance.SetEvent(PuppeteerEvent.ColonistsChanged);
 		}
 	}
 
@@ -104,7 +101,7 @@ namespace Puppeteer
 	{
 		public static void Postfix()
 		{
-			Controller.instance.SetEvent(Event.PrioritiesChanged);
+			Controller.instance.SetEvent(PuppeteerEvent.PrioritiesChanged);
 		}
 	}
 
@@ -114,7 +111,7 @@ namespace Puppeteer
 	{
 		public static void Postfix()
 		{
-			Controller.instance.SetEvent(Event.PrioritiesChanged);
+			Controller.instance.SetEvent(PuppeteerEvent.PrioritiesChanged);
 		}
 	}
 
@@ -124,7 +121,7 @@ namespace Puppeteer
 	{
 		public static void Postfix()
 		{
-			Controller.instance.SetEvent(Event.SchedulesChanged);
+			Controller.instance.SetEvent(PuppeteerEvent.SchedulesChanged);
 		}
 	}
 
@@ -134,7 +131,7 @@ namespace Puppeteer
 	{
 		public static void Postfix()
 		{
-			Controller.instance.SetEvent(Event.SchedulesChanged);
+			Controller.instance.SetEvent(PuppeteerEvent.SchedulesChanged);
 		}
 	}
 
@@ -145,6 +142,16 @@ namespace Puppeteer
 		public static void Prefix(Rect rect, Pawn colonist)
 		{
 			Drawing.DrawAssignmentStatus(colonist, rect);
+		}
+	}
+
+	[HarmonyPatch(typeof(ColonistBarColonistDrawer))]
+	[HarmonyPatch(nameof(ColonistBarColonistDrawer.HandleClicks))]
+	static class ColonistBarColonistDrawer_HandleClicks_Patch
+	{
+		public static void Prefix(Rect rect, Pawn colonist)
+		{
+			Drawing.AssignFloatMenu(colonist, rect);
 		}
 	}
 

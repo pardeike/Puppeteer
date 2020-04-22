@@ -21,7 +21,10 @@ namespace Puppeteer
 			RenderTexture.active = renderTexture;
 			portrait.ReadPixels(new Rect(0, 0, w, h), 0, 0);
 			portrait.Apply();
-			return portrait.EncodeToPNG();
+			var data = portrait.EncodeToPNG();
+			Object.Destroy(portrait);
+			return data;
+
 			//var compressor = new TJCompressor();
 			//var ptr = portrait.GetNativeTexturePtr();
 			//var stride = size * 4;
@@ -35,13 +38,13 @@ namespace Puppeteer
 			camera.transform.position = position;
 		}
 
-		public static void PawnScreenRender(ViewerID vID, Vector3 drawPos, float radius)
+		public static void PawnScreenRender(ViewerID vID, Vector3 drawPos)
 		{
 			var camera = RenderCamera.camera;
 			if (camera == null) return;
 
 			var cameraPos = new Vector3(renderOffset + drawPos.x, 40f, drawPos.z);
-			SetCamera(camera, ref cameraPos, radius);
+			SetCamera(camera, ref cameraPos, Puppeteer.Settings.graphicalMapSize / 2f);
 
 			var renderTexture = RenderTexture.GetTemporary(imageSize, imageSize, 24);
 			camera.targetTexture = renderTexture;
@@ -55,6 +58,7 @@ namespace Puppeteer
 			RenderTexture.active = null;
 
 			var jpgData = imageTexture.EncodeToJPG(60);
+			Object.Destroy(imageTexture);
 			Controller.instance.PawnOnMap(vID, jpgData);
 		}
 	}

@@ -15,8 +15,8 @@ namespace Puppeteer
 			LongEventHandler.QueueLongEvent(delegate ()
 			{
 				if (MainMenuDrawer_Init_Patch.gameEntered)
-					Controller.instance.SetEvent(Event.GameExited);
-				Controller.instance.SetEvent(Event.GameEntered);
+					Controller.instance.SetEvent(PuppeteerEvent.GameExited);
+				Controller.instance.SetEvent(PuppeteerEvent.GameEntered);
 				MainMenuDrawer_Init_Patch.gameEntered = true;
 			}, null, false, null, false);
 		}
@@ -31,8 +31,9 @@ namespace Puppeteer
 		public static void Postfix()
 		{
 			if (gameEntered)
-				Controller.instance.SetEvent(Event.GameExited);
+				Controller.instance.SetEvent(PuppeteerEvent.GameExited);
 			gameEntered = false;
+			VersionInformation.Show();
 		}
 	}
 
@@ -88,8 +89,8 @@ namespace Puppeteer
 
 		public static void Postfix()
 		{
-			Controller.instance.SetEvent(Event.SendChangedPriorities);
-			Controller.instance.SetEvent(Event.SendChangedSchedules);
+			Controller.instance.SetEvent(PuppeteerEvent.SendChangedPriorities);
+			Controller.instance.SetEvent(PuppeteerEvent.SendChangedSchedules);
 		}
 	}
 
@@ -105,7 +106,7 @@ namespace Puppeteer
 
 		public static void Postfix()
 		{
-			Controller.instance.SetEvent(Event.Save);
+			Controller.instance.SetEvent(PuppeteerEvent.Save);
 		}
 	}
 }

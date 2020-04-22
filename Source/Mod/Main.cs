@@ -1,9 +1,7 @@
 ﻿using HarmonyLib;
+using Newtonsoft.Json;
+using UnityEngine;
 using Verse;
-
-// TODOs:
-// - find out if LabelCap is better using Resolve() or ToString()
-// - add settings
 
 namespace Puppeteer
 {
@@ -17,10 +15,49 @@ namespace Puppeteer
 		}
 	}
 
-	public class PuppeteerMain : Mod
+	public class Puppeteer : Mod
 	{
-		public PuppeteerMain(ModContentPack content) : base(content)
+		const string settingsFileName = "PuppeteerSettings.json";
+		public static Settings Settings = new Settings();
+
+		public Puppeteer(ModContentPack content) : base(content)
 		{
+			VersionInformation.rootDir = content.RootDir;
+			LoadSettings();
+		}
+
+		public override string SettingsCategory()
+		{
+			return "Puppeteer";
+		}
+
+		public override void DoSettingsWindowContents(Rect inRect)
+		{
+			SettingsDrawer.DoWindowContents(ref Puppeteer.Settings, inRect);
+		}
+
+		public override void WriteSettings()
+		{
+			base.WriteSettings();
+			SaveSettings();
+		}
+
+		public static void LoadSettings()
+		{
+			var data = settingsFileName.ReadConfig();
+			Settings = data == null ? new Settings() : JsonConvert.DeserializeObject<Settings>(data);
+		}
+
+		public static void SaveSettings()
+		{
+			var data = JsonConvert.SerializeObject(Settings, Formatting.Indented);
+			settingsFileName.WriteConfig(data);
+		}
+
+		public static void ReseSettings()
+		{
+			Settings = new Settings();
+			SettingsDrawer.scrollPosition = Vector2.zero;
 		}
 	}
 }

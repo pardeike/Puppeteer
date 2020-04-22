@@ -1,0 +1,26 @@
+﻿[
+	{
+		"version": "0.0.7.0",
+		"infos": [
+			{
+				"title": "New Update System",
+				"texts": [ "This dialog helps you to not miss any new features when Puppeteer updates." ]
+			},
+			{
+				"title": "New features",
+				"texts": [
+					"- Colonist Bar contains visual connection status and last command issued",
+					"- Right click in the Colonist Bar now shows an assignment menu",
+					"- Settings! You can now configure Puppeteer in the Mod Settings"
+				]
+			},
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"- Puppet Announcer now always on top. That makes it compatible with Dubs Mini Map.",
+					"- Viewers are no longer automatically unassigned"
+				]
+			}
+		]
+	}
+]

@@ -44,6 +44,10 @@
 		</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Services\Dialogs.cs" />
+    <Compile Include="Tools\Defs.cs" />
+    <Compile Include="Tools\GetterSetters.cs" />
+    <Compile Include="Tools\VersionInformation.cs" />
     <Compile Include="Mod\State.cs" />
     <Compile Include="Services\Drawing.cs" />
     <Compile Include="Services\GridUpdater.cs" />
@@ -127,14 +131,27 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\About\VersionInfo.json">
+      <Link>VersionInfo.json</Link>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="..\Languages\English\Keyed\Help.xml">
+      <Link>Languages\English\Keyed\Help.xml</Link>
+    </Content>
+    <Content Include="..\Languages\English\Keyed\Text.xml">
+      <Link>Languages\English\Keyed\Text.xml</Link>
+    </Content>
+    <Content Include="..\Languages\English\LanguageInfo.xml">
+      <Link>Languages\English\LanguageInfo.xml</Link>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>ModBuilder -v AssemblyVersion -file "$(TargetPath)" -save "$(ProjectName)-version"
 ModBuilder -v XMLPut -file "$(SolutionDir)About\Manifest.xml" -xpath /Manifest/version -value "{{$(ProjectName)-version}}"
 ModBuilder -v XMLPut -file "$(SolutionDir)About\ModSync.xml" -xpath /ModSyncNinjaData/Version -value "{{$(ProjectName)-version}}"
-"$(ProjectDir)Install.bat" $(ConfigurationName) "$(ProjectDir)" "$(ProjectName)" "About Assemblies Textures"</PostBuildEvent>
+"$(ProjectDir)Install.bat" $(ConfigurationName) "$(ProjectDir)" "$(ProjectName)" "About Assemblies Languages Textures"</PostBuildEvent>
   </PropertyGroup>
 </Project>
