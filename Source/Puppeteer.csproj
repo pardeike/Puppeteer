@@ -44,6 +44,8 @@
 		</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Comm\OutgoingRequests.cs" />
+    <Compile Include="Services\ConnectionStatus.cs" />
     <Compile Include="Services\Dialogs.cs" />
     <Compile Include="Tools\Defs.cs" />
     <Compile Include="Tools\GetterSetters.cs" />
@@ -59,7 +61,6 @@
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Jobs\Fight.cs" />
     <Compile Include="Tools\Comparers.cs" />
-    <Compile Include="Tools\ConcurrentQueue.cs" />
     <Compile Include="Tools\FileWatcher.cs" />
     <Compile Include="Services\PlayerPawns.cs" />
     <Compile Include="Services\Integrations.cs" />

@@ -44,7 +44,7 @@ namespace Puppeteer
 
 		void Connect()
 		{
-			nextRetry = new DateTime().AddSeconds(5);
+			nextRetry = new DateTime().AddSeconds(10);
 			var token = ReadToken();
 			if (token.Length == 0)
 			{
@@ -90,7 +90,7 @@ namespace Puppeteer
 				return;
 			}
 
-			ws?.SendAsync(obj.GetData(), callback);
+			OutgoingRequests.Add(obj.type, obj.GetData(), callback);
 		}
 
 		public void Disconnect()
@@ -110,6 +110,7 @@ namespace Puppeteer
 		private void Ws_OnClose(object sender, CloseEventArgs e)
 		{
 			isConnected = false;
+			OutgoingRequests.Clear();
 			Tools.LogWarning(ErrorDescription(e.Code));
 		}
 
@@ -118,7 +119,7 @@ namespace Puppeteer
 			processor.Message(e.RawData);
 		}
 
-		private void Ws_OnError(object sender, ErrorEventArgs e)
+		private void Ws_OnError(object sender, WebSocketSharp.ErrorEventArgs e)
 		{
 			Tools.LogWarning(e.Exception.ToString());
 		}

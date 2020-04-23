@@ -6,6 +6,8 @@ namespace Puppeteer
 {
 	public abstract class JSONConvertable<T>
 	{
+		public string type;
+
 		public byte[] GetData()
 		{
 			var ms = new MemoryStream();

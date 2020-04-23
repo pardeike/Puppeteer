@@ -19,7 +19,7 @@ namespace Puppeteer
 		{
 			if (state.TryGetValue(type, out var queue) == false)
 			{
-				queue = new ConcurrentQueue<Action>(true);
+				queue = new ConcurrentQueue<Action>();
 				_ = state.TryAdd(type, queue);
 			}
 			queue.Enqueue(action);
@@ -31,7 +31,8 @@ namespace Puppeteer
 			{
 				try
 				{
-					queue.Dequeue()?.Invoke();
+					if (queue.TryDequeue(out var item))
+						item.Invoke();
 				}
 				catch (Exception e)
 				{

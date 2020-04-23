@@ -8,13 +8,12 @@ namespace Puppeteer
 {
 	public class SimpleCmd : JSONConvertable<SimpleCmd>
 	{
-		public string type;
 	}
 
 	public class Ping : JSONConvertable<Earned>
 	{
-		public string type = "ping";
 		public bool game = true;
+		public Ping() { type = "ping"; }
 	}
 
 	public class GameInfo : JSONConvertable<GameInfo>
@@ -24,7 +23,7 @@ namespace Puppeteer
 			public string[] terrain;
 		}
 
-		public string type = "game-info";
+		public GameInfo() { type = "game-info"; }
 		public ViewerID viewer;
 		public Info info;
 	}
@@ -36,7 +35,7 @@ namespace Puppeteer
 			public int amount;
 		}
 
-		public string type = "earn";
+		public Earned() { type = "earn"; }
 		public ViewerID viewer;
 		public Info info;
 	}
@@ -48,7 +47,7 @@ namespace Puppeteer
 			public byte[] image;
 		}
 
-		public string type = "portrait";
+		public Portrait() { type = "portrait"; }
 		public ViewerID viewer;
 		public Info info;
 	}
@@ -60,7 +59,7 @@ namespace Puppeteer
 			public byte[] image;
 		}
 
-		public string type = "on-map";
+		public OnMap() { type = "on-map"; }
 		public ViewerID viewer;
 		public Info info;
 	}
@@ -171,40 +170,37 @@ namespace Puppeteer
 			public SkillInfo[] skills;
 		}
 
-		public string type = "colonist-basics";
+		public ColonistBaseInfo() { type = "colonist-basics"; }
 		public ViewerID viewer;
 		public Info info;
 	}
 
 	public class Assignment : JSONConvertable<Assignment>
 	{
-		public string type = "assignment";
+		public Assignment() { type = "assignment"; }
 		public ViewerID viewer;
 		public bool state;
 	}
 
 	public class Join : JSONConvertable<Join>
 	{
-		public string type;
 		public ViewerID viewer;
 	}
 
 	public class Leave : JSONConvertable<Leave>
 	{
-		public string type;
 		public ViewerID viewer;
 	}
 
 	public class Assign : JSONConvertable<Assign>
 	{
-		public string type;
 		public int colonistID;
 		public ViewerID viewer;
 	}
 
 	public class OutgoingState<T> : JSONConvertable<OutgoingState<T>>
 	{
-		public string type = "state";
+		public OutgoingState() { type = "state"; }
 		public ViewerID viewer;
 		public string key;
 		public T val;
@@ -212,7 +208,6 @@ namespace Puppeteer
 
 	public class IncomingState : JSONConvertable<IncomingState>
 	{
-		public string type;
 		public ViewerID user;
 		public string key;
 		public object val;
@@ -227,13 +222,12 @@ namespace Puppeteer
 
 	public class AllColonists : JSONConvertable<AllColonists>
 	{
-		public string type = "colonists";
+		public AllColonists() { type = "colonists"; }
 		public List<ColonistInfo> colonists;
 	}
 
 	public class IncomingJob : JSONConvertable<IncomingJob>
 	{
-		public string type;
 		public ViewerID user;
 		public string id;
 		public string method;
@@ -242,7 +236,7 @@ namespace Puppeteer
 
 	public class OutgoingJobResult : JSONConvertable<OutgoingJobResult>
 	{
-		public string type = "job";
+		public OutgoingJobResult() { type = "job"; }
 		public ViewerID viewer;
 		public string id;
 		public string info; // json
@@ -285,7 +279,7 @@ namespace Puppeteer
 			public byte[] val;
 		}
 
-		public string type = "grid";
+		public GridUpdate() { type = "grid"; }
 		public ViewerID controller;
 		public Info info;
 	}

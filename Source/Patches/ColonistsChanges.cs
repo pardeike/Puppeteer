@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Puppeteer.Services;
 using RimWorld;
 using RimWorld.Planet;
 using System;
@@ -142,6 +143,7 @@ namespace Puppeteer
 		public static void Prefix(Rect rect, Pawn colonist)
 		{
 			Drawing.DrawAssignmentStatus(colonist, rect);
+			ConnectionStatus.Update();
 		}
 	}
 

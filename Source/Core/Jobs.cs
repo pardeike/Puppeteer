@@ -34,7 +34,7 @@ namespace Puppeteer
 						serializer.Serialize(writer, obj);
 						result.info = writer.ToString();
 					}
-					connection.Send(result);
+					connection.Send(result, null);
 				});
 			}
 

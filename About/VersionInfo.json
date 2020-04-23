@@ -4,7 +4,7 @@
 		"infos": [
 			{
 				"title": "New Update System",
-				"texts": [ "This dialog helps you to not miss any new features when Puppeteer updates." ]
+				"texts": [ "This dialog helps you to not miss any new features when Puppeteer updates" ]
 			},
 			{
 				"title": "New features",
@@ -17,7 +17,7 @@
 			{
 				"title": "Bug fixes",
 				"texts": [
-					"- Puppet Announcer now always on top. That makes it compatible with Dubs Mini Map.",
+					"- Puppet Announcer now always on top. That makes it compatible with Dubs Mini Map",
 					"- Viewers are no longer automatically unassigned"
 				]
 			}
@@ -27,9 +27,16 @@
 		"version": "0.0.8.0",
 		"infos": [
 			{
+				"title": "New features",
+				"texts": [
+					"- New connection indicator that shows possible network congestions"
+				]
+			},
+			{
 				"title": "Bug fixes",
 				"texts": [
-					"- Puppet head cannot get stuck anymore",
+					"- Puppet head does not get stuck anymore",
+					"- Communication runs now in a background thread to avoid network congestions",
 					"- Less risk for internal concurreny that leads to undefined state",
 					"- Better rendering of the static in the colonist bar"
 				]
