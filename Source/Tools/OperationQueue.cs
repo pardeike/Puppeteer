@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace Puppeteer
 {
@@ -13,14 +13,14 @@ namespace Puppeteer
 
 	public static class OperationQueue
 	{
-		static readonly Dictionary<OperationType, ConcurrentQueue<Action>> state = new Dictionary<OperationType, ConcurrentQueue<Action>>();
+		static readonly ConcurrentDictionary<OperationType, ConcurrentQueue<Action>> state = new ConcurrentDictionary<OperationType, ConcurrentQueue<Action>>();
 
 		public static void Add(OperationType type, Action action)
 		{
 			if (state.TryGetValue(type, out var queue) == false)
 			{
 				queue = new ConcurrentQueue<Action>(true);
-				state[type] = queue;
+				_ = state.TryAdd(type, queue);
 			}
 			queue.Enqueue(action);
 		}
@@ -28,7 +28,16 @@ namespace Puppeteer
 		public static void Process(OperationType type)
 		{
 			if (state.TryGetValue(type, out var queue))
-				queue.Dequeue()?.Invoke();
+			{
+				try
+				{
+					queue.Dequeue()?.Invoke();
+				}
+				catch (Exception e)
+				{
+					Tools.LogWarning($"While dequeuing {type}: {e}");
+				}
+			}
 		}
 	}
 }

@@ -23,6 +23,8 @@ namespace Puppeteer
 		SchedulesChanged,
 		SendChangedSchedules,
 		GridUpdate,
+		RenderColonists,
+		UpdateColonists,
 	}
 
 	public interface ICommandProcessor
@@ -85,50 +87,63 @@ namespace Puppeteer
 
 		public void SetEvent(PuppeteerEvent evt)
 		{
-			// Log.Warning($"SET EVENT {evt}");
-			switch (evt)
+			try
 			{
-				case PuppeteerEvent.GameEntered:
-					connection = new Connection(this);
-					break;
-				case PuppeteerEvent.GameExited:
-					connection?.Disconnect();
-					connection = null;
-					break;
-				case PuppeteerEvent.Save:
-					State.Save();
-					break;
-				case PuppeteerEvent.ColonistsChanged:
-					if (firstTime == false)
-						GeneralCommands.SendAllColonists(connection);
-					firstTime = false;
-					break;
-				case PuppeteerEvent.AreasChanged:
-					GeneralCommands.SendAreas(connection);
-					break;
-				case PuppeteerEvent.PrioritiesChanged:
-					prioritiesChanged = true;
-					break;
-				case PuppeteerEvent.SendChangedPriorities:
-					if (prioritiesChanged)
-					{
-						prioritiesChanged = false;
-						GeneralCommands.SendPriorities(connection);
-					}
-					break;
-				case PuppeteerEvent.SchedulesChanged:
-					schedulesChanged = true;
-					break;
-				case PuppeteerEvent.SendChangedSchedules:
-					if (schedulesChanged)
-					{
-						schedulesChanged = false;
-						GeneralCommands.SendSchedules(connection);
-					}
-					break;
-				case PuppeteerEvent.GridUpdate:
-					GeneralCommands.UpdateGrids(connection);
-					break;
+				// Log.Warning($"SET EVENT {evt}");
+				switch (evt)
+				{
+					case PuppeteerEvent.GameEntered:
+						connection = new Connection(this);
+						break;
+					case PuppeteerEvent.GameExited:
+						connection?.Disconnect();
+						connection = null;
+						break;
+					case PuppeteerEvent.Save:
+						State.Save();
+						break;
+					case PuppeteerEvent.ColonistsChanged:
+						if (firstTime == false)
+							GeneralCommands.SendAllColonists(connection);
+						firstTime = false;
+						break;
+					case PuppeteerEvent.AreasChanged:
+						GeneralCommands.SendAreas(connection);
+						break;
+					case PuppeteerEvent.PrioritiesChanged:
+						prioritiesChanged = true;
+						break;
+					case PuppeteerEvent.SendChangedPriorities:
+						if (prioritiesChanged)
+						{
+							prioritiesChanged = false;
+							GeneralCommands.SendPriorities(connection);
+						}
+						break;
+					case PuppeteerEvent.SchedulesChanged:
+						schedulesChanged = true;
+						break;
+					case PuppeteerEvent.SendChangedSchedules:
+						if (schedulesChanged)
+						{
+							schedulesChanged = false;
+							GeneralCommands.SendSchedules(connection);
+						}
+						break;
+					case PuppeteerEvent.GridUpdate:
+						GeneralCommands.UpdateGrids(connection);
+						break;
+					case PuppeteerEvent.RenderColonists:
+						Tools.RenderColonists();
+						break;
+					case PuppeteerEvent.UpdateColonists:
+						Tools.UpdateColonists();
+						break;
+				}
+			}
+			catch (Exception e)
+			{
+				Tools.LogWarning($"While setting event {evt}: {e}");
 			}
 		}
 

@@ -22,5 +22,18 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "0.0.8.0",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"- Puppet head cannot get stuck anymore",
+					"- Less risk for internal concurreny that leads to undefined state",
+					"- Better rendering of the static in the colonist bar"
+				]
+			}
+		]
 	}
 ]

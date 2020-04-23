@@ -323,5 +323,22 @@ namespace Puppeteer
 			var ticks = (int)(GenDate.TicksPerHour * hours);
 			return ticks.ToStringTicksToPeriodVerbose(true, false);
 		}
+
+		public static void Draw(this Texture2D texture, Rect rect, bool withAlpha = false, Color? color = null)
+		{
+			var c = color ?? Color.white;
+			GUI.DrawTexture(rect, texture, ScaleMode.StretchToFill, withAlpha, 0f, c, Vector4.zero, Vector4.zero);
+		}
+
+		public static string GetModRootDirectory()
+		{
+			var me = LoadedModManager.GetMod<Puppeteer>();
+			if (me == null)
+			{
+				Log.Error("LoadedModManager.GetMod<Puppeteer>() failed");
+				return "";
+			}
+			return me.Content.RootDir;
+		}
 	}
 }

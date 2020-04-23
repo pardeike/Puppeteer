@@ -145,8 +145,6 @@ namespace Puppeteer
 		const string versionFileName = "VersionInfo.json";
 		const string lastSeenFileName = "PuppeteerLastSeenVersion.json";
 
-		public static string rootDir;
-
 		public class Info
 		{
 			public string title;
@@ -162,7 +160,7 @@ namespace Puppeteer
 
 		public static void Show()
 		{
-			var path = $"{rootDir}{Path.DirectorySeparatorChar}About{Path.DirectorySeparatorChar}{versionFileName}";
+			var path = $"{Tools.GetModRootDirectory()}{Path.DirectorySeparatorChar}About{Path.DirectorySeparatorChar}{versionFileName}";
 			if (File.Exists(path) == false) return;
 			var data = File.ReadAllText(path, Encoding.UTF8);
 			if (data == null) return;

@@ -47,6 +47,10 @@ namespace Puppeteer
 
 		public static void Update()
 		{
+			puppetOut += puppetOutIncrement * Math.Sign(puppetOutDesired - puppetOut);
+			if (puppetOut < 0) puppetOut = 0;
+			if (puppetOut > 1) puppetOut = 1;
+
 			if (puppetOut > 0)
 			{
 				var xPos = UI.screenWidth - (int)(puppetTex.width * Math.Sin(Math.PI / 2 * puppetOut));
@@ -66,12 +70,6 @@ namespace Puppeteer
 			Find.WindowStack.ImmediateWindow(1883894527, rect, WindowLayer.Super, () =>
 			{
 				rect = rect.AtZero();
-
-				puppetOut += puppetOutIncrement * Math.Sign(puppetOutDesired - puppetOut);
-				if (puppetOut < 0) puppetOut = 0;
-				if (puppetOut > 1) puppetOut = 1;
-
-
 				if (Widgets.ButtonImage(rect, puppetTex))
 					clickAction();
 			}, false, false, 0f);

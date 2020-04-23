@@ -11,38 +11,42 @@ namespace Puppeteer
 		const int progressBarTimeInterval = 30;
 
 		static readonly DateTime t = DateTime.Now;
-		static readonly long sixtySecondsTicks = t.AddSeconds(progressBarTimeInterval).Ticks - t.Ticks;
+		static readonly long countdownTicks = t.AddSeconds(progressBarTimeInterval).Ticks - t.Ticks;
 		static readonly Color barColor = new Color(0, 166 / 255f, 81 / 255f);
 
 		public static void DrawAssignmentStatus(Pawn pawn, Rect rect)
 		{
+			if (Event.current.type != EventType.Repaint) return;
+
 			if (pawn == null) return;
 			var puppet = State.Instance.PuppetForPawn(pawn);
 			var puppeteer = puppet?.puppeteer;
 			if (puppeteer == null) return;
 
-			var sixtySecondsAgo = DateTime.Now.Ticks - sixtySecondsTicks;
+			var sixtySecondsAgo = DateTime.Now.Ticks - countdownTicks;
 			var lastCommand = puppeteer.lastCommandIssued.Ticks;
 			var deltaTicks = Math.Max(lastCommand, sixtySecondsAgo) - sixtySecondsAgo;
-			var f = (float)((double)deltaTicks / sixtySecondsTicks);
+			var f = (float)((double)deltaTicks / countdownTicks);
 
 			var savedColor = GUI.color;
 
-			var standardWidth = rect.width == 48;
-			var texture = standardWidth ? Assets.connectedMin : Assets.connectedMax;
-			var tex = texture[puppeteer.connected ? 1 : 0];
+			var tex = Assets.connected[puppeteer.connected ? 1 : 0];
 			var height = rect.width * tex.height / tex.width;
 			var r = new Rect((int)rect.xMin, (int)rect.yMin - (int)height, (int)rect.width, (int)height);
 			GUI.color = new Color(1f, 1f, 1f, Find.ColonistBar.GetEntryRectAlpha(r));
-			GUI.DrawTexture(r, tex, ScaleMode.ScaleToFit, true);
+			tex.Draw(r, true);
 
-			if (puppeteer.connected)
+			if (puppeteer.connected && f > 0)
 			{
-				var u = r.width / tex.width;
-				var n = standardWidth ? 1 : 2;
-				var r2 = new Rect(r.xMin + 1 * n, r.yMin + 5 * n, 46 * n * f, 4 * n);
+				GUI.color = Color.white;
+				var u = r.width / Find.ColonistBar.Size.x;
+				r = new Rect(r.xMin, r.yMin + 4 * u, r.width, 6 * u);
+				GUI.DrawTexture(r.Rounded(), BaseContent.BlackTex);
+				r = r.ExpandedBy(-u);
+				GUI.DrawTexture(r.Rounded(), BaseContent.WhiteTex);
+				r.width *= f;
 				GUI.color = barColor;
-				GUI.DrawTexture(r2, BaseContent.WhiteTex);
+				GUI.DrawTexture(r.Rounded(), BaseContent.WhiteTex);
 			}
 
 			GUI.color = savedColor;

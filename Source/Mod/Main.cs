@@ -22,7 +22,6 @@ namespace Puppeteer
 
 		public Puppeteer(ModContentPack content) : base(content)
 		{
-			VersionInformation.rootDir = content.RootDir;
 			LoadSettings();
 		}
 
