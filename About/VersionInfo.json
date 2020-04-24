@@ -47,9 +47,18 @@
 		"version": "0.0.9.0",
 		"infos": [
 			{
+				"title": "Create new colonists",
+				"image": "AddNewColonist",
+				"texts": [
+					"You can now spawn new Colonists that are automatically assigned to a viewer with the new button in the top right corner of the screen. If you have Prepare Carefully, you can even add cloth and weapons"
+				]
+			},
+			{
 				"title": "Bug fixes",
 				"texts": [
-					"- Connection indicator scale expanded"
+					"- Connection indicator scale expanded",
+					"- Connection indicator shows average send time for slow connections",
+					"- Colonist bar spacing with multiple rows"
 				]
 			}
 		]
