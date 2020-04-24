@@ -75,21 +75,40 @@ namespace Puppeteer
 			if (newColonist.Name is NameTriple triple)
 				newColonist.Name = new NameTriple(triple.First, vID.name, triple.Last);
 			Find.GameInitData.startingAndOptionalPawns.Add(newColonist);
+			Traverse.Create(Find.Scenario).Field("parts").GetValue<List<ScenPart>>().Clear();
 			Find.WindowStack.Add(new Page_ConfigureStartingPawns()
 			{
 				next = null,
-				nextAct = () =>
-				{
-					newColonist = Find.GameInitData.startingAndOptionalPawns[0];
-					var map = Find.CurrentMap;
-					if (CellFinder.TryFindRandomEdgeCellWith(c => map.reachability.CanReachColony(c) && !c.Fogged(map), map, CellFinder.EdgeRoadChance_Neutral, out var cell))
-					{
-						_ = GenSpawn.Spawn(newColonist, cell, map, WipeMode.Vanish);
-						ShowWandererJoinedLetter(newColonist);
-						Controller.instance.AssignViewerToPawn(vID, newColonist);
-					}
-				}
+				nextAct = () => { CreateColonist(vID, Find.GameInitData.startingAndOptionalPawns[0]); }
 			});
+		}
+
+		static void CreateColonist(ViewerID vID, Pawn pawn)
+		{
+			var map = Find.CurrentMap;
+			if (CellFinder.TryFindRandomEdgeCellWith(c => map.reachability.CanReachColony(c) && !c.Fogged(map), map, CellFinder.EdgeRoadChance_Neutral, out var cell) == false) return;
+
+			_ = GenSpawn.Spawn(pawn, cell, map, WipeMode.Vanish);
+			ShowWandererJoinedLetter(pawn);
+			Controller.instance.AssignViewerToPawn(vID, pawn);
+
+			var things = Find.Scenario.AllParts
+				.SelectMany(part => part.PlayerStartingThings())
+				.Select(thing =>
+				{
+					if (thing.def.CanHaveFaction)
+						thing.SetFactionDirect(Faction.OfPlayer);
+					return thing;
+				})
+				.ToList();
+
+			foreach (var thing in things)
+			{
+				if (thing.def.IsWeapon && thing is ThingWithComps weapon)
+					pawn.equipment.AddEquipment(weapon);
+				else if (thing is Apparel apparel)
+					pawn.apparel.Wear(apparel, false);
+			}
 		}
 
 		static void ShowWandererJoinedLetter(Pawn pawn)
