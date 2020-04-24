@@ -2,6 +2,7 @@
 using RimWorld;
 using System.Collections.Generic;
 using System.Reflection;
+using UnityEngine;
 using Verse;
 
 namespace Puppeteer
@@ -64,6 +65,17 @@ namespace Puppeteer
 
 			PuppetCommentator.Update();
 			OperationQueue.Process(OperationType.Log);
+		}
+	}
+
+	[HarmonyPatch(typeof(GlobalControls))]
+	[HarmonyPatch(nameof(GlobalControls.GlobalControlsOnGUI))]
+	static class GlobalControls_GlobalControlsOnGUI_Patch
+	{
+		public static void Postfix()
+		{
+			if (Event.current.type != EventType.Layout)
+				GeneralGUI.Update();
 		}
 	}
 

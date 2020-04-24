@@ -11,6 +11,7 @@ namespace Puppeteer
 	{
 		public static Texture2D puppet = LoadTexture("Puppet");
 		public static Texture2D bubble = LoadTexture("Bubble");
+		public static Texture2D colonist = LoadTexture("Colonist");
 		public static Texture2D[] connected = LoadTextures("Connected0", "Connected1");
 		public static Texture2D[] status = LoadTextures("Status0", "Status1");
 		public static Texture2D[] numbers = LoadTextureRow("Numbers", new[] { 10, 7, 10, 9, 10, 10, 10, 9, 10, 10, 23 });
