@@ -34,19 +34,21 @@ namespace Puppeteer
 			var height = rect.width * tex.height / tex.width;
 			var r = new Rect((int)rect.xMin, (int)rect.yMin - (int)height, (int)rect.width, (int)height);
 			GUI.color = new Color(1f, 1f, 1f, Find.ColonistBar.GetEntryRectAlpha(r));
-			tex.Draw(r, true);
+			tex.Draw(r.Rounded(), true);
 
 			if (puppeteer.connected && f > 0)
 			{
 				GUI.color = Color.white;
-				var u = r.width / Find.ColonistBar.Size.x;
-				r = new Rect(r.xMin, r.yMin + 4 * u, r.width, 6 * u);
-				GUI.DrawTexture(r.Rounded(), BaseContent.BlackTex);
-				r = r.ExpandedBy(-u);
-				GUI.DrawTexture(r.Rounded(), BaseContent.WhiteTex);
+				var u = rect.width / tex.width;
+				r.yMin += 16 * u;
+				r.height = 24 * u;
+				r = r.Rounded();
+				GUI.DrawTexture(r, BaseContent.BlackTex);
+				r = r.ExpandedBy(-(float)Math.Max(1, Math.Round(4f * u)));
+				GUI.DrawTexture(r, BaseContent.WhiteTex);
 				r.width *= f;
 				GUI.color = barColor;
-				GUI.DrawTexture(r.Rounded(), BaseContent.WhiteTex);
+				GUI.DrawTexture(r, BaseContent.WhiteTex);
 			}
 
 			GUI.color = savedColor;

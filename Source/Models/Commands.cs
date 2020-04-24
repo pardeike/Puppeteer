@@ -168,6 +168,7 @@ namespace Puppeteer
 			public int deathIn;
 			public Injury[] injuries;
 			public SkillInfo[] skills;
+			public string[] traits;
 		}
 
 		public ColonistBaseInfo() { type = "colonist-basics"; }

@@ -42,5 +42,16 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "0.0.9.0",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"- Connection indicator scale expanded"
+				]
+			}
+		]
 	}
 ]

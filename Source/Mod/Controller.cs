@@ -388,6 +388,7 @@ namespace Puppeteer
 			info.deathIn = (int)(((float)ticksUntilDeath / GenDate.TicksPerHour) + 0.5f);
 			info.injuries = GetInjuries(pawn);
 			info.skills = GetSkills(pawn);
+			info.traits = pawn.story.traits.allTraits.Select(trait => trait.LabelCap).ToArray();
 
 			connection.Send(new ColonistBaseInfo() { viewer = puppeteer.vID, info = info });
 		}

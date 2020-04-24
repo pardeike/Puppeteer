@@ -13,8 +13,9 @@ namespace Puppeteer
 		public static Texture2D bubble = LoadTexture("Bubble");
 		public static Texture2D[] connected = LoadTextures("Connected0", "Connected1");
 		public static Texture2D[] status = LoadTextures("Status0", "Status1");
+		public static Texture2D[] numbers = LoadTextureRow("Numbers", new[] { 10, 7, 10, 9, 10, 10, 10, 9, 10, 10, 23 });
 
-		static Texture2D LoadTexture(string path)
+		static Texture2D LoadTexture(string path, bool makeReadonly = true)
 		{
 			var fullPath = Path.Combine(Tools.GetModRootDirectory(), "Textures", $"{path}.png");
 			var data = File.ReadAllBytes(fullPath);
@@ -24,7 +25,7 @@ namespace Puppeteer
 			tex.Compress(true);
 			tex.wrapMode = TextureWrapMode.Clamp;
 			tex.filterMode = FilterMode.Trilinear;
-			tex.Apply(true, true);
+			tex.Apply(true, makeReadonly);
 			return tex;
 		}
 
@@ -32,6 +33,27 @@ namespace Puppeteer
 		{
 			// ContentFinder<Texture2D>.Get(path, true)
 			return paths.Select(path => LoadTexture(path)).ToArray();
+		}
+
+		static Texture2D[] LoadTextureRow(string path, int[] offsets)
+		{
+			var original = LoadTexture(path, false);
+			var x = 0;
+			var height = original.height;
+			return offsets.Select(width =>
+			{
+				var tex = new Texture2D(width, height, TextureFormat.ARGB32, false);
+				var pixels = original.GetPixels(x, 0, width, height);
+				tex.SetPixels(0, 0, width, height, pixels);
+				tex.Apply();
+				tex.Compress(true);
+				tex.wrapMode = TextureWrapMode.Clamp;
+				tex.filterMode = FilterMode.Trilinear;
+				tex.Apply(true, true);
+				x += width;
+				return tex;
+			})
+			.ToArray();
 		}
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Verse;
@@ -16,7 +17,11 @@ namespace Puppeteer
 			public Action<bool> callback;
 		}
 
-		public static int MaxQueued = 20;
+		public static int MaxQueued = 200;
+		static readonly RunningAverage runningAverage = new RunningAverage(MaxQueued / 10);
+		static readonly Stopwatch stopwatch = new Stopwatch();
+		public static long AverageSendTime { get; private set; } = 0;
+
 		static readonly ConcurrentQueue<SendTask> tasks = new ConcurrentQueue<SendTask>();
 		public static int Count => tasks.Count;
 
@@ -29,7 +34,6 @@ namespace Puppeteer
 		public static void Add(string type, byte[] data, Action<bool> callback)
 		{
 			if (tasks.Count >= MaxQueued) return;
-
 			var task = new SendTask() { type = type, data = data, callback = callback };
 			tasks.Enqueue(task);
 		}
@@ -46,8 +50,11 @@ namespace Puppeteer
 			if (ws == null) return Task.Delay(100);
 			return Task.Run(() =>
 			{
+				stopwatch.Start();
 				ws.SendAsync(task.data, success =>
 				{
+					AverageSendTime = runningAverage.Add(stopwatch.ElapsedMilliseconds);
+					stopwatch.Reset();
 					if (success == false) Log.Error($"Error sending {task.type}");
 					task.callback(success);
 				});

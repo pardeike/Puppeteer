@@ -3,6 +3,7 @@ using Puppeteer.Services;
 using RimWorld;
 using RimWorld.Planet;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Verse;
 
@@ -161,9 +162,23 @@ namespace Puppeteer
 	[HarmonyPatch("GetDrawLoc")]
 	static class ColonistBarDrawLocsFinder_GetDrawLoc_Patch
 	{
+		const float BaseSpaceBetweenColonistsVertical = 32f;
+		const float extraVerticalOffset = 15f;
+
 		public static void Postfix(ref Vector2 __result, float scale)
 		{
-			__result.y += 15 * scale;
+			__result.y += extraVerticalOffset * scale;
+		}
+
+		public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+		{
+			foreach (var instr in instructions)
+			{
+				var scale = Find.UIRoot == null || Find.MapUI == null ? 1f : (Find.ColonistBar?.Scale ?? 1f);
+				if (instr.OperandIs(BaseSpaceBetweenColonistsVertical))
+					instr.operand = BaseSpaceBetweenColonistsVertical + extraVerticalOffset * scale;
+				yield return instr;
+			}
 		}
 	}
 }
