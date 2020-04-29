@@ -21,48 +21,55 @@ namespace Puppeteer
 			var width = 70f;
 			var height = 25f;
 			var padding = 4;
-			var r = new Rect(UI.screenWidth - width - padding, padding, width, height);
+			var rect = new Rect(UI.screenWidth - width - padding, padding, width, height);
 			GUI.color = Color.white;
-			tex1.Draw(r, true);
+			tex1.Draw(rect, true);
 
-			r.xMin += 2;
-			r.yMin += 8;
-			r.height = 9;
-			r.width = f * 46;
+			rect.xMin += 2;
+			rect.yMin += 8;
+			rect.height = 9;
+			rect.width = 45;
+			var barRect = rect;
+
 			GUI.color = new Color(f, 1 - f, 0);
-			GUI.DrawTexture(r.Rounded(), BaseContent.WhiteTex);
+			rect.width *= f;
+			GUI.DrawTexture(rect.Rounded(), BaseContent.WhiteTex);
 
-			var average = OutgoingRequests.AverageSendTime;
-			if (average > 0)
-			{
-				r.xMin += 2;
-				GUI.color = Color.white;
-				foreach (var c in $"{average}$")
-				{
-					var numTex = c == '$' ? Assets.numbers[10] : Assets.numbers[c - '0'];
-					r.width = numTex.width / 2f;
-					GUI.DrawTexture(r, numTex);
-					r.xMin += r.width + 1;
-				}
-			}
+			RenderNumber(barRect, OutgoingRequests.AverageSendTime, true, TextAlignment.Left);
+			RenderNumber(barRect, OutgoingRequests.ErrorCount, false, TextAlignment.Right);
 
 			var tex2 = Assets.colonist;
 			width = tex2.width / 2;
 			height = tex2.height / 2;
-			r = new Rect(r.x - 2 * padding - width, r.center.y - height / 2, width, height);
-			if (Widgets.ButtonImage(r, Assets.colonist))
+			rect = new Rect(rect.x - 2 * padding - width, rect.center.y - height / 2, width, height);
+			if (Widgets.ButtonImage(rect, Assets.colonist))
 				UnassignedViewersMenu();
 
 			GUI.color = savedColor;
 		}
 
+		static void RenderNumber(Rect rect, long val, bool useMilliseconds, TextAlignment direction)
+		{
+			rect.x = direction == TextAlignment.Left ? rect.x + 2 : rect.xMax;
+			GUI.color = Color.white;
+			var characters = val.ToString() + (useMilliseconds ? "$" : "");
+			foreach (var c in characters)
+			{
+				var numTex = c == '$' ? Assets.numbers[10] : Assets.numbers[c - '0'];
+				rect.width = numTex.width / 2f;
+				if (direction == TextAlignment.Right) rect.x -= rect.width;
+				GUI.DrawTexture(rect, numTex);
+				rect.x += direction == TextAlignment.Left ? rect.width + 1 : -1;
+			}
+		}
+
 		static void UnassignedViewersMenu()
 		{
-			var availableViewers = State.Instance.AllPuppeteers().Select(p => p.vID).OrderBy(vID => vID.name).ToList();
-			if (availableViewers.Any())
+			var connectedViewers = State.Instance.ConnectedPuppeteers().Select(p => p.vID).OrderBy(vID => vID.name).ToList();
+			if (connectedViewers.Any())
 			{
 				var list = new List<FloatMenuOption>();
-				foreach (var vID in availableViewers)
+				foreach (var vID in connectedViewers)
 					list.Add(new FloatMenuOption(vID.name, () => GenerateColonist(vID)));
 				Find.WindowStack.Add(new FloatMenu(list));
 			}

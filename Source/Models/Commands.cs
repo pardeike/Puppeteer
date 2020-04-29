@@ -16,6 +16,11 @@ namespace Puppeteer
 		public Ping() { type = "ping"; }
 	}
 
+	public class Hello : JSONConvertable<Hello>
+	{
+		public Hello() { type = "hello"; }
+	}
+
 	public class GameInfo : JSONConvertable<GameInfo>
 	{
 		public class Info
@@ -212,6 +217,12 @@ namespace Puppeteer
 		public ViewerID user;
 		public string key;
 		public object val;
+	}
+
+	public class StallingState : JSONConvertable<StallingState>
+	{
+		public ViewerID viewer;
+		public bool state;
 	}
 
 	public class ColonistInfo : JSONConvertable<ColonistInfo>

@@ -58,6 +58,7 @@ namespace Puppeteer
 				lastCommand = null;
 				lastCommandIssued = default;
 				connected = default;
+				stalling = default;
 				lastCommandIssued = default;
 				lastCommand = default;
 			}
@@ -68,6 +69,7 @@ namespace Puppeteer
 			[JsonProperty] private int _puppet;
 
 			public bool connected;
+			public bool stalling;
 			public DateTime lastCommandIssued;
 			public string lastCommand;
 			public int coinsEarned;

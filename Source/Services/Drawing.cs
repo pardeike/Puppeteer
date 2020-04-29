@@ -30,7 +30,7 @@ namespace Puppeteer
 
 			var savedColor = GUI.color;
 
-			var tex = Assets.connected[puppeteer.connected ? 1 : 0];
+			var tex = Assets.connected[puppeteer.stalling ? 2 : (puppeteer.connected ? 1 : 0)];
 			var height = rect.width * tex.height / tex.width;
 			var r = new Rect((int)rect.xMin, (int)rect.yMin - (int)height, (int)rect.width, (int)height);
 			GUI.color = new Color(1f, 1f, 1f, Find.ColonistBar.GetEntryRectAlpha(r));
@@ -65,16 +65,16 @@ namespace Puppeteer
 			if (Vector2.Distance(lastMousePos, e.mousePosition) > 4f) return;
 
 			var puppet = State.Instance.PuppetForPawn(pawn);
-			var puppeteer = puppet?.puppeteer;
+			var existingPuppeteer = puppet?.puppeteer;
 
-			var availableViewers = State.Instance.AllPuppeteers().Select(p => p.vID).OrderBy(vID => vID.name).ToList();
-			if (availableViewers.Any() || puppeteer != null)
+			var availablePuppeteers = State.Instance.ConnectedPuppeteers().OrderBy(p => p.vID.name).ToList();
+			if (availablePuppeteers.Any() || existingPuppeteer != null)
 			{
 				var list = new List<FloatMenuOption>();
-				if (puppeteer != null)
-					list.Add(new FloatMenuOption($"Remove {puppeteer.vID.name}", () => Controller.instance.AssignViewerToPawn(null, pawn)));
-				foreach (var vID in availableViewers)
-					list.Add(new FloatMenuOption($"Assign {vID.name}", () => Controller.instance.AssignViewerToPawn(vID, pawn)));
+				if (existingPuppeteer != null)
+					list.Add(new FloatMenuOption($"Remove {existingPuppeteer.vID.name}", () => Controller.instance.AssignViewerToPawn(null, pawn)));
+				foreach (var puppeteer in availablePuppeteers)
+					list.Add(new FloatMenuOption($"Assign {puppeteer.vID.name}", () => Controller.instance.AssignViewerToPawn(puppeteer.vID, pawn), puppeteer.puppet != null ? null : Assets.new27, Color.white));
 				Find.WindowStack.Add(new FloatMenu(list));
 			}
 		}

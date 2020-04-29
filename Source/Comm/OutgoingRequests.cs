@@ -19,14 +19,19 @@ namespace Puppeteer
 
 		public static int MaxQueued = 200;
 		static readonly RunningAverage runningAverage = new RunningAverage(MaxQueued / 10);
+		static readonly System.Timers.Timer periodical = new System.Timers.Timer(500) { AutoReset = true };
 		static readonly Stopwatch stopwatch = new Stopwatch();
 		public static long AverageSendTime { get; private set; } = 0;
+		public static long ErrorCount = 0;
 
 		static readonly ConcurrentQueue<SendTask> tasks = new ConcurrentQueue<SendTask>();
 		public static int Count => tasks.Count;
 
 		static OutgoingRequests()
 		{
+			periodical.Elapsed += new System.Timers.ElapsedEventHandler((sender, e) => { if (ErrorCount > 0) ErrorCount--; });
+			periodical.Start();
+
 			var thread = new Thread(Process);
 			thread.Start();
 		}
@@ -55,7 +60,11 @@ namespace Puppeteer
 				{
 					AverageSendTime = runningAverage.Add(stopwatch.ElapsedMilliseconds);
 					stopwatch.Reset();
-					if (success == false) Log.Error($"Error sending {task.type}");
+					if (success == false)
+					{
+						ErrorCount++;
+						Log.Warning($"Error sending {task.type}");
+					}
 					task.callback(success);
 				});
 			});
@@ -67,6 +76,7 @@ namespace Puppeteer
 			{
 				_ = tasks.TryDequeue(out var task);
 				await Send(task);
+				if (ErrorCount > 0) ErrorCount--;
 			}
 		}
 	}

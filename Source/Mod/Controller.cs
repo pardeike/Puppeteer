@@ -188,6 +188,18 @@ namespace Puppeteer
 						Jobs.Run(connection, puppeteer, job);
 						break;
 					}
+					case "stalling":
+					{
+						var stalling = StallingState.Create(msg);
+						var puppeteer = State.Instance.PuppeteerForViewer(stalling.viewer);
+						if (puppeteer != null)
+						{
+							puppeteer.stalling = stalling.state;
+							var state = puppeteer.stalling ? "started" : "ends";
+							Tools.LogWarning($"{stalling.viewer.name} {state} stalling");
+						}
+						break;
+					}
 					default:
 					{
 						Tools.LogWarning($"unknown command '{cmd.type}'");

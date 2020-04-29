@@ -44,7 +44,7 @@
 		]
 	},
 	{
-		"version": "0.0.9.0",
+		"version": "0.1.0.0",
 		"infos": [
 			{
 				"title": "Create new colonists",
@@ -59,6 +59,38 @@
 					"- Connection indicator scale expanded",
 					"- Connection indicator shows average send time for slow connections",
 					"- Colonist bar spacing with multiple rows"
+				]
+			}
+		]
+	},
+	{
+		"version": "0.1.1.0",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"- Position of Add Colonist button now stable",
+					"- Add Colonist button only shows connected viewers",
+					"- Showing stalled connection for viewers"
+				]
+			}
+		]
+	},
+	{
+		"version": "0.1.2.0",
+		"infos": [
+			{
+				"title": "New server",
+				"texts": [
+					"Using a new server that is less limited"
+				]
+			},
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"- Sends hello correctly",
+					"- Let assignment menu only show connected viewers",
+					"- Marks new viewers in the menu"
 				]
 			}
 		]

@@ -18,7 +18,7 @@ namespace Puppeteer
 		public Connection(ICommandProcessor processor)
 		{
 			this.processor = processor;
-			endpoint = Tools.IsLocalDev ? "ws://localhost:3000" : "wss://puppeteer-central.herokuapp.com";
+			endpoint = Tools.IsLocalDev ? "ws://localhost:3000" : "ws://138-128-246-196.cloud-xip.io";
 			TryConnect();
 		}
 
@@ -103,8 +103,7 @@ namespace Puppeteer
 		{
 			isConnected = true;
 			Tools.LogWarning("Connected!");
-
-			ws.SendAsync("{\"type\":\"hello\"}", null);
+			Send(new Hello());
 		}
 
 		private void Ws_OnClose(object sender, CloseEventArgs e)
