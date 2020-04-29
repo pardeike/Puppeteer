@@ -48,6 +48,16 @@ namespace Puppeteer
 		}
 	}
 
+	[HarmonyPatch(typeof(Prefs))]
+	[HarmonyPatch(nameof(Prefs.DevMode), MethodType.Setter)]
+	static class Prefs_DevMode_Patch
+	{
+		public static void Postfix()
+		{
+			Find.ColonistBar.MarkColonistsDirty();
+		}
+	}
+
 	[HarmonyPatch(typeof(Root))]
 	[HarmonyPatch(nameof(Root.OnGUI))]
 	static class Root_OnGUI_Patch

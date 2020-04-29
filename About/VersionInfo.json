@@ -105,5 +105,19 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "0.1.2.2",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"- Reverted back to not using CloudFlare for websockets",
+					"- Removes the flicker when you have multiple maps",
+					"- Reduced some red errors",
+					"- Moved the UX down when debug menu shows"
+				]
+			}
+		]
 	}
 ]

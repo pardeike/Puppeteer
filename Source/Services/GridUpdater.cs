@@ -44,6 +44,18 @@ namespace Puppeteer
 
 		public static byte[] GetGrid(Pawn colonist, int radius)
 		{
+			bool HostileToColonist(Pawn pawn)
+			{
+				try
+				{
+					return pawn.HostileTo(colonist);
+				}
+				catch
+				{
+					return false;
+				}
+			}
+
 			var rectLen = 2 * radius + 1;
 			var result = new byte[rectLen * rectLen * 2];
 
@@ -117,7 +129,7 @@ namespace Puppeteer
 						var x0 = x - (px - radius);
 						var z0 = z - (pz - radius);
 						var idx = z0 * rectLen + x0;
-						var byte2 = 32 + (pawn.IsColonist ? 64 : 0) + (pawn.HostileTo(colonist) ? 128 : 0);
+						var byte2 = 32 + (pawn.IsColonist ? 64 : 0) + (HostileToColonist(pawn) ? 128 : 0);
 						result[2 * idx + 1] += (byte)byte2;
 					}
 			}

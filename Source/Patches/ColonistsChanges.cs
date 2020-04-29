@@ -162,10 +162,12 @@ namespace Puppeteer
 	{
 		const float BaseSpaceBetweenColonistsVertical = 32f;
 		const float extraVerticalOffset = 15f;
+		const float extraDevModeOffset = 20f;
 
 		public static void Postfix(ref Vector2 __result, float scale)
 		{
-			__result.y += extraVerticalOffset * scale;
+			var offset = extraVerticalOffset + (Prefs.DevMode ? extraDevModeOffset : 0f);
+			__result.y += offset * scale;
 		}
 
 		public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -174,7 +176,10 @@ namespace Puppeteer
 			{
 				var scale = Find.UIRoot == null || Find.MapUI == null ? 1f : (Find.ColonistBar?.Scale ?? 1f);
 				if (instr.OperandIs(BaseSpaceBetweenColonistsVertical))
-					instr.operand = BaseSpaceBetweenColonistsVertical + extraVerticalOffset * scale;
+				{
+					var offset = extraVerticalOffset + (Prefs.DevMode ? extraDevModeOffset : 0f);
+					instr.operand = BaseSpaceBetweenColonistsVertical + offset * scale;
+				}
 				yield return instr;
 			}
 		}

@@ -19,7 +19,7 @@ namespace Puppeteer
 		public Connection(ICommandProcessor processor)
 		{
 			this.processor = processor;
-			endpoint = Tools.IsLocalDev ? "ws://localhost:3000" : "wss://puppeteer.rimworld.live";
+			endpoint = Tools.IsLocalDev ? "ws://localhost:3000" : "ws://138.128.246.196"; // "wss://puppeteer.rimworld.live";
 			TryConnect();
 		}
 

@@ -260,7 +260,7 @@ namespace Puppeteer
 				}
 			}
 			else
-				map.weatherManager.DrawAllWeather();
+				; // map.weatherManager.DrawAllWeather();
 
 			Renderer.fakeZoom = true;
 			SetCurrentMapDirectly(map);
