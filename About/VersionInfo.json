@@ -94,5 +94,16 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "0.1.2.1",
+		"infos": [
+			{
+				"title": "Secure Connection",
+				"texts": [
+					"The puppeteer mod now uses a secure websocket connection powered by CloudFlare"
+				]
+			}
+		]
 	}
 ]

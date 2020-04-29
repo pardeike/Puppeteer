@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Authentication;
 using WebSocketSharp;
 
 namespace Puppeteer
@@ -18,7 +19,7 @@ namespace Puppeteer
 		public Connection(ICommandProcessor processor)
 		{
 			this.processor = processor;
-			endpoint = Tools.IsLocalDev ? "ws://localhost:3000" : "ws://138-128-246-196.cloud-xip.io";
+			endpoint = Tools.IsLocalDev ? "ws://localhost:3000" : "wss://puppeteer.rimworld.live";
 			TryConnect();
 		}
 
@@ -38,6 +39,7 @@ namespace Puppeteer
 			ws.OnMessage += Ws_OnMessage;
 			ws.OnError += Ws_OnError;
 			ws.OnClose += Ws_OnClose;
+			ws.SslConfiguration.EnabledSslProtocols = SslProtocols.Tls12;
 
 			Connect();
 		}
