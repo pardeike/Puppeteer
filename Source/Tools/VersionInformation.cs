@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using UnityEngine;
 using Verse;
@@ -170,10 +169,7 @@ namespace Puppeteer
 			var idx = allVersions.FindIndex(v => v.version == lastSeen);
 			if (idx >= 0) allVersions.RemoveRange(0, idx + 1);
 
-			var currentVersion = ((AssemblyFileVersionAttribute)Attribute.GetCustomAttribute(
-				Assembly.GetAssembly(typeof(VersionInformation)),
-				typeof(AssemblyFileVersionAttribute), false)
-			).Version;
+			var currentVersion = Tools.GetModVersionString();
 
 			if (allVersions.Any())
 				Find.WindowStack.Add(new VersionDialog(allVersions, () => lastSeenFileName.WriteConfig(currentVersion)));

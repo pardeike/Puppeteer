@@ -73,7 +73,7 @@ namespace Puppeteer
 			public DateTime lastCommandIssued;
 			public string lastCommand;
 			public int coinsEarned;
-			public int gridSize;
+			public int[] grid;
 		}
 
 		// new associations are automatically create for:

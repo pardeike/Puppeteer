@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Timers;
 using UnityEngine;
 using Verse;
+using Verse.Profile;
 using static HarmonyLib.AccessTools;
 
 namespace Puppeteer
@@ -157,8 +158,22 @@ namespace Puppeteer
 				switch (cmd.type)
 				{
 					case "welcome":
+					{
+						var info = Welcome.Create(msg);
+						var minimumVersion = new Version(info.minVersion);
+						var currentVersion = new Version(Tools.GetModVersionString());
+						if (currentVersion < minimumVersion)
+						{
+							void gotoMainScreen()
+							{
+								LongEventHandler.QueueLongEvent(delegate () { MemoryUtility.ClearAllMapsAndWorld(); }, "Entry", "SavingLongEvent", false, null, false);
+							}
+							Find.WindowStack.Add(new NoteDialog($"This version ({currentVersion}) is older than the required version ({minimumVersion}).\n\nPlease make sure Puppeteer is updated, thank you.", "Main Menu", gotoMainScreen));
+							return;
+						}
 						GeneralCommands.SendAllColonists(connection);
 						break;
+					}
 					case "join":
 						GeneralCommands.Join(connection, Join.Create(msg).viewer);
 						break;
@@ -364,11 +379,26 @@ namespace Puppeteer
 				.ToArray();
 		}
 
+		static readonly MethodInfo m_GetWorkTypeDisabledCausedBy = Method(typeof(CharacterCardUtility), "GetWorkTypeDisabledCausedBy");
+		static readonly FastInvokeHandler GetWorkTypeDisabledCausedBy = MethodInvoker.GetHandler(m_GetWorkTypeDisabledCausedBy);
+
+		static readonly MethodInfo m_GetWorkTypesDisabledByWorkTag = Method(typeof(CharacterCardUtility), "GetWorkTypesDisabledByWorkTag");
+		static readonly FastInvokeHandler GetWorkTypesDisabledByWorkTag = MethodInvoker.GetHandler(m_GetWorkTypesDisabledByWorkTag);
+
 		public void UpdateColonist(State.Puppeteer puppeteer)
 		{
 			var pawn = puppeteer?.puppet?.pawn;
+
+			string IncapableInfo(WorkTags t)
+			{
+				return GetWorkTypeDisabledCausedBy(null, new object[] { pawn, t }) + "\n" + GetWorkTypesDisabledByWorkTag(null, new object[] { t });
+			}
+
 			if (pawn == null) return;
 			var carrier = Tools.GetCarrier(pawn);
+			var childhood = pawn.story.GetBackstory(BackstorySlot.Childhood);
+			var adulthood = pawn.story.GetBackstory(BackstorySlot.Adulthood);
+			var disabledTags = pawn.CombinedDisabledWorkTags.GetAllSelectedItems<WorkTags>().Where(t => t != WorkTags.None).ToList();
 			var info = new ColonistBaseInfo.Info
 			{
 				name = pawn.Name.ToStringFull,
@@ -376,6 +406,8 @@ namespace Puppeteer
 				y = (carrier ?? pawn).Position.z,
 				mx = (carrier ?? pawn).Map.Size.x,
 				my = (carrier ?? pawn).Map.Size.z,
+				childhood = new Tag(childhood.TitleCapFor(pawn.gender), childhood.FullDescriptionFor(pawn)),
+				adulthood = new Tag(adulthood.TitleCapFor(pawn.gender), adulthood.FullDescriptionFor(pawn)),
 				inspect = carrier != null ? Array.Empty<string>() : pawn.GetInspectString().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None),
 				health = new ColonistBaseInfo.Percentage()
 				{
@@ -400,7 +432,8 @@ namespace Puppeteer
 			info.deathIn = (int)(((float)ticksUntilDeath / GenDate.TicksPerHour) + 0.5f);
 			info.injuries = GetInjuries(pawn);
 			info.skills = GetSkills(pawn);
-			info.traits = pawn.story.traits.allTraits.Select(trait => trait.LabelCap).ToArray();
+			info.incapable = disabledTags.Select(tag => new Tag(tag.LabelTranslated().CapitalizeFirst(), IncapableInfo(tag))).ToArray();
+			info.traits = pawn.story.traits.allTraits.Select(trait => new Tag(trait.LabelCap, trait.TipString(pawn))).ToArray();
 
 			connection.Send(new ColonistBaseInfo() { viewer = puppeteer.vID, info = info });
 		}

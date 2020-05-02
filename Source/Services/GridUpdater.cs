@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using RimWorld;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -42,7 +43,7 @@ namespace Puppeteer
 				.ToArray();
 		}
 
-		public static byte[] GetGrid(Pawn colonist, int radius)
+		public static byte[] GetGrid(Pawn colonist, int x1, int y1, int x2, int y2)
 		{
 			bool HostileToColonist(Pawn pawn)
 			{
@@ -56,8 +57,10 @@ namespace Puppeteer
 				}
 			}
 
-			var rectLen = 2 * radius + 1;
-			var result = new byte[rectLen * rectLen * 2];
+			var width = x2 - x1 + 1;
+			var height = y2 - y1 + 1;
+			if (width <= 0 || height <= 0) return Array.Empty<byte>();
+			var result = new byte[width * height * 2];
 
 			var map = colonist.Map;
 			var px = colonist.Position.x;
@@ -69,12 +72,12 @@ namespace Puppeteer
 			var map_z = map.Size.z;
 			var resultIndex = 0;
 			var indices = map.cellIndices;
-			var mapIndex = indices.CellToIndex(px - radius, pz - radius);
-			for (var z = pz - radius; z <= pz + radius; z++)
+			var mapIndex = indices.CellToIndex(x1, y1);
+			for (var z = y1; z <= y2; z++)
 			{
 				var ok = z >= 0 && z < map_z;
 				var xi = 0;
-				for (var x = px - radius; x <= px + radius; x++)
+				for (var x = x1; x <= x2; x++)
 				{
 					var byte1 = 255;
 					var byte2 = 0;
@@ -113,8 +116,16 @@ namespace Puppeteer
 							if (other) byte2 += 16;
 						}
 					}
-					result[resultIndex++] = (byte)byte1;
-					result[resultIndex++] = (byte)byte2;
+					try
+					{
+						result[resultIndex++] = (byte)byte1;
+						result[resultIndex++] = (byte)byte2;
+					}
+					catch (Exception e)
+					{
+						Log.Warning($"EX-B ({resultIndex}): {e}");
+						throw;
+					}
 					xi++;
 				}
 				mapIndex += map_x;
@@ -123,14 +134,22 @@ namespace Puppeteer
 			{
 				var x = pawn.Position.x;
 				var z = pawn.Position.z;
-				if (x >= px - radius && x <= px + radius)
-					if (z >= pz - radius && z <= pz + radius)
+				if (x >= x1 && x <= x2)
+					if (z >= y1 && z <= y2)
 					{
-						var x0 = x - (px - radius);
-						var z0 = z - (pz - radius);
-						var idx = z0 * rectLen + x0;
+						var x0 = x - x1;
+						var z0 = z - y1;
+						var idx = z0 * width + x0;
 						var byte2 = 32 + (pawn.IsColonist ? 64 : 0) + (HostileToColonist(pawn) ? 128 : 0);
-						result[2 * idx + 1] += (byte)byte2;
+						try
+						{
+							result[2 * idx + 1] += (byte)byte2;
+						}
+						catch (Exception e)
+						{
+							Log.Warning($"EX-A ({2 * idx + 1}): {e}");
+							throw;
+						}
 					}
 			}
 

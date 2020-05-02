@@ -105,7 +105,6 @@ namespace Puppeteer
 		{
 			isConnected = true;
 			Tools.LogWarning("Connected!");
-			Send(new Hello());
 		}
 
 		private void Ws_OnClose(object sender, CloseEventArgs e)

@@ -49,6 +49,30 @@ namespace Puppeteer
 			}
 		}
 
+		public static int[] SafeParse(object obj, int count, string delim = ":")
+		{
+			try
+			{
+				var str = Convert.ToString(obj);
+				if (str == null) return null;
+				var vals = str.Split(delim.ToCharArray());
+				if (vals.Length != count) return null;
+				return vals.Select(v => int.Parse(v)).ToArray();
+			}
+			catch
+			{
+				return null;
+			}
+		}
+
+		public static string GetModVersionString()
+		{
+			var assembly = Assembly.GetAssembly(typeof(Tools));
+			var t_attribute = typeof(AssemblyFileVersionAttribute);
+			var attribute = (AssemblyFileVersionAttribute)Attribute.GetCustomAttribute(assembly, t_attribute, false);
+			return attribute.Version;
+		}
+
 		public static void LogWarning(string message)
 		{
 			message = message.Split('\n', '\r').Select(line => Regex.Replace(line, @" \[0x[0-9a-fA-F]+\] in <[0-9a-fA-F]+>:\d+ ", "")).Join(null, "\n");
@@ -259,8 +283,10 @@ namespace Puppeteer
 					return;
 				}
 			}
-			else
-				; // map.weatherManager.DrawAllWeather();
+			// the following creates flickering
+			//
+			//else
+			//	map.weatherManager.DrawAllWeather();
 
 			Renderer.fakeZoom = true;
 			SetCurrentMapDirectly(map);

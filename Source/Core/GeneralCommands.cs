@@ -218,8 +218,8 @@ namespace Puppeteer
 					{
 						var pawn = puppeteer.puppet?.pawn;
 						if (pawn == null) return (Action)null;
-						var gridSize = puppeteer.gridSize;
-						if (gridSize == 0) return null;
+						var grid = puppeteer.grid;
+						if (grid == null) return null;
 						var vID = puppeteer.vID;
 						return () =>
 						{
@@ -230,7 +230,9 @@ namespace Puppeteer
 								{
 									px = pawn.Position.x,
 									pz = pawn.Position.z,
-									val = GridUpdater.GetGrid(pawn, gridSize)
+									width = grid[2] - grid[0] + 1,
+									height = grid[3] - grid[1] + 1,
+									val = GridUpdater.GetGrid(pawn, grid[0], grid[1], grid[2], grid[3])
 								}
 							});
 						};

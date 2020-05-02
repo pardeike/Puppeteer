@@ -45,6 +45,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Comm\OutgoingRequests.cs" />
+    <Compile Include="Core\Actions.cs" />
     <Compile Include="Services\GeneralGUI.cs" />
     <Compile Include="Services\Dialogs.cs" />
     <Compile Include="Tools\Defs.cs" />

@@ -16,11 +16,6 @@ namespace Puppeteer
 		public Ping() { type = "ping"; }
 	}
 
-	public class Hello : JSONConvertable<Hello>
-	{
-		public Hello() { type = "hello"; }
-	}
-
 	public class GameInfo : JSONConvertable<GameInfo>
 	{
 		public class Info
@@ -67,6 +62,18 @@ namespace Puppeteer
 		public OnMap() { type = "on-map"; }
 		public ViewerID viewer;
 		public Info info;
+	}
+
+	public class Tag
+	{
+		public string name;
+		public string info;
+
+		public Tag(string name, string info)
+		{
+			this.name = name;
+			this.info = info;
+		}
 	}
 
 	public class ColonistBaseInfo : JSONConvertable<OnMap>
@@ -159,6 +166,8 @@ namespace Puppeteer
 			public int y;
 			public int mx;
 			public int my;
+			public Tag childhood;
+			public Tag adulthood;
 			public string[] inspect;
 			public Percentage health;
 			public Percentage mood;
@@ -173,7 +182,8 @@ namespace Puppeteer
 			public int deathIn;
 			public Injury[] injuries;
 			public SkillInfo[] skills;
-			public string[] traits;
+			public Tag[] incapable;
+			public Tag[] traits;
 		}
 
 		public ColonistBaseInfo() { type = "colonist-basics"; }
@@ -196,6 +206,11 @@ namespace Puppeteer
 	public class Leave : JSONConvertable<Leave>
 	{
 		public ViewerID viewer;
+	}
+
+	public class Welcome : JSONConvertable<Welcome>
+	{
+		public string minVersion;
 	}
 
 	public class Assign : JSONConvertable<Assign>
@@ -288,11 +303,27 @@ namespace Puppeteer
 		{
 			public int px;
 			public int pz;
+			public int width;
+			public int height;
 			public byte[] val;
 		}
 
 		public GridUpdate() { type = "grid"; }
 		public ViewerID controller;
 		public Info info;
+	}
+
+	public class ContextMenu : JSONConvertable<ContextMenu>
+	{
+		public class Choice
+		{
+			public string id;
+			public string label;
+			public bool disabled;
+		}
+
+		public ContextMenu() { type = "menu"; }
+		public ViewerID controller;
+		public Choice[] choices;
 	}
 }

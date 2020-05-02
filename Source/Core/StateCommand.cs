@@ -64,9 +64,8 @@ namespace Puppeteer
 				}
 				case "grid":
 				{
-					var gridSize = Convert.ToInt32(state.val);
-					puppeteer.gridSize = gridSize;
-					if (gridSize > 0)
+					var grid = Tools.SafeParse(state.val, 4);
+					if (grid == null)
 					{
 						connection.Send(new GridUpdate()
 						{
@@ -75,7 +74,25 @@ namespace Puppeteer
 							{
 								px = pawn.Position.x,
 								pz = pawn.Position.z,
-								val = GridUpdater.GetGrid(pawn, gridSize)
+								width = 0,
+								height = 0,
+								val = Array.Empty<byte>()
+							}
+						});
+					}
+					else
+					{
+						puppeteer.grid = grid;
+						connection.Send(new GridUpdate()
+						{
+							controller = vID,
+							info = new GridUpdate.Info()
+							{
+								px = pawn.Position.x,
+								pz = pawn.Position.z,
+								width = grid[2] - grid[0] + 1,
+								height = grid[3] - grid[1] + 1,
+								val = GridUpdater.GetGrid(pawn, grid[0], grid[1], grid[2], grid[3])
 							}
 						});
 					}
@@ -98,6 +115,47 @@ namespace Puppeteer
 							}
 						}
 					}
+					break;
+				}
+				case "menu":
+				{
+					var val = Convert.ToString(state.val);
+					var coordinates = val.Split(',').Select(v => { if (int.TryParse(v, out var n)) return n; else return -1000; }).ToArray();
+					if (coordinates.Length == 2)
+					{
+						Actions.RemoveActions(pawn);
+						if (Tools.CannotMoveOrDo(pawn) == false)
+						{
+							var cell = new IntVec3(coordinates[0], 0, coordinates[1]);
+							if (cell.InBounds(pawn.Map))
+							{
+								var choices = FloatMenuMakerMap
+									.ChoicesAtFor(cell.ToVector3(), pawn)
+									.Select(choice =>
+									{
+										var id = Guid.NewGuid().ToString();
+										Actions.AddAction(pawn, id, choice.action);
+										return new ContextMenu.Choice()
+										{
+											id = id,
+											label = choice.Label,
+											disabled = choice.Disabled
+										};
+									}).ToArray();
+								connection.Send(new ContextMenu()
+								{
+									controller = vID,
+									choices = choices
+								});
+							}
+						}
+					}
+					break;
+				}
+				case "action":
+				{
+					var id = Convert.ToString(state.val);
+					_ = Actions.RunAction(pawn, id);
 					break;
 				}
 				default:
