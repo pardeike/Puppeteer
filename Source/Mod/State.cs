@@ -160,12 +160,6 @@ namespace Puppeteer
 				.Where(puppeteer => puppeteer.connected);
 		}
 
-		public bool HasPuppet(ViewerID vID)
-		{
-			if (vID == null) return false;
-			return PuppeteerForViewer(vID)?.puppet != null;
-		}
-
 		public void Assign(ViewerID vID, Pawn pawn)
 		{
 			if (vID == null || pawn == null) return;

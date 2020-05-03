@@ -160,6 +160,21 @@ namespace Puppeteer
 			Render(pawn, new CellRect(grid[0], grid[1], grid[2] - grid[0], grid[3] - grid[1]), () =>
 			{
 				var compressionTask = GridRenderer(grid);
+				/*
+				var jpgData = compressionTask();
+				Controller.instance.connection.Send(new GridUpdate()
+				{
+					controller = vID,
+					info = new GridUpdate.Info()
+					{
+						px = px,
+						pz = pz,
+						phx = phx,
+						phz = phz,
+						map = compressionTask()
+					}
+				});
+				*/
 				BackgroundOperations.Add((connection) =>
 				{
 					var jpgData = compressionTask();
@@ -180,3 +195,4 @@ namespace Puppeteer
 		}
 	}
 }
+

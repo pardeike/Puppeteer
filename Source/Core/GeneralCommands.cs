@@ -207,20 +207,23 @@ namespace Puppeteer
 
 		static readonly Dictionary<TimeSpeed, int> intervals = new Dictionary<TimeSpeed, int>()
 		{
-			{ TimeSpeed.Normal, 15 },
-			{ TimeSpeed.Fast, 30 },
+			{ TimeSpeed.Paused, 120 },
+			{ TimeSpeed.Normal, 30 },
+			{ TimeSpeed.Fast, 45 },
 			{ TimeSpeed.Superfast, 60 },
 			{ TimeSpeed.Ultrafast, 90 },
 		};
+		static long updateMapCounter = 0;
 		public static void UpdateMaps()
 		{
-			var actions = State.Instance.ConnectedPuppeteers()
-					.Select(puppeteer => (Action)(() => Renderer.RenderMap(puppeteer)))
-					.ToList();
+			var puppeteers = State.Instance.ConnectedPuppeteers()
+				.Where(p => p.connected && p.puppet?.pawn != null).ToArray();
+			updateMapCounter++;
 
-			if (intervals.TryGetValue(Find.TickManager.CurTimeSpeed, out var interval) == false)
-				interval = 60;
-			Tools.RunEvery(interval, actions);
+			if (intervals.TryGetValue(Find.TickManager.CurTimeSpeed, out var interval) == false) return;
+			var indices = Tools.EqualSpreading(interval, updateMapCounter, puppeteers.Length);
+			foreach (var i in indices)
+				Renderer.RenderMap(puppeteers[i]);
 		}
 	}
 }

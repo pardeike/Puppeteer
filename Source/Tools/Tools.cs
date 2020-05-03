@@ -209,15 +209,13 @@ namespace Puppeteer
 			return min;
 		}
 
-		static long tickCounter = 0;
-		public static void RunEvery(int tickInterval, List<Action> actions)
+		public static IEnumerable<int> EqualSpreading(int tickInterval, long spreadCounter, int totalCount)
 		{
-			var len = actions.Count;
-			for (var i = 0; i < len; i++)
+			for (var i = 0; i < totalCount; i++)
 			{
-				var offset = len > 1 ? i + i * ((tickInterval - len) / len) : 0;
-				if (offset % tickInterval == tickCounter++ % tickInterval)
-					actions[i]();
+				var offset = totalCount > 1 ? i + i * ((tickInterval - totalCount) / totalCount) : 0;
+				if (offset % tickInterval == spreadCounter % tickInterval)
+					yield return i;
 			}
 		}
 

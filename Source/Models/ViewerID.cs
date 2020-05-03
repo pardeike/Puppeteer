@@ -52,5 +52,10 @@ namespace Puppeteer
 		{
 			return !(v1 == v2);
 		}
+
+		public override string ToString()
+		{
+			return $"{name}:{service}:{id}";
+		}
 	}
 }

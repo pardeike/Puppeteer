@@ -156,5 +156,16 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "0.1.4.1",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"Improves the map rendering"
+				]
+			}
+		]
 	}
 ]
