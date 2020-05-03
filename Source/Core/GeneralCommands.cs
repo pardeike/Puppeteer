@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Verse;
@@ -56,7 +57,7 @@ namespace Puppeteer
 			if (vID == null)
 			{
 				if (pawn == null) return;
-				Tools.SetColonistNickname(pawn, null);
+				// Tools.SetColonistNickname(pawn, null);
 				Tools.LogWarning($"{pawn.OriginalName()} lost control");
 				vID = State.Instance.PuppetForPawn(pawn)?.puppeteer?.vID;
 				State.Instance.Unassign(vID);
@@ -66,7 +67,7 @@ namespace Puppeteer
 			}
 
 			var oldPawn = State.Instance.PuppeteerForViewer(vID)?.puppet?.pawn;
-			Tools.SetColonistNickname(oldPawn, null);
+			// Tools.SetColonistNickname(oldPawn, null);
 			State.Instance.Unassign(vID);
 
 			var oldPuppeteer = State.Instance.PuppetForPawn(pawn)?.puppeteer;
@@ -80,14 +81,9 @@ namespace Puppeteer
 			State.Save();
 		}
 
-		/*public static IEnumerable<ViewerID> Available()
-		{
-			return State.instance.AvailableViewers();
-		}*/
-
 		static void SendGameInfo(Connection connection, ViewerID vID)
 		{
-			connection.Send(new GameInfo() { viewer = vID, info = new GameInfo.Info() { terrain = GridUpdater.ColorList() } });
+			connection.Send(new GameInfo() { viewer = vID, info = new GameInfo.Info() { version = Tools.GetModVersionString() } });
 		}
 
 		public static void SendEarnToAll(Connection connection, int amount)
@@ -209,37 +205,22 @@ namespace Puppeteer
 			SendSchedules(connection);
 		}
 
-		public static void UpdateGrids(Connection connection)
+		static readonly Dictionary<TimeSpeed, int> intervals = new Dictionary<TimeSpeed, int>()
 		{
-			if (connection == null) return;
-
+			{ TimeSpeed.Normal, 15 },
+			{ TimeSpeed.Fast, 30 },
+			{ TimeSpeed.Superfast, 60 },
+			{ TimeSpeed.Ultrafast, 90 },
+		};
+		public static void UpdateMaps()
+		{
 			var actions = State.Instance.ConnectedPuppeteers()
-					.Select(puppeteer =>
-					{
-						var pawn = puppeteer.puppet?.pawn;
-						if (pawn == null) return (Action)null;
-						var grid = puppeteer.grid;
-						if (grid == null) return null;
-						var vID = puppeteer.vID;
-						return () =>
-						{
-							connection.Send(new GridUpdate()
-							{
-								controller = vID,
-								info = new GridUpdate.Info()
-								{
-									px = pawn.Position.x,
-									pz = pawn.Position.z,
-									width = grid[2] - grid[0] + 1,
-									height = grid[3] - grid[1] + 1,
-									val = GridUpdater.GetGrid(pawn, grid[0], grid[1], grid[2], grid[3])
-								}
-							});
-						};
-					})
-					.OfType<Action>()
+					.Select(puppeteer => (Action)(() => Renderer.RenderMap(puppeteer)))
 					.ToList();
-			Tools.RunEvery(15, actions);
+
+			if (intervals.TryGetValue(Find.TickManager.CurTimeSpeed, out var interval) == false)
+				interval = 60;
+			Tools.RunEvery(interval, actions);
 		}
 	}
 }

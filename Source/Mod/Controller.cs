@@ -23,8 +23,7 @@ namespace Puppeteer
 		SendChangedPriorities,
 		SchedulesChanged,
 		SendChangedSchedules,
-		GridUpdate,
-		RenderColonists,
+		UpdateMaps,
 		UpdateColonists,
 	}
 
@@ -131,11 +130,8 @@ namespace Puppeteer
 							GeneralCommands.SendSchedules(connection);
 						}
 						break;
-					case PuppeteerEvent.GridUpdate:
-						GeneralCommands.UpdateGrids(connection);
-						break;
-					case PuppeteerEvent.RenderColonists:
-						Tools.RenderColonists();
+					case PuppeteerEvent.UpdateMaps:
+						GeneralCommands.UpdateMaps();
 						break;
 					case PuppeteerEvent.UpdateColonists:
 						Tools.UpdateColonists();
@@ -241,11 +237,6 @@ namespace Puppeteer
 			if (State.Instance.RemovePawn(pawn))
 				State.Save();
 			GeneralCommands.SendAllColonists(connection);
-		}
-
-		public void PawnOnMap(ViewerID vID, byte[] image)
-		{
-			connection.Send(new OnMap() { viewer = vID, info = new OnMap.Info() { image = image } });
 		}
 
 		public void AssignViewerToPawn(ViewerID vID, Pawn pawn)
@@ -388,13 +379,13 @@ namespace Puppeteer
 		public void UpdateColonist(State.Puppeteer puppeteer)
 		{
 			var pawn = puppeteer?.puppet?.pawn;
+			if (pawn == null) return;
 
 			string IncapableInfo(WorkTags t)
 			{
 				return GetWorkTypeDisabledCausedBy(null, new object[] { pawn, t }) + "\n" + GetWorkTypesDisabledByWorkTag(null, new object[] { t });
 			}
 
-			if (pawn == null) return;
 			var carrier = Tools.GetCarrier(pawn);
 			var childhood = pawn.story.GetBackstory(BackstorySlot.Childhood);
 			var adulthood = pawn.story.GetBackstory(BackstorySlot.Adulthood);
@@ -404,10 +395,10 @@ namespace Puppeteer
 				name = pawn.Name.ToStringFull,
 				x = (carrier ?? pawn).Position.x,
 				y = (carrier ?? pawn).Position.z,
-				mx = (carrier ?? pawn).Map.Size.x,
-				my = (carrier ?? pawn).Map.Size.z,
-				childhood = new Tag(childhood.TitleCapFor(pawn.gender), childhood.FullDescriptionFor(pawn)),
-				adulthood = new Tag(adulthood.TitleCapFor(pawn.gender), adulthood.FullDescriptionFor(pawn)),
+				mx = (carrier ?? pawn).Map?.Size.x ?? 0,
+				my = (carrier ?? pawn).Map?.Size.z ?? 0,
+				childhood = new Tag(childhood?.TitleCapFor(pawn.gender) ?? "", childhood?.FullDescriptionFor(pawn) ?? ""),
+				adulthood = new Tag(adulthood?.TitleCapFor(pawn.gender) ?? "", adulthood?.FullDescriptionFor(pawn) ?? ""),
 				inspect = carrier != null ? Array.Empty<string>() : pawn.GetInspectString().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None),
 				health = new ColonistBaseInfo.Percentage()
 				{
@@ -422,7 +413,7 @@ namespace Puppeteer
 				restrict = new ColonistBaseInfo.Value(pawn.timetable.CurrentAssignment.LabelCap, pawn.timetable.CurrentAssignment.color),
 				area = new ColonistBaseInfo.Value(AreaUtility.AreaAllowedLabel(pawn), pawn.playerSettings?.EffectiveAreaRestriction?.Color ?? Color.gray),
 				drafted = pawn.Drafted,
-				response = pawn.playerSettings.hostilityResponse.GetLabel(),
+				response = pawn.playerSettings?.hostilityResponse.GetLabel() ?? "",
 				needs = GetNeeds(pawn),
 				thoughts = GetThoughts(pawn),
 				capacities = GetCapacities(pawn),

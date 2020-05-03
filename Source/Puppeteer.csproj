@@ -44,6 +44,7 @@
 		</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Comm\BackgroundOperations.cs" />
     <Compile Include="Comm\OutgoingRequests.cs" />
     <Compile Include="Core\Actions.cs" />
     <Compile Include="Services\GeneralGUI.cs" />
@@ -54,7 +55,6 @@
     <Compile Include="Tools\VersionInformation.cs" />
     <Compile Include="Mod\State.cs" />
     <Compile Include="Services\Drawing.cs" />
-    <Compile Include="Services\GridUpdater.cs" />
     <Compile Include="Core\Jobs.cs" />
     <Compile Include="Services\PuppetCommentator.cs" />
     <Compile Include="Tools\Assets.cs" />

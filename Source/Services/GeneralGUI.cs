@@ -36,7 +36,7 @@ namespace Puppeteer
 			GUI.DrawTexture(rect.Rounded(), BaseContent.WhiteTex);
 
 			RenderNumber(barRect, OutgoingRequests.AverageSendTime, true, TextAlignment.Left);
-			RenderNumber(barRect, OutgoingRequests.ErrorCount, false, TextAlignment.Right);
+			RenderNumber(barRect, BackgroundOperations.Count, false, TextAlignment.Right);
 
 			var tex2 = Assets.colonist;
 			width = tex2.width / 2;

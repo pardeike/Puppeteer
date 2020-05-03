@@ -64,38 +64,8 @@ namespace Puppeteer
 				}
 				case "grid":
 				{
-					var grid = Tools.SafeParse(state.val, 4);
-					if (grid == null)
-					{
-						connection.Send(new GridUpdate()
-						{
-							controller = vID,
-							info = new GridUpdate.Info()
-							{
-								px = pawn.Position.x,
-								pz = pawn.Position.z,
-								width = 0,
-								height = 0,
-								val = Array.Empty<byte>()
-							}
-						});
-					}
-					else
-					{
-						puppeteer.grid = grid;
-						connection.Send(new GridUpdate()
-						{
-							controller = vID,
-							info = new GridUpdate.Info()
-							{
-								px = pawn.Position.x,
-								pz = pawn.Position.z,
-								width = grid[2] - grid[0] + 1,
-								height = grid[3] - grid[1] + 1,
-								val = GridUpdater.GetGrid(pawn, grid[0], grid[1], grid[2], grid[3])
-							}
-						});
-					}
+					puppeteer.grid = Tools.SafeParse(state.val, 4);
+					Renderer.RenderMap(puppeteer);
 					break;
 				}
 				case "goto":

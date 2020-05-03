@@ -137,10 +137,8 @@ namespace Puppeteer
 		public static void Postfix()
 		{
 			OperationQueue.Process(OperationType.Portrait);
-			Controller.instance.SetEvent(PuppeteerEvent.RenderColonists);
 			Controller.instance.SetEvent(PuppeteerEvent.UpdateColonists);
-			if (Find.TickManager.Paused == false)
-				Controller.instance.SetEvent(PuppeteerEvent.GridUpdate);
+			Controller.instance.SetEvent(PuppeteerEvent.UpdateMaps);
 		}
 	}
 

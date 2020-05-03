@@ -138,5 +138,23 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "0.1.4.0",
+		"infos": [
+			{
+				"title": "New Features",
+				"texts": [
+					"Full graphical map!"
+				]
+			},
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"Optimized data size for map transfer",
+					"Fixed javascript errors when zooming map"
+				]
+			}
+		]
 	}
 ]

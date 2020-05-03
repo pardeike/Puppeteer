@@ -20,7 +20,7 @@ namespace Puppeteer
 	{
 		public class Info
 		{
-			public string[] terrain;
+			public string version;
 		}
 
 		public GameInfo() { type = "game-info"; }
@@ -52,18 +52,6 @@ namespace Puppeteer
 		public Info info;
 	}
 
-	public class OnMap : JSONConvertable<OnMap>
-	{
-		public class Info
-		{
-			public byte[] image;
-		}
-
-		public OnMap() { type = "on-map"; }
-		public ViewerID viewer;
-		public Info info;
-	}
-
 	public class Tag
 	{
 		public string name;
@@ -76,7 +64,7 @@ namespace Puppeteer
 		}
 	}
 
-	public class ColonistBaseInfo : JSONConvertable<OnMap>
+	public class ColonistBaseInfo : JSONConvertable<ColonistBaseInfo>
 	{
 		public class Percentage
 		{
@@ -303,9 +291,9 @@ namespace Puppeteer
 		{
 			public int px;
 			public int pz;
-			public int width;
-			public int height;
-			public byte[] val;
+			public float phx;
+			public float phz;
+			public byte[] map;
 		}
 
 		public GridUpdate() { type = "grid"; }

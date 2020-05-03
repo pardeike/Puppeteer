@@ -111,6 +111,7 @@ namespace Puppeteer
 		{
 			isConnected = false;
 			OutgoingRequests.Clear();
+			BackgroundOperations.Clear();
 			Tools.LogWarning(ErrorDescription(e.Code));
 		}
 

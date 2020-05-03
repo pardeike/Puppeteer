@@ -63,7 +63,7 @@ namespace Puppeteer
 					if (success == false)
 					{
 						ErrorCount++;
-						Log.Warning($"Error sending {task.type}");
+						Tools.LogWarning($"Error sending {task.type}");
 					}
 					task.callback(success);
 				});

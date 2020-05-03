@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using RimWorld;
-using RimWorld.Planet;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -75,7 +74,10 @@ namespace Puppeteer
 
 		public static void LogWarning(string message)
 		{
-			message = message.Split('\n', '\r').Select(line => Regex.Replace(line, @" \[0x[0-9a-fA-F]+\] in <[0-9a-fA-F]+>:\d+ ", "")).Join(null, "\n");
+			message = message
+				.Split(new[] { Environment.NewLine }, StringSplitOptions.None)
+				.Select(line => Regex.Replace(line, @" \[0x[0-9a-fA-F]+\] in <[0-9a-fA-F]+>:\d+ ", ""))
+				.Join(null, "\n");
 			PuppetCommentator.Say(message);
 			OperationQueue.Add(OperationType.Log, () =>
 			{
@@ -207,14 +209,14 @@ namespace Puppeteer
 			return min;
 		}
 
+		static long tickCounter = 0;
 		public static void RunEvery(int tickInterval, List<Action> actions)
 		{
 			var len = actions.Count;
-			var ticks = GenTicks.TicksAbs;
 			for (var i = 0; i < len; i++)
 			{
 				var offset = len > 1 ? i + i * ((tickInterval - len) / len) : 0;
-				if (offset % tickInterval == ticks % tickInterval)
+				if (offset % tickInterval == tickCounter++ % tickInterval)
 					actions[i]();
 			}
 		}
@@ -259,67 +261,6 @@ namespace Puppeteer
 			var puppeteer = RoundRobbin.NextColonist("update-colonist");
 			if (puppeteer != null)
 				Controller.instance.UpdateColonist(puppeteer);
-		}
-
-		public static void RenderColonists()
-		{
-			var puppeteer = RoundRobbin.NextColonist("render-colonist");
-			var pawn = puppeteer?.puppet?.pawn;
-			if (pawn == null) return;
-
-			pawn = GetCarrier(pawn) ?? pawn;
-			var map = pawn.Map;
-
-			if (map == null) return;
-			var currentMap = Find.CurrentMap;
-			var isVisibleMap = map == currentMap && WorldRendererUtility.WorldRenderedNow == false;
-			if (isVisibleMap)
-			{
-				var viewRect = Find.CameraDriver.CurrentViewRect.ContractedBy(2);
-				var visible = viewRect.Contains(pawn.Position);
-				if (visible)
-				{
-					Renderer.PawnScreenRender(puppeteer.vID, pawn.DrawPos);
-					return;
-				}
-			}
-			// the following creates flickering
-			//
-			//else
-			//	map.weatherManager.DrawAllWeather();
-
-			Renderer.fakeZoom = true;
-			SetCurrentMapDirectly(map);
-			Renderer.renderOffset = CurrentMapOffset();
-			Renderer.fakeViewRect = new CellRect(0, 0, map.Size.x, map.Size.z);
-
-			map.glowGrid.MarkGlowGridDirty(pawn.Position);
-
-			map.skyManager.SkyManagerUpdate();
-			map.powerNetManager.UpdatePowerNetsAndConnections_First();
-			map.glowGrid.GlowGridUpdate_First();
-
-			PlantFallColors.SetFallShaderGlobals(map);
-			//map.waterInfo.SetTextures();
-
-			var pos = pawn.Position;
-			Renderer.fakeViewRect = new CellRect(pos.x - 3, pos.z - 3, pos.x + 3, pos.z + 3);
-
-			map.mapDrawer.MapMeshDrawerUpdate_First();
-			map.mapDrawer.DrawMapMesh();
-			map.dynamicDrawManager.DrawDynamicThings();
-
-			map.gameConditionManager.GameConditionManagerDraw(map);
-			MapEdgeClipDrawer.DrawClippers(map);
-			map.designationManager.DrawDesignations();
-			map.overlayDrawer.DrawAllOverlays();
-
-			Renderer.PawnScreenRender(puppeteer.vID, pawn.DrawPos);
-
-			Renderer.fakeViewRect = CellRect.Empty;
-			Renderer.renderOffset = 0f;
-			SetCurrentMapDirectly(currentMap);
-			Renderer.fakeZoom = false;
 		}
 
 		public static void AutoExposeDataWithDefaults<T>(this T settings) where T : new()
