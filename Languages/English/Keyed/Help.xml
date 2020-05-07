@@ -1,6 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <LanguageData>
 
-	<GraphicalMapSize_Help>The graphical map is the map displayed in the upper right corner of the client</GraphicalMapSize_Help>
+	<MapImageSize_Help>The map image size determines how large the images that are sent are. Smaller values reduce the amount of data send.</MapImageSize_Help>
+	<MapImageCompression_Help>This setting controls how high the JPEG compression for sending the map is. More compression results in less data to send but looks worse.</MapImageCompression_Help>
+	<MapUpdateFrequency_Help>The update frequency tells the client to request new map images every x milliseconds. Higher values reduce the amount of data send.</MapUpdateFrequency_Help>
+
 
 </LanguageData>

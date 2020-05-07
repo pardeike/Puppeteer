@@ -138,7 +138,7 @@ namespace Puppeteer
 		{
 			OperationQueue.Process(OperationType.Portrait);
 			Controller.instance.SetEvent(PuppeteerEvent.UpdateColonists);
-			Controller.instance.SetEvent(PuppeteerEvent.UpdateMaps);
+			//Controller.instance.SetEvent(PuppeteerEvent.UpdateMaps);
 		}
 	}
 

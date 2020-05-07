@@ -3,6 +3,8 @@
 
 	<NewPuppeteerVersion>New Puppeteer Version</NewPuppeteerVersion>
 
-	<GraphicalMapSize>Graphical Map Size</GraphicalMapSize>
+	<MapImageSize>Map Image Size</MapImageSize>
+	<MapImageCompression>Map Image Compression</MapImageCompression>
+	<MapUpdateFrequency>Map Image Update Frequency</MapUpdateFrequency>
 
 </LanguageData>

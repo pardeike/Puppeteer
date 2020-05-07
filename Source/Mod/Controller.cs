@@ -23,7 +23,7 @@ namespace Puppeteer
 		SendChangedPriorities,
 		SchedulesChanged,
 		SendChangedSchedules,
-		UpdateMaps,
+		//UpdateMaps,
 		UpdateColonists,
 	}
 
@@ -130,9 +130,9 @@ namespace Puppeteer
 							GeneralCommands.SendSchedules(connection);
 						}
 						break;
-					case PuppeteerEvent.UpdateMaps:
-						GeneralCommands.UpdateMaps();
-						break;
+					//case PuppeteerEvent.UpdateMaps:
+					//	GeneralCommands.UpdateMaps();
+					//	break;
 					case PuppeteerEvent.UpdateColonists:
 						Tools.UpdateColonists();
 						break;

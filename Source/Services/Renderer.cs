@@ -7,7 +7,6 @@ namespace Puppeteer
 {
 	public static class Renderer
 	{
-		const int gridImagePixels = 128;
 		public static float renderOffset = 0f;
 		public static Vector3 RenderOffsetVector => new Vector3(renderOffset, 0f, 0f);
 		public static CellRect fakeViewRect = CellRect.Empty;
@@ -55,9 +54,9 @@ namespace Puppeteer
 			var cameraPos = new Vector3(renderOffset + centerX, 40f, centerZ);
 			SetCamera(camera, ref cameraPos, Math.Max(dx / 2f, dz / 2f));
 
-			var f = GenMath.LerpDouble(1.5f, 8f, 1f, 4f, (float)Math.Sqrt(Math.Max(dx, dz)));
-			var sizeX = (int)(gridImagePixels * f);
-			var sizeZ = (int)(gridImagePixels * f * dz / dx);
+			var f = GenMath.LerpDouble(1.5f, 8f, 1f, 4f, (float)Math.Sqrt(Math.Min(dx, dz)));
+			var sizeX = (int)(Puppeteer.Settings.mapImageSize * f);
+			var sizeZ = (int)(Puppeteer.Settings.mapImageSize * f * dz / dx);
 			var renderTexture = RenderTexture.GetTemporary(sizeX, sizeZ, 24);
 			camera.targetTexture = renderTexture;
 			RenderTexture.active = renderTexture;
@@ -69,7 +68,9 @@ namespace Puppeteer
 			camera.targetTexture = null;
 			RenderTexture.active = null;
 
-			var quality = (int)GenMath.LerpDoubleClamped(8, 40, 95, 65, Math.Min(dx, dz));
+			var q_from = GenMath.LerpDouble(1, 9, 100, 65, Puppeteer.Settings.mapImageCompression);
+			var q_to = GenMath.LerpDouble(1, 9, 80, 25, Puppeteer.Settings.mapImageCompression);
+			var quality = (int)GenMath.LerpDoubleClamped(8, 40, q_from, q_to, Math.Min(dx, dz));
 			return () =>
 			{
 				var jpgData = imageTexture.EncodeToJPG(quality);
@@ -125,7 +126,7 @@ namespace Puppeteer
 			fakeZoom = false;
 		}
 
-		public static void RenderMap(State.Puppeteer puppeteer)
+		public static void RenderMap(State.Puppeteer puppeteer, int[] grid)
 		{
 			var pawn = puppeteer?.puppet?.pawn;
 			pawn = Tools.GetCarrier(pawn) ?? pawn;
@@ -137,7 +138,6 @@ namespace Puppeteer
 			var phx = pawn.DrawPos.x;
 			var phz = pawn.DrawPos.z;
 
-			var grid = puppeteer.grid;
 			if (grid == null)
 			{
 				var connection = Controller.instance.connection;
@@ -160,21 +160,6 @@ namespace Puppeteer
 			Render(pawn, new CellRect(grid[0], grid[1], grid[2] - grid[0], grid[3] - grid[1]), () =>
 			{
 				var compressionTask = GridRenderer(grid);
-				/*
-				var jpgData = compressionTask();
-				Controller.instance.connection.Send(new GridUpdate()
-				{
-					controller = vID,
-					info = new GridUpdate.Info()
-					{
-						px = px,
-						pz = pz,
-						phx = phx,
-						phz = phz,
-						map = compressionTask()
-					}
-				});
-				*/
 				BackgroundOperations.Add((connection) =>
 				{
 					var jpgData = compressionTask();

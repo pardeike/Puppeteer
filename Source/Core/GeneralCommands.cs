@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Verse;
@@ -83,7 +82,7 @@ namespace Puppeteer
 
 		static void SendGameInfo(Connection connection, ViewerID vID)
 		{
-			connection.Send(new GameInfo() { viewer = vID, info = new GameInfo.Info() { version = Tools.GetModVersionString() } });
+			connection.Send(new GameInfo() { viewer = vID, info = new GameInfo.Info() { version = Tools.GetModVersionString(), mapFreq = Puppeteer.Settings.mapUpdateFrequency } });
 		}
 
 		public static void SendEarnToAll(Connection connection, int amount)
@@ -205,7 +204,13 @@ namespace Puppeteer
 			SendSchedules(connection);
 		}
 
-		static readonly Dictionary<TimeSpeed, int> intervals = new Dictionary<TimeSpeed, int>()
+		public static void SendGameInfoToAll()
+		{
+			var puppeteers = State.Instance.ConnectedPuppeteers();
+			puppeteers.Do(puppeteer => SendGameInfo(Controller.instance.connection, puppeteer.vID));
+		}
+
+		/*static readonly Dictionary<TimeSpeed, int> intervals = new Dictionary<TimeSpeed, int>()
 		{
 			{ TimeSpeed.Paused, 120 },
 			{ TimeSpeed.Normal, 30 },
@@ -224,6 +229,6 @@ namespace Puppeteer
 			var indices = Tools.EqualSpreading(interval, updateMapCounter, puppeteers.Length);
 			foreach (var i in indices)
 				Renderer.RenderMap(puppeteers[i]);
-		}
+		}*/
 	}
 }

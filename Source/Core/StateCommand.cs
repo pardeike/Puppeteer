@@ -64,8 +64,8 @@ namespace Puppeteer
 				}
 				case "grid":
 				{
-					puppeteer.grid = Tools.SafeParse(state.val, 4);
-					Renderer.RenderMap(puppeteer);
+					var grid = Tools.SafeParse(state.val, 4);
+					Renderer.RenderMap(puppeteer, grid);
 					break;
 				}
 				case "goto":

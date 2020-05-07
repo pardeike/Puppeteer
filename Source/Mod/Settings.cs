@@ -5,7 +5,9 @@ namespace Puppeteer
 {
 	public class Settings
 	{
-		public int graphicalMapSize = 3;
+		public int mapImageSize = 180;
+		public int mapImageCompression = 9;
+		public int mapUpdateFrequency = 600;
 	}
 
 	public static class SettingsDrawer
@@ -36,9 +38,15 @@ namespace Puppeteer
 				Widgets.Label(list.GetRect(textHeight).Rounded(), intro);
 				list.Gap(10f);
 
-				var tmp = (settings.graphicalMapSize - 1) / 2;
-				list.Dialog_IntSlider("GraphicalMapSize", n => $"{1 + 2 * n}x{1 + 2 * n}", ref tmp, 1, 5);
-				settings.graphicalMapSize = 1 + 2 * tmp;
+				list.Dialog_IntSlider("MapImageSize", n => $"{n}x{n} pixel", ref settings.mapImageSize, 32, 256);
+				list.Dialog_IntSlider("MapImageCompression", n => $"{10 * n}%", ref settings.mapImageCompression, 1, 9);
+
+				var oldVal = settings.mapUpdateFrequency;
+				var val = settings.mapUpdateFrequency / 10;
+				list.Dialog_IntSlider("MapUpdateFrequency", n => $"{n * 10} ms", ref val, 10, 200);
+				settings.mapUpdateFrequency = val * 10;
+				if (settings.mapUpdateFrequency != oldVal)
+					GeneralCommands.SendGameInfoToAll();
 			}
 
 			list.End();

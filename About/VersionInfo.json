@@ -167,5 +167,17 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "0.1.5.0",
+		"infos": [
+			{
+				"title": "Map updates",
+				"texts": [
+					"- Map updates are now requested, not pushed from the game",
+					"- Map settings"
+				]
+			}
+		]
 	}
 ]
