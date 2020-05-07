@@ -23,8 +23,8 @@ namespace Puppeteer
 		SendChangedPriorities,
 		SchedulesChanged,
 		SendChangedSchedules,
-		//UpdateMaps,
 		UpdateColonists,
+		TimeChanged,
 	}
 
 	public interface ICommandProcessor
@@ -130,11 +130,11 @@ namespace Puppeteer
 							GeneralCommands.SendSchedules(connection);
 						}
 						break;
-					//case PuppeteerEvent.UpdateMaps:
-					//	GeneralCommands.UpdateMaps();
-					//	break;
 					case PuppeteerEvent.UpdateColonists:
 						Tools.UpdateColonists();
+						break;
+					case PuppeteerEvent.TimeChanged:
+						GeneralCommands.SendTimeInfoToAll();
 						break;
 				}
 			}

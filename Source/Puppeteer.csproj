@@ -51,6 +51,7 @@
     <Compile Include="Services\Dialogs.cs" />
     <Compile Include="Tools\Defs.cs" />
     <Compile Include="Tools\GetterSetters.cs" />
+    <Compile Include="Tools\MapFaker.cs" />
     <Compile Include="Tools\RunningAverage.cs" />
     <Compile Include="Tools\VersionInformation.cs" />
     <Compile Include="Mod\State.cs" />

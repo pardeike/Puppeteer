@@ -131,4 +131,19 @@ namespace Puppeteer
 			Controller.instance.SetEvent(PuppeteerEvent.Save);
 		}
 	}
+
+	[HarmonyPatch]
+	static class TickManager_TimeSpeed_Patches
+	{
+		public static IEnumerable<MethodBase> TargetMethods()
+		{
+			yield return AccessTools.Property(typeof(TickManager), nameof(TickManager.CurTimeSpeed)).GetSetMethod();
+			yield return SymbolExtensions.GetMethodInfo(() => new TickManager().TogglePaused());
+		}
+
+		public static void Postfix()
+		{
+			Controller.instance.SetEvent(PuppeteerEvent.TimeChanged);
+		}
+	}
 }

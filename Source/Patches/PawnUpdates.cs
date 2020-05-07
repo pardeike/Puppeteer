@@ -24,7 +24,7 @@ namespace Puppeteer
 
 	[HarmonyPatch(typeof(CameraDriver))]
 	[HarmonyPatch(nameof(CameraDriver.CurrentZoom), MethodType.Getter)]
-	static class CameraDriver_CurrentZoom_Patch
+	static class CameraDriver_get_CurrentZoom_Patch
 	{
 		public static bool Prefix(ref CameraZoomRange __result)
 		{
@@ -138,7 +138,6 @@ namespace Puppeteer
 		{
 			OperationQueue.Process(OperationType.Portrait);
 			Controller.instance.SetEvent(PuppeteerEvent.UpdateColonists);
-			//Controller.instance.SetEvent(PuppeteerEvent.UpdateMaps);
 		}
 	}
 
@@ -152,20 +151,6 @@ namespace Puppeteer
 			OperationQueue.Process(OperationType.SetState);
 		}
 	}
-
-	/*[HarmonyPatch(typeof(Thing))]
-	[HarmonyPatch(nameof(Thing.Position), MethodType.Setter)]
-	static class Thing_Position_Patch
-	{
-		public static void Postfix(Thing __instance)
-		{
-			var pawn = __instance as Pawn;
-			if (pawn == null || pawn.Spawned == false || pawn.IsColonist == false)
-				return;
-
-			// Puppeteer.instance.PawnUpdate(pawn);
-		}
-	}*/
 
 	[HarmonyPatch(typeof(PortraitsCache))]
 	[HarmonyPatch(nameof(PortraitsCache.SetDirty))]

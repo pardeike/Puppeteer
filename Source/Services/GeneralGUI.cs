@@ -112,9 +112,15 @@ namespace Puppeteer
 			foreach (var thing in things)
 			{
 				if (thing.def.IsWeapon && thing is ThingWithComps weapon)
-					pawn.equipment.AddEquipment(weapon);
+				{
+					if (EquipmentUtility.CanEquip(weapon, pawn))
+						pawn.equipment.AddEquipment(weapon);
+				}
 				else if (thing is Apparel apparel)
-					pawn.apparel.Wear(apparel, false);
+				{
+					if (ApparelUtility.HasPartsToWear(pawn, apparel.def))
+						pawn.apparel.Wear(apparel, false);
+				}
 			}
 		}
 

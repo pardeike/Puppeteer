@@ -138,24 +138,9 @@ namespace Puppeteer
 			var phx = pawn.DrawPos.x;
 			var phz = pawn.DrawPos.z;
 
+			const int initialRadius = 5;
 			if (grid == null)
-			{
-				var connection = Controller.instance.connection;
-				if (connection != null && connection.isConnected)
-					connection.Send(new GridUpdate()
-					{
-						controller = vID,
-						info = new GridUpdate.Info()
-						{
-							px = px,
-							pz = pz,
-							phx = phx,
-							phz = phz,
-							map = null
-						}
-					});
-				return;
-			}
+				grid = new int[] { px - initialRadius, pz - initialRadius, px + initialRadius, pz + initialRadius };
 
 			Render(pawn, new CellRect(grid[0], grid[1], grid[2] - grid[0], grid[3] - grid[1]), () =>
 			{
@@ -172,6 +157,7 @@ namespace Puppeteer
 							pz = pz,
 							phx = phx,
 							phz = phz,
+							frame = new GridUpdate.Frame(grid),
 							map = jpgData
 						}
 					});
@@ -180,4 +166,3 @@ namespace Puppeteer
 		}
 	}
 }
-

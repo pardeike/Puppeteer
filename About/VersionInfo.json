@@ -179,5 +179,21 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "0.1.6.0",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"- Fix right-click commands on a second map tile",
+					"- More web-map handling improvements",
+					"- Html characters in the interface",
+					"- Allow only equipable weapons and apparel that fits",
+					"- Moved colonist to first row of schedule and priorities",
+					"- Adds game time and date"
+				]
+			}
+		]
 	}
 ]

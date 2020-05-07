@@ -1,5 +1,7 @@
 ﻿using HarmonyLib;
+using RimWorld;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Verse;
@@ -85,6 +87,13 @@ namespace Puppeteer
 			connection.Send(new GameInfo() { viewer = vID, info = new GameInfo.Info() { version = Tools.GetModVersionString(), mapFreq = Puppeteer.Settings.mapUpdateFrequency } });
 		}
 
+		static void SendTimeInfo(Connection connection, ViewerID vID)
+		{
+			var vector = Find.WorldGrid.LongLatOf(Find.CurrentMap.Tile);
+			var dateStr = GenDate.DateFullStringWithHourAt(Find.TickManager.TicksAbs, vector);
+			connection.Send(new TimeInfo() { viewer = vID, info = new TimeInfo.Info() { time = dateStr, speed = (int)Find.TickManager.CurTimeSpeed } });
+		}
+
 		public static void SendEarnToAll(Connection connection, int amount)
 		{
 			var puppeteers = State.Instance.ConnectedPuppeteers();
@@ -143,6 +152,14 @@ namespace Puppeteer
 			SendStates(connection, "zones", GetResult, forPuppeteer);
 		}
 
+		static List<Pawn> AllColonistsWithCurrentTop(Pawn pawn)
+		{
+			var list = Tools.AllColonists(false);
+			if (list.Remove(pawn))
+				list.Insert(0, pawn);
+			return list;
+		}
+
 		public static void SendPriorities(Connection connection)
 		{
 			PrioritiyInfo GetResult(Pawn pawn)
@@ -160,8 +177,7 @@ namespace Puppeteer
 				}
 
 				var columns = Integrations.GetWorkTypeDefs().Select(def => def.labelShort).ToArray();
-				var rows = Tools.AllColonists(false)
-					.Select(colonist => new PrioritiyInfo.Priorities() { pawn = colonist.LabelShortCap, yours = colonist == pawn, val = GetValues(colonist) })
+				var rows = AllColonistsWithCurrentTop(pawn).Select(colonist => new PrioritiyInfo.Priorities() { pawn = colonist.LabelShortCap, yours = colonist == pawn, val = GetValues(colonist) })
 					.ToArray();
 				return new PrioritiyInfo()
 				{
@@ -184,7 +200,7 @@ namespace Puppeteer
 					var schedules = Enumerable.Range(0, 24).Select(hour => p.timetable.GetAssignment(hour)).ToArray();
 					return schedules.Join(s => Defs.Assignments[s], "");
 				}
-				var rows = Tools.AllColonists(false)
+				var rows = AllColonistsWithCurrentTop(pawn)
 					.Select(colonist => new ScheduleInfo.Schedules() { pawn = colonist.LabelShortCap, yours = colonist == pawn, val = GetValues(colonist) })
 					.ToArray();
 				return new ScheduleInfo() { rows = rows };
@@ -197,6 +213,7 @@ namespace Puppeteer
 			var puppeteer = State.Instance.PuppeteerForViewer(vID);
 
 			SendGameInfo(connection, vID);
+			SendTimeInfo(connection, vID);
 			SendEarned(connection, puppeteer);
 			SendPortrait(connection, puppeteer);
 			SendAreas(connection, puppeteer);
@@ -210,25 +227,10 @@ namespace Puppeteer
 			puppeteers.Do(puppeteer => SendGameInfo(Controller.instance.connection, puppeteer.vID));
 		}
 
-		/*static readonly Dictionary<TimeSpeed, int> intervals = new Dictionary<TimeSpeed, int>()
+		public static void SendTimeInfoToAll()
 		{
-			{ TimeSpeed.Paused, 120 },
-			{ TimeSpeed.Normal, 30 },
-			{ TimeSpeed.Fast, 45 },
-			{ TimeSpeed.Superfast, 60 },
-			{ TimeSpeed.Ultrafast, 90 },
-		};
-		static long updateMapCounter = 0;
-		public static void UpdateMaps()
-		{
-			var puppeteers = State.Instance.ConnectedPuppeteers()
-				.Where(p => p.connected && p.puppet?.pawn != null).ToArray();
-			updateMapCounter++;
-
-			if (intervals.TryGetValue(Find.TickManager.CurTimeSpeed, out var interval) == false) return;
-			var indices = Tools.EqualSpreading(interval, updateMapCounter, puppeteers.Length);
-			foreach (var i in indices)
-				Renderer.RenderMap(puppeteers[i]);
-		}*/
+			var puppeteers = State.Instance.ConnectedPuppeteers();
+			puppeteers.Do(puppeteer => SendTimeInfo(Controller.instance.connection, puppeteer.vID));
+		}
 	}
 }

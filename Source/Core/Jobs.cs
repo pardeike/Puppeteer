@@ -164,7 +164,9 @@ namespace Puppeteer
 			var selector = args[0];
 
 			var things = map.listerThings
-				.ThingsInGroup(ThingRequestGroup.Weapon);
+				.ThingsInGroup(ThingRequestGroup.Weapon)
+				.Where(thing => EquipmentUtility.CanEquip(thing, pawn))
+				.ToList();
 
 			if (selector == "best")
 				things.Sort(new MarketValueSorter());
@@ -195,6 +197,7 @@ namespace Puppeteer
 		{
 			var weapon = Tools.GetThingFromArgs<Thing>(pawn, args, 0);
 			if (weapon == null) return "no";
+			if (EquipmentUtility.CanEquip(weapon, pawn) == false) return "no";
 			return pawn.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.Equip, weapon), JobTag.Misc) ? "ok" : "no";
 		}
 

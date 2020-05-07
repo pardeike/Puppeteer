@@ -99,19 +99,23 @@ namespace Puppeteer
 							var cell = new IntVec3(coordinates[0], 0, coordinates[1]);
 							if (cell.InBounds(pawn.Map))
 							{
-								var choices = FloatMenuMakerMap
-									.ChoicesAtFor(cell.ToVector3(), pawn)
-									.Select(choice =>
-									{
-										var id = Guid.NewGuid().ToString();
-										Actions.AddAction(pawn, id, choice.action);
-										return new ContextMenu.Choice()
+								var choices = Array.Empty<ContextMenu.Choice>();
+								using (new MapFaker(pawn))
+								{
+									choices = FloatMenuMakerMap
+										.ChoicesAtFor(cell.ToVector3(), pawn)
+										.Select(choice =>
 										{
-											id = id,
-											label = choice.Label,
-											disabled = choice.Disabled
-										};
-									}).ToArray();
+											var id = Guid.NewGuid().ToString();
+											Actions.AddAction(pawn, id, choice.action);
+											return new ContextMenu.Choice()
+											{
+												id = id,
+												label = choice.Label,
+												disabled = choice.Disabled
+											};
+										}).ToArray();
+								}
 								connection.Send(new ContextMenu()
 								{
 									controller = vID,

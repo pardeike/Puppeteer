@@ -29,6 +29,19 @@ namespace Puppeteer
 		public Info info;
 	}
 
+	public class TimeInfo : JSONConvertable<TimeInfo>
+	{
+		public class Info
+		{
+			public string time;
+			public int speed;
+		}
+
+		public TimeInfo() { type = "time-info"; }
+		public ViewerID viewer;
+		public Info info;
+	}
+
 	public class Earned : JSONConvertable<Earned>
 	{
 		public class Info
@@ -288,12 +301,29 @@ namespace Puppeteer
 
 	public class GridUpdate : JSONConvertable<GridUpdate>
 	{
+		public class Frame
+		{
+			public int x1;
+			public int z1;
+			public int x2;
+			public int z2;
+
+			public Frame(int[] n)
+			{
+				x1 = n[0];
+				z1 = n[1];
+				x2 = n[2];
+				z2 = n[3];
+			}
+		}
+
 		public class Info
 		{
 			public int px;
 			public int pz;
 			public float phx;
 			public float phz;
+			public Frame frame;
 			public byte[] map;
 		}
 
