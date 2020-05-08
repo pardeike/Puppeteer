@@ -1,5 +1,8 @@
 ﻿using RimWorld;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using UnityEngine;
 using Verse;
 
@@ -18,9 +21,11 @@ namespace Puppeteer
 			var w = renderTexture.width;
 			var h = renderTexture.height;
 			var portrait = new Texture2D(w, h, TextureFormat.ARGB32, false);
+			var active = RenderTexture.active;
 			RenderTexture.active = renderTexture;
 			portrait.ReadPixels(new Rect(0, 0, w, h), 0, 0);
 			portrait.Apply();
+			RenderTexture.active = active;
 			var data = portrait.EncodeToPNG();
 			UnityEngine.Object.Destroy(portrait);
 			return data;
@@ -31,6 +36,102 @@ namespace Puppeteer
 			camera.orthographicSize = size;
 			camera.farClipPlane = 100f;
 			camera.transform.position = position;
+		}
+
+		public static Texture2D ScaleTexture(Texture2D texture, int size)
+		{
+			var renderTexture = RenderTexture.GetTemporary(size, size, 0, RenderTextureFormat.ARGB32);
+			var active = RenderTexture.active;
+			RenderTexture.active = renderTexture;
+			Graphics.Blit(texture, renderTexture);
+			var result = new Texture2D(size, size, TextureFormat.RGBA32, false);
+			result.ReadPixels(new Rect(0, 0, size, size), 0, 0);
+			RenderTexture.active = active;
+			RenderTexture.ReleaseTemporary(renderTexture);
+			return result;
+		}
+
+		public static byte[] GetImage(Texture2D texture, int size, int compression = 70)
+		{
+			var result = ScaleTexture(texture, size);
+			var data = compression == 0 ? result.EncodeToPNG() : result.EncodeToJPG(compression);
+			UnityEngine.Object.Destroy(result);
+			return data;
+		}
+
+		public static byte[] GetImageMatrix(Texture2D[] textures, int size, bool disabled = false, int compression = 70)
+		{
+			var scaledTextures = textures.Select(tex => ScaleTexture(tex, size)).ToArray();
+			for (var i = 0; i < scaledTextures.Length; i++)
+				File.WriteAllBytes(@"C:\Users\andre\Desktop\Icons\" + (i + 1) + ".png", scaledTextures[i].EncodeToPNG());
+
+			var count = textures.Length;
+			var renderTexture = RenderTexture.GetTemporary(count * size, size, 0, RenderTextureFormat.ARGB32);
+
+			var active = RenderTexture.active;
+			RenderTexture.active = renderTexture;
+			GL.PushMatrix();
+			GL.LoadPixelMatrix(0, count * size, size, 0);
+			var rect = new Rect(0, 0, size, size);
+			for (var i = 0; i < count; i++)
+			{
+				//	Graphics.Blit(scaledTextures[i], renderTexture, Vector2.one, new Vector2(i * size, 0));
+				var material = disabled ? TexUI.GrayscaleGUI : null;
+				GenUI.DrawTextureWithMaterial(rect, Command.BGTex, material);
+				Graphics.DrawTexture(rect, Command.BGTex, new Rect(0, 0, Command.BGTex.width, Command.BGTex.height), 0, 0, 0, 0, new Color(0.5f, 0.5f, 0.5f, 0.5f), material);
+				Widgets.DrawTextureFitted(rect, scaledTextures[i], 0.85f, Vector2.one, new Rect(0f, 0f, 1f, 1f), 0f, material);
+
+				rect.x += i * size;
+			}
+			GL.PopMatrix();
+
+			var result = new Texture2D(count * size, size, TextureFormat.ARGB32, false);
+			result.ReadPixels(new Rect(0, 0, count * size, size), 0, 0, false);
+
+			RenderTexture.active = active;
+
+			RenderTexture.ReleaseTemporary(renderTexture);
+			var data = compression == 0 ? result.EncodeToPNG() : result.EncodeToJPG(compression);
+			File.WriteAllBytes(@"C:\Users\andre\Desktop\Icons\gizmo.png", data);
+			UnityEngine.Object.Destroy(result);
+			return data;
+		}
+
+		public static byte[] GetCommandsMatrix(List<Command> commands)
+		{
+			var count = commands.Count;
+			var size = 75;
+
+			var renderTexture = RenderTexture.GetTemporary(count * size, size, 0, RenderTextureFormat.ARGB32);
+			RenderTexture.active = renderTexture;
+
+			GL.PushMatrix();
+			GL.LoadPixelMatrix(0, count * size, size, 0);
+			var rect = new Rect(0, 0, size, size);
+			for (var i = 0; i < count; i++)
+			{
+				_ = commands[i].GizmoOnGUI(new Vector2(i * size, 0), 100000);
+				rect.x += size;
+			}
+			GL.PopMatrix();
+
+			var result = new Texture2D(count * size, size, TextureFormat.ARGB32, false);
+			result.ReadPixels(new Rect(0, 0, count * size, size), 0, 0, false);
+			result.Apply();
+			RenderTexture.active = null;
+
+			RenderTexture.ReleaseTemporary(renderTexture);
+
+			var topLeftPixel = result.GetPixel(0, 0);
+			if (topLeftPixel.r + topLeftPixel.g + topLeftPixel.b == 0)
+			{
+				UnityEngine.Object.Destroy(result);
+				return null;
+			}
+
+			var data = result.EncodeToPNG();
+			UnityEngine.Object.Destroy(result);
+			return data;
 		}
 
 		public static Func<byte[]> GridRenderer(int[] grid)
@@ -59,6 +160,7 @@ namespace Puppeteer
 			var sizeZ = (int)(Puppeteer.Settings.mapImageSize * f * dz / dx);
 			var renderTexture = RenderTexture.GetTemporary(sizeX, sizeZ, 24);
 			camera.targetTexture = renderTexture;
+			var active = RenderTexture.active;
 			RenderTexture.active = renderTexture;
 			camera.Render();
 			var imageTexture = new Texture2D(sizeX, sizeZ, TextureFormat.RGB24, false);
@@ -66,7 +168,7 @@ namespace Puppeteer
 			imageTexture.Apply();
 			RenderTexture.ReleaseTemporary(renderTexture);
 			camera.targetTexture = null;
-			RenderTexture.active = null;
+			RenderTexture.active = active;
 
 			var q_from = GenMath.LerpDouble(1, 9, 100, 65, Puppeteer.Settings.mapImageCompression);
 			var q_to = GenMath.LerpDouble(1, 9, 80, 25, Puppeteer.Settings.mapImageCompression);
@@ -164,5 +266,43 @@ namespace Puppeteer
 				});
 			});
 		}
+
+		/*public static void RenderGizmos(Thing thing)
+		{
+			var inspectWindow = Find.WindowStack.Windows
+				.OfType<MainTabWindow_Inspect>()
+				.FirstOrDefault();
+			if (inspectWindow == null) return;
+
+			var selector = Find.Selector;
+			var saved = selector.SelectedObjectsListForReading;
+			selector.ClearSelection();
+			selector.Select(thing, false, false);
+
+			var gizmos = new List<Gizmo>();
+			using (new GizmoCapture(gizmos))
+				inspectWindow.DrawInspectGizmos();
+
+			Find.Selector.ClearSelection();
+			saved.ForEach(item => selector.Select(item, false, false));
+
+			foreach (var gizmo in gizmos)
+			{
+				var result = gizmo.GizmoOnGUI(new Vector2(20000, 200000), GizmoGridDrawer.HeightDrawnRecently);
+				gizmo.ProcessInput(Event.KeyboardEvent(" "));
+			}
+		}*/
 	}
+
+	/*[HarmonyPatch(typeof(GizmoGridDrawer))]
+	[HarmonyPatch(nameof(GizmoGridDrawer.DrawGizmoGrid))]
+	static class GizmoGridDrawer_DrawGizmoGrid_Patch
+	{
+		public static bool Prefix(IEnumerable<Gizmo> gizmos)
+		{
+			if (GizmoCapture.capture == false) return true;
+			GizmoCapture.gizmos.AddRange(gizmos);
+			return false;
+		}
+	}*/
 }

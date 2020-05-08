@@ -46,6 +46,8 @@ namespace Puppeteer
 			Graphics.Blit(texture, buffer, material, 0);
 			RenderTexture.active = buffer;
 			outputTexture.ReadPixels(new Rect(0, 0, width, height), 0, 0, false);
+			outputTexture.Apply();
+			RenderTexture.active = null;
 
 			var color32s = ProminentColor.GetColors32FromImage(outputTexture, resizedTo, maxColorAmount, colorLimiterPercentage, uniteColorsTolerance, minimiumColorPercentage);
 

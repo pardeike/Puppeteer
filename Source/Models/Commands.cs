@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 using static HarmonyLib.AccessTools;
 
 namespace Puppeteer
@@ -344,5 +345,33 @@ namespace Puppeteer
 		public ContextMenu() { type = "menu"; }
 		public ViewerID controller;
 		public Choice[] choices;
+	}
+
+	public class Selection : JSONConvertable<Selection>
+	{
+		public class Gizmo
+		{
+			public string id;
+			public string label;
+			public string disabled;
+		}
+
+		public class Corner
+		{
+			public int x;
+			public int z;
+
+			public Corner(Vector3 vec)
+			{
+				x = (int)vec.x;
+				z = (int)vec.z;
+			}
+		}
+
+		public Selection() { type = "selection"; }
+		public ViewerID controller;
+		public Corner[] frame;
+		public Gizmo[] gizmos;
+		public byte[] atlas;
 	}
 }

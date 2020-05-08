@@ -141,6 +141,18 @@ namespace Puppeteer
 		}
 	}
 
+
+	[HarmonyPatch(typeof(WindowStack))]
+	[HarmonyPatch(nameof(WindowStack.WindowStackOnGUI))]
+	static class WindowStack_WindowStackOnGUI_Patch
+	{
+		public static void Postfix()
+		{
+			if (Event.current.type == EventType.Repaint)
+				OperationQueue.Process(OperationType.Select);
+		}
+	}
+
 	[HarmonyPatch(typeof(Widgets))]
 	[HarmonyPatch(nameof(Widgets.WidgetsOnGUI))]
 	static class Widgets_WidgetsOnGUI_Patch

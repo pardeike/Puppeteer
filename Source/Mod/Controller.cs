@@ -7,7 +7,6 @@ using System.Reflection;
 using System.Timers;
 using UnityEngine;
 using Verse;
-using Verse.Profile;
 using static HarmonyLib.AccessTools;
 
 namespace Puppeteer
@@ -156,17 +155,7 @@ namespace Puppeteer
 					case "welcome":
 					{
 						var info = Welcome.Create(msg);
-						var minimumVersion = new Version(info.minVersion);
-						var currentVersion = new Version(Tools.GetModVersionString());
-						if (currentVersion < minimumVersion)
-						{
-							void gotoMainScreen()
-							{
-								LongEventHandler.QueueLongEvent(delegate () { MemoryUtility.ClearAllMapsAndWorld(); }, "Entry", "SavingLongEvent", false, null, false);
-							}
-							Find.WindowStack.Add(new NoteDialog($"This version ({currentVersion}) is older than the required version ({minimumVersion}).\n\nPlease make sure Puppeteer is updated, thank you.", "Main Menu", gotoMainScreen));
-							return;
-						}
+						GeneralCommands.CheckVersionRequired(info);
 						GeneralCommands.SendAllColonists(connection);
 						break;
 					}

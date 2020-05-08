@@ -1,6 +1,8 @@
 ﻿using RimWorld;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 using Verse;
 using Verse.AI;
 
@@ -130,6 +132,105 @@ namespace Puppeteer
 				{
 					var id = Convert.ToString(state.val);
 					_ = Actions.RunAction(pawn, id);
+					break;
+				}
+				case "select":
+				{
+					var val = Convert.ToString(state.val);
+					var coordinates = val.Split(',').Select(v => { if (int.TryParse(v, out var n)) return n; else return -1000; }).ToArray();
+					if (coordinates.Length == 2)
+					{
+						GizmosHandler.RemoveActions(pawn);
+
+						var map = pawn.Map;
+						var cell = new IntVec3(coordinates[0], 0, coordinates[1]);
+						if (cell.InBounds(map))
+						{
+							var things = Selector.SelectableObjectsAt(cell, map);
+							var obj = things.FirstOrDefault();
+							var commands = GizmosHandler.GetCommands(obj);
+							if (obj == null || commands == null || commands.Count == 0)
+							{
+								connection.Send(new Selection()
+								{
+									controller = vID,
+									frame = Array.Empty<Selection.Corner>(),
+									gizmos = Array.Empty<Selection.Gizmo>(),
+									atlas = Array.Empty<byte>(),
+								});
+								return;
+							}
+
+							void renderOp()
+							{
+								var atlas = Renderer.GetCommandsMatrix(commands);
+								if (atlas == null)
+								{
+									Log.Warning("Retrying (should never happen)...");
+									OperationQueue.Add(OperationType.Select, renderOp);
+									return;
+								}
+
+								var bracketLocs = new Vector3[4];
+								if (obj is Zone zone)
+								{
+									var x1 = zone.Cells.Min(c => c.x);
+									var z1 = zone.Cells.Min(c => c.z);
+									var x2 = zone.Cells.Max(c => c.x);
+									var z2 = zone.Cells.Max(c => c.z);
+									bracketLocs[0] = new Vector3(x1, 0, z1);
+									bracketLocs[1] = new Vector3(x2, 0, z1);
+									bracketLocs[2] = new Vector3(x2, 0, z2);
+									bracketLocs[3] = new Vector3(x1, 0, z2);
+								}
+								else if (obj is Thing thing)
+								{
+									var customRectForSelector = thing.CustomRectForSelector;
+									var selectTimes = new Dictionary<object, float>(); // cannot use SelectionDrawer.selectTimes because it would interfer with real selection
+									if (customRectForSelector != null)
+									{
+										SelectionDrawerUtility.CalculateSelectionBracketPositionsWorld(bracketLocs, thing, customRectForSelector.Value.CenterVector3, new Vector2((float)customRectForSelector.Value.Width, (float)customRectForSelector.Value.Height), selectTimes, Vector2.one, 1f);
+									}
+									else
+										SelectionDrawerUtility.CalculateSelectionBracketPositionsWorld<object>(bracketLocs, thing, thing.DrawPos, thing.RotatedSize.ToVector2(), selectTimes, Vector2.one, 1f);
+								}
+
+								var gizmos = Array.Empty<Selection.Gizmo>();
+								var actions = new List<GizmosHandler.Item>();
+								using (new MapFaker(pawn))
+								{
+									actions = GizmosHandler.GetActions(obj, commands);
+									gizmos = actions
+										.Select(gizmo =>
+										{
+											var id = Guid.NewGuid().ToString();
+											GizmosHandler.AddAction(pawn, id, gizmo.action);
+											return new Selection.Gizmo()
+											{
+												id = id,
+												label = gizmo.label,
+												disabled = gizmo.disabled
+											};
+										}).ToArray();
+								}
+								connection.Send(new Selection()
+								{
+									controller = vID,
+									frame = bracketLocs.Select(loc => new Selection.Corner(loc)).ToArray(),
+									gizmos = gizmos,
+									atlas = atlas
+								});
+							}
+
+							OperationQueue.Add(OperationType.Select, renderOp);
+						}
+					}
+					break;
+				}
+				case "gizmo":
+				{
+					var id = Convert.ToString(state.val);
+					_ = GizmosHandler.RunAction(pawn, id);
 					break;
 				}
 				default:

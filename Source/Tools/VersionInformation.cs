@@ -35,8 +35,22 @@ namespace Puppeteer
 
 		public override void Close(bool doCloseSound = true)
 		{
-			onClose?.Invoke();
 			base.Close(doCloseSound);
+			onClose?.Invoke();
+		}
+
+		public override void PreOpen()
+		{
+			SetInitialSizeAndPosition();
+			if (layer == WindowLayer.Dialog)
+			{
+				if (Current.ProgramState == ProgramState.Playing)
+				{
+					Find.DesignatorManager.Dragger.EndDrag();
+					Find.DesignatorManager.Deselect();
+					Find.Selector.Notify_DialogOpened();
+				}
+			}
 		}
 
 		public override void PostClose()

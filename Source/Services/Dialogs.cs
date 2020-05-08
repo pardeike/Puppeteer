@@ -11,7 +11,28 @@ namespace Puppeteer
 		internal NoteDialog(string text, string buttonAText = null, Action buttonAAction = null, string buttonBText = null, Action buttonBAction = null, string title = null, bool buttonADestructive = false, Action acceptAction = null, Action cancelAction = null)
 			: base(text, buttonAText, buttonAAction, buttonBText, buttonBAction, title, buttonADestructive, acceptAction, cancelAction) { }
 
-		public override Vector2 InitialSize => new Vector2(320, 240);
+		public override Vector2 InitialSize => new Vector2(480, 240);
+		public Action closeAction = null;
+
+		public override void PreOpen()
+		{
+			SetInitialSizeAndPosition();
+			if (layer == WindowLayer.Dialog)
+			{
+				if (Current.ProgramState == ProgramState.Playing)
+				{
+					Find.DesignatorManager.Dragger.EndDrag();
+					Find.DesignatorManager.Deselect();
+					Find.Selector.Notify_DialogOpened();
+				}
+			}
+		}
+
+		public override void Close(bool doCloseSound = true)
+		{
+			base.Close(doCloseSound);
+			closeAction?.Invoke();
+		}
 	}
 
 	public class SettingsDialog : Page

@@ -195,5 +195,17 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "0.2.0.0",
+		"infos": [
+			{
+				"title": "Select things on the map",
+				"image": "MapSelections",
+				"texts": [
+					"You can now select things on the web map. You will get the same actions as in the game. Selecting an action will work as usual."
+				]
+			}
+		]
 	}
 ]

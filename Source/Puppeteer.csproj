@@ -47,6 +47,7 @@
     <Compile Include="Comm\BackgroundOperations.cs" />
     <Compile Include="Comm\OutgoingRequests.cs" />
     <Compile Include="Core\Actions.cs" />
+    <Compile Include="Core\GizmosHandler.cs" />
     <Compile Include="Services\GeneralGUI.cs" />
     <Compile Include="Services\Dialogs.cs" />
     <Compile Include="Tools\Defs.cs" />

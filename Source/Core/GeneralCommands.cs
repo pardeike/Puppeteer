@@ -5,11 +5,44 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Verse;
+using Verse.Profile;
 
 namespace Puppeteer
 {
 	public static class GeneralCommands
 	{
+		public static void CheckVersionRequired(Welcome info)
+		{
+			var minimumVersion = new Version(info.minVersion);
+			var currentVersion = new Version(Tools.GetModVersionString());
+			if (currentVersion < minimumVersion)
+			{
+				OperationQueue.Add(OperationType.Log, () =>
+				{
+					var note = $"The Puppeteer server needs v{minimumVersion} of Puppeteer but you are running v{currentVersion}. " +
+									"Please make sure the Puppeteer Mod is updated.\n\n" +
+									"Thank you.";
+					if (Current.ProgramState == ProgramState.Playing)
+					{
+						GameDataSaveLoader.SaveGame($"Puppeteer-Upgrade-Save-{DateTime.Now:yyyyMMdd-HHmmss}");
+						Find.WindowStack.Add(new NoteDialog(note, "SaveAndQuitToMainMenu".Translate(), null, null, null, "Puppeteer")
+						{
+							closeAction = () =>
+							{
+								LongEventHandler.QueueLongEvent(delegate ()
+								{
+									MemoryUtility.ClearAllMapsAndWorld();
+								}, "Entry", "SavingLongEvent", false, null, false);
+							}
+						});
+						return;
+					}
+					var note2 = new NoteDialog(note);
+					Find.WindowStack.Add(note2);
+				});
+			}
+		}
+
 		public static void SendAllColonists(Connection connection)
 		{
 			if (connection == null) return;
