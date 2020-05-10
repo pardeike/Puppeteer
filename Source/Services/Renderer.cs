@@ -192,9 +192,8 @@ namespace Puppeteer
 			renderOffset = Tools.CurrentMapOffset();
 			fakeViewRect = new CellRect(0, 0, map.Size.x, map.Size.z);
 
-			// TODO: right place to call this?
-			//       does it cause flickering?
-			//map.weatherManager.DrawAllWeather();
+			// if (!WorldRendererUtility.WorldRenderedNow)
+			// map.weatherManager.DrawAllWeather();
 
 			// TODO: needed?
 			//map.glowGrid.MarkGlowGridDirty(pawn.Position);
@@ -206,10 +205,10 @@ namespace Puppeteer
 			PlantFallColors.SetFallShaderGlobals(map);
 
 			// TODO: expensive?
-			//map.waterInfo.SetTextures();
+			map.waterInfo.SetTextures();
 
 			var pos = pawn.Position;
-			fakeViewRect = viewRect;
+			fakeViewRect = viewRect.ContractedBy(-1);
 
 			map.mapDrawer.MapMeshDrawerUpdate_First();
 			map.mapDrawer.DrawMapMesh();
@@ -244,24 +243,27 @@ namespace Puppeteer
 			if (grid == null)
 				grid = new int[] { px - initialRadius, pz - initialRadius, px + initialRadius, pz + initialRadius };
 
-			Render(pawn, new CellRect(grid[0], grid[1], grid[2] - grid[0], grid[3] - grid[1]), () =>
+			OperationQueue.Add(OperationType.RenderMap, () =>
 			{
-				var compressionTask = GridRenderer(grid);
-				BackgroundOperations.Add((connection) =>
+				Render(pawn, new CellRect(grid[0], grid[1], grid[2] - grid[0], grid[3] - grid[1]), () =>
 				{
-					var jpgData = compressionTask();
-					connection.Send(new GridUpdate()
+					var compressionTask = GridRenderer(grid);
+					BackgroundOperations.Add((connection) =>
 					{
-						controller = vID,
-						info = new GridUpdate.Info()
+						var jpgData = compressionTask();
+						connection.Send(new GridUpdate()
 						{
-							px = px,
-							pz = pz,
-							phx = phx,
-							phz = phz,
-							frame = new GridUpdate.Frame(grid),
-							map = jpgData
-						}
+							controller = vID,
+							info = new GridUpdate.Info()
+							{
+								px = px,
+								pz = pz,
+								phx = phx,
+								phz = phz,
+								frame = new GridUpdate.Frame(grid),
+								map = jpgData
+							}
+						});
 					});
 				});
 			});

@@ -209,7 +209,8 @@ namespace Puppeteer
 											{
 												id = id,
 												label = gizmo.label,
-												disabled = gizmo.disabled
+												disabled = gizmo.disabled,
+												allowed = gizmo.allowed,
 											};
 										}).ToArray();
 								}

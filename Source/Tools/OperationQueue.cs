@@ -9,7 +9,8 @@ namespace Puppeteer
 		SetState,
 		Job,
 		Log,
-		Select
+		Select,
+		RenderMap
 	}
 
 	public static class OperationQueue

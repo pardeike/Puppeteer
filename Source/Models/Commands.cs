@@ -354,6 +354,7 @@ namespace Puppeteer
 			public string id;
 			public string label;
 			public string disabled;
+			public bool allowed;
 		}
 
 		public class Corner

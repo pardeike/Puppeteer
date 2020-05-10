@@ -136,7 +136,11 @@ namespace Puppeteer
 	{
 		public static void Postfix()
 		{
-			OperationQueue.Process(OperationType.Portrait);
+			if (Event.current.type == EventType.Repaint)
+			{
+				OperationQueue.Process(OperationType.Portrait);
+				OperationQueue.Process(OperationType.RenderMap);
+			}
 			Controller.instance.SetEvent(PuppeteerEvent.UpdateColonists);
 		}
 	}

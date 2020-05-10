@@ -205,6 +205,13 @@
 				"texts": [
 					"You can now select things on the web map. You will get the same actions as in the game. Selecting an action will work as usual."
 				]
+			},
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"- Mobile browser can use map again",
+					"- Improved performance for browsers",
+				]
 			}
 		]
 	}

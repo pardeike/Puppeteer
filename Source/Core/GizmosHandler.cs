@@ -1,7 +1,9 @@
-﻿using RimWorld;
+﻿using HarmonyLib;
+using RimWorld;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using UnityEngine;
 using Verse;
 
@@ -11,6 +13,47 @@ namespace Puppeteer
 	{
 		static readonly Event mouseClick = new Event(0) { type = EventType.MouseDown, button = 0, clickCount = 1 };
 		static readonly Dictionary<Pawn, Dictionary<string, Action>> allActions = new Dictionary<Pawn, Dictionary<string, Action>>();
+		static readonly Dictionary<Command, Command> actionCommands = new Dictionary<Command, Command>();
+
+		[HarmonyPatch(typeof(BuildCopyCommandUtility))]
+		[HarmonyPatch(nameof(BuildCopyCommandUtility.BuildCommand))]
+		static class BuildCopyCommandUtility_BuildCommand_Patch
+		{
+			static Command_Action Register(Command_Action action, Designator_Build buildCmd)
+			{
+				actionCommands[action] = buildCmd;
+				return action;
+			}
+
+			public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+			{
+				var m_FindAllowedDesignator = SymbolExtensions.GetMethodInfo(() => BuildCopyCommandUtility.FindAllowedDesignator(default, false));
+				var m_Register = SymbolExtensions.GetMethodInfo(() => Register(default, default));
+
+				var list = instructions.ToList();
+				var idx = instructions.FirstIndexOf(inst => inst.Calls(m_FindAllowedDesignator));
+				if (idx < 0 || idx >= list.Count)
+				{
+					Log.Error("Cannot find BuildCopyCommandUtility.FindAllowedDesignator in BuildCopyCommandUtility.BuildCommand");
+					return instructions;
+				}
+				var fld = list[idx + 1].operand;
+				if (list.Last().opcode != OpCodes.Ret)
+				{
+					Log.Error("BuildCopyCommandUtility.BuildCommand does not end with RET");
+					return instructions;
+				}
+				var labels = list.Last().labels;
+				list.Last().labels = new List<Label>();
+				list.InsertRange(list.Count - 1, new[]
+				{
+					new CodeInstruction(OpCodes.Ldloc_0) { labels = labels },
+					new CodeInstruction(OpCodes.Ldfld, fld),
+					new CodeInstruction(OpCodes.Call, m_Register)
+				});
+				return list.AsEnumerable();
+			}
+		}
 
 		public static void AddAction(Pawn pawn, string id, Action action)
 		{
@@ -46,6 +89,7 @@ namespace Puppeteer
 			public Action action;
 			public Texture2D icon;
 			public string disabled;
+			public bool allowed;
 			public float order;
 		}
 
@@ -68,7 +112,10 @@ namespace Puppeteer
 				result.AddRange(Find.ReverseDesignatorDatabase.AllDesignators
 					.Where(des => des.CanDesignateThing(thing).Accepted));
 			if (obj is ISelectable selectable)
+			{
+				actionCommands.Clear();
 				result.AddRange(selectable.GetGizmos().Cast<Command>());
+			}
 			return result.OrderBy(gizmo => gizmo.order).ToList();
 		}
 
@@ -76,33 +123,48 @@ namespace Puppeteer
 		{
 			var count = Widgets.mouseOverScrollViewStack;
 
-			var result = commands.Select(cmd =>
+			bool Allowed(Command cmd)
 			{
-				if (cmd is Designator des)
+				if (actionCommands.TryGetValue(cmd, out var realCmd))
+					cmd = realCmd;
+
+				if ((cmd as Designator_Place) != null) return false;
+				if ((cmd as Designator_Build) != null) return false;
+				return true;
+			}
+
+			var result = commands
+				.Select(cmd =>
 				{
-					var thing = obj as Thing;
+					_ = actionCommands.TryGetValue(cmd, out var realCmd);
+					if (cmd is Designator des)
+					{
+						var thing = obj as Thing;
+						return new Item
+						{
+							label = des.LabelCapReverseDesignating(thing),
+							icon = des.IconReverseDesignating(thing, out var angle, out var offset),
+							order = ((des is Designator_Uninstall) ? (-11f) : (-20f)),
+							disabled = des.disabled ? des.disabledReason : null,
+							allowed = Allowed(cmd),
+							action = delegate
+							{
+								des.DesignateThing(thing);
+								des.Finalize(true);
+							}
+						};
+					}
 					return new Item
 					{
-						label = des.LabelCapReverseDesignating(thing),
-						icon = des.IconReverseDesignating(thing, out var angle, out var offset),
-						order = ((des is Designator_Uninstall) ? (-11f) : (-20f)),
-						disabled = des.disabled ? des.disabledReason : null,
-						action = delegate
-						{
-							des.DesignateThing(thing);
-							des.Finalize(true);
-						}
+						label = cmd.LabelCap,
+						icon = cmd.icon,
+						order = ((cmd is Designator_Uninstall) ? (-11f) : (-20f)),
+						disabled = cmd.disabled ? cmd.disabledReason : null,
+						allowed = Allowed(cmd),
+						action = () => cmd.ProcessInput(mouseClick)
 					};
-				}
-				return new Item
-				{
-					label = cmd.LabelCap,
-					icon = cmd.icon,
-					order = ((cmd is Designator_Uninstall) ? (-11f) : (-20f)),
-					disabled = cmd.disabled ? cmd.disabledReason : null,
-					action = () => cmd.ProcessInput(mouseClick)
-				};
-			}).ToList();
+				})
+				.ToList();
 
 			Widgets.mouseOverScrollViewStack = count;
 
