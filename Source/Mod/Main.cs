@@ -49,7 +49,7 @@ namespace Puppeteer
 
 		public static void SaveSettings()
 		{
-			var data = JsonConvert.SerializeObject(Settings, Formatting.Indented);
+			var data = JsonConvert.SerializeObject(Settings, Formatting.None);
 			settingsFileName.WriteConfig(data);
 		}
 

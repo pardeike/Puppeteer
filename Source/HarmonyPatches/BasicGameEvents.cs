@@ -1,5 +1,7 @@
 ﻿using HarmonyLib;
 using RimWorld;
+using RimWorld.Planet;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -35,6 +37,34 @@ namespace Puppeteer
 				Controller.instance.SetEvent(PuppeteerEvent.GameExited);
 			gameEntered = false;
 			VersionInformation.Show();
+		}
+	}
+
+	[HarmonyPatch(typeof(PlaySettings))]
+	[HarmonyPatch(nameof(PlaySettings.DoPlaySettingsGlobalControls))]
+	static class PlaySettings_DoPlaySettingsGlobalControls_Patch
+	{
+		public static void Postfix(WidgetRow row, bool worldView)
+		{
+			if (worldView) return;
+			var old = Puppeteer.Settings.showOffLimitZones;
+			row.ToggleableIcon(ref Puppeteer.Settings.showOffLimitZones, Assets.ShowOffLimits, "Toggle Off Limits", SoundDefOf.Mouseover_ButtonToggle, null);
+			if (Puppeteer.Settings.showOffLimitZones != old)
+				Puppeteer.SaveSettings();
+		}
+	}
+
+	[HarmonyPatch(typeof(FloatMenuOption), MethodType.Constructor)]
+	[HarmonyPatch(new[] { typeof(string), typeof(Action), typeof(MenuOptionPriority), typeof(Action), typeof(Thing), typeof(float), typeof(Func<Rect, bool>), typeof(WorldObject) })]
+	static class FloatMenuOption_Constructor_Patch
+	{
+		public static void Postfix(string label, Action action)
+		{
+			if (action == null) return;
+			var idx = label.IndexOf(" (");
+			if (idx > 0) label = label.Remove(idx);
+			if (Puppeteer.Settings.menuCommands.Add(label))
+				Puppeteer.SaveSettings();
 		}
 	}
 
@@ -109,10 +139,17 @@ namespace Puppeteer
 			PlayerPawns.Update(__instance);
 		}
 
-		public static void Postfix()
+		public static void Postfix(Map __instance)
 		{
 			Controller.instance.SetEvent(PuppeteerEvent.SendChangedPriorities);
 			Controller.instance.SetEvent(PuppeteerEvent.SendChangedSchedules);
+
+			var offLimits = __instance.GetComponent<OffLimitsComponent>();
+			offLimits.areas.Do(area =>
+			{
+				area.Drawer.MarkForDraw();
+				area.Drawer.CellBoolDrawerUpdate();
+			});
 		}
 	}
 

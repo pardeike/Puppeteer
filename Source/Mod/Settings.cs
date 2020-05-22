@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using Verse;
 
 namespace Puppeteer
@@ -8,6 +9,8 @@ namespace Puppeteer
 		public int mapImageSize = 180;
 		public int mapImageCompression = 9;
 		public int mapUpdateFrequency = 600;
+		public bool showOffLimitZones = true;
+		public HashSet<string> menuCommands = new HashSet<string>();
 	}
 
 	public static class SettingsDrawer

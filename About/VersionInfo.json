@@ -210,7 +210,25 @@
 				"title": "Bug fixes",
 				"texts": [
 					"- Mobile browser can use map again",
-					"- Improved performance for browsers",
+					"- Improved performance for browsers"
+				]
+			}
+		]
+	},
+	{
+		"version": "0.3.0.0",
+		"infos": [
+			{
+				"title": "Viewer Restrictions!",
+				"image": "Restrictions",
+				"texts": [
+					"There is a new type of zone that contains sets of restrictions - which are lists of forbidden actions"
+				]
+			},
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"- Grow Zones caused error, fixed"
 				]
 			}
 		]

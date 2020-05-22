@@ -47,7 +47,10 @@
     <Compile Include="Comm\BackgroundOperations.cs" />
     <Compile Include="Comm\OutgoingRequests.cs" />
     <Compile Include="Core\Actions.cs" />
+    <Compile Include="Core\OffLimitsComponent.cs" />
     <Compile Include="Core\GizmosHandler.cs" />
+    <Compile Include="Models\OffLimitsArea.cs" />
+    <Compile Include="Models\Restriction.cs" />
     <Compile Include="Services\GeneralGUI.cs" />
     <Compile Include="Services\Dialogs.cs" />
     <Compile Include="Tools\Defs.cs" />
@@ -81,14 +84,20 @@
     <Compile Include="Models\PawnUpdates.cs" />
     <Compile Include="Models\Commands.cs" />
     <Compile Include="Models\ViewerID.cs" />
-    <Compile Include="Patches\ColonistsChanges.cs" />
-    <Compile Include="Patches\BasicGameEvents.cs" />
-    <Compile Include="Patches\PawnUpdates.cs" />
+    <Compile Include="HarmonyPatches\ColonistsChanges.cs" />
+    <Compile Include="HarmonyPatches\BasicGameEvents.cs" />
+    <Compile Include="HarmonyPatches\PawnUpdates.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Mod\Controller.cs" />
     <Compile Include="Tools\Colors.cs" />
     <Compile Include="Tools\Tools.cs" />
     <Compile Include="Core\GeneralCommands.cs" />
+    <Compile Include="UX\Designator_OffLimits.cs" />
+    <Compile Include="UX\Dialog_EditOffLimitsArea.cs" />
+    <Compile Include="UX\Dialog_EditRestriction.cs" />
+    <Compile Include="UX\Dialog_OffLimits.cs" />
+    <Compile Include="UX\SettingsColumns.cs" />
+    <Compile Include="UX\SettingsTable.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="0Harmony, Version=2.0.0.8, Culture=neutral, processorArchitecture=MSIL">
@@ -113,6 +122,10 @@
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AssetBundleModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin64_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
@@ -142,6 +155,11 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\Defs\TableDef.xml">
+      <Link>Defs\TableDef.xml</Link>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <Content Include="..\Languages\English\Keyed\Help.xml">
       <Link>Languages\English\Keyed\Help.xml</Link>
     </Content>
@@ -157,6 +175,6 @@
     <PostBuildEvent>ModBuilder -v AssemblyVersion -file "$(TargetPath)" -save "$(ProjectName)-version"
 ModBuilder -v XMLPut -file "$(SolutionDir)About\Manifest.xml" -xpath /Manifest/version -value "{{$(ProjectName)-version}}"
 ModBuilder -v XMLPut -file "$(SolutionDir)About\ModSync.xml" -xpath /ModSyncNinjaData/Version -value "{{$(ProjectName)-version}}"
-"$(ProjectDir)Install.bat" $(ConfigurationName) "$(ProjectDir)" "$(ProjectName)" "About Assemblies Languages Textures"</PostBuildEvent>
+"$(ProjectDir)Install.bat" $(ConfigurationName) "$(ProjectDir)" "$(ProjectName)" "About Assemblies Defs Languages Resources Textures"</PostBuildEvent>
   </PropertyGroup>
 </Project>

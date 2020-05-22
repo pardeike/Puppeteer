@@ -104,7 +104,7 @@ namespace Puppeteer
 			}
 		*/
 
-		public static List<Command> GetCommands(object obj)
+		public static List<Command> GetCommands(Map map, IntVec3 cell, object obj)
 		{
 			if (obj == null) return null;
 			var result = new List<Command>();
@@ -114,9 +114,18 @@ namespace Puppeteer
 			if (obj is ISelectable selectable)
 			{
 				actionCommands.Clear();
-				result.AddRange(selectable.GetGizmos().Cast<Command>());
+
+				var cmds = Tools.GetCommands(selectable);
+				cmds.Do(cmd =>
+				{
+					var reason = Tools.Restricted(map, cell, cmd.LabelCap);
+					if (reason != null)
+						cmd.Disable(reason);
+				});
+				result.AddRange(cmds);
 			}
-			return result.OrderBy(gizmo => gizmo.order).ToList();
+			return result
+				.OrderBy(gizmo => gizmo.order).ToList();
 		}
 
 		public static List<Item> GetActions(object obj, List<Command> commands)

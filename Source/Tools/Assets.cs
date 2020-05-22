@@ -9,13 +9,49 @@ namespace Puppeteer
 	[StaticConstructorOnStartup]
 	public static class Assets
 	{
-		public static Texture2D new27 = LoadTexture("New");
-		public static Texture2D puppet = LoadTexture("Puppet");
-		public static Texture2D bubble = LoadTexture("Bubble");
-		public static Texture2D colonist = LoadTexture("Colonist");
-		public static Texture2D[] connected = LoadTextures("Connected0", "Connected1", "Connected2");
-		public static Texture2D[] status = LoadTextures("Status0", "Status1");
-		public static Texture2D[] numbers = LoadTextureRow("Numbers", new[] { 10, 7, 10, 9, 10, 10, 10, 9, 10, 10, 23 });
+		public static readonly Texture2D new27 = LoadTexture("New");
+		public static readonly Texture2D puppet = LoadTexture("Puppet");
+		public static readonly Texture2D bubble = LoadTexture("Bubble");
+		public static readonly Texture2D colonist = LoadTexture("Colonist");
+		public static readonly Texture2D[] connected = LoadTextures("Connected0", "Connected1", "Connected2");
+		public static readonly Texture2D[] status = LoadTextures("Status0", "Status1");
+		public static readonly Texture2D[] numbers = LoadTextureRow("Numbers", new[] { 10, 7, 10, 9, 10, 10, 10, 9, 10, 10, 23 });
+		public static readonly Texture2D DeleteX = ContentFinder<Texture2D>.Get("UI/Buttons/Delete");
+		public static readonly Texture2D ShowOffLimits = ContentFinder<Texture2D>.Get("UX/ShowOffLimits", true);
+		public static readonly Texture2D OffLimitsAdd = ContentFinder<Texture2D>.Get("UX/OffLimitsAdd", true);
+		public static readonly Texture2D OffLimitsSub = ContentFinder<Texture2D>.Get("UX/OffLimitsSub", true);
+		public static readonly Texture2D[] AreaEdit = LoadTextures("UX/AreaSub", "UX/AreaAdd");
+		public static readonly Texture2D tagBackground = SolidColorMaterials.NewSolidColorTexture(new Color(1, 1, 1, 0.1f));
+
+		static Material _stripesMaterial = null;
+		public static Material StripesMaterial
+		{
+			get
+			{
+				if (_stripesMaterial == null)
+				{
+					var path = Path.Combine(Tools.GetModRootDirectory(), "Resources", "offlimits");
+					var assets = AssetBundle.LoadFromFile(path).LoadAllAssets<Material>();
+					_stripesMaterial = assets[0];
+				}
+				return _stripesMaterial;
+			}
+		}
+
+		static Shader _stripesShader = null;
+		public static Shader StripesShader
+		{
+			get
+			{
+				if (_stripesShader == null)
+				{
+					var path = Path.Combine(Tools.GetModRootDirectory(), "Resources", "offlimits");
+					var assets = AssetBundle.LoadFromFile(path).LoadAllAssets<Shader>();
+					_stripesShader = assets[0];
+				}
+				return _stripesShader;
+			}
+		}
 
 		static Texture2D LoadTexture(string path, bool makeReadonly = true)
 		{

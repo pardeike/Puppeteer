@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+	<PawnColumnDef>
+		<defName>CopyPastePuppeteerSettings</defName>
+		<workerClass>Puppeteer.CopyPastePuppeteerSettings</workerClass>
+	</PawnColumnDef>
+
+	<PawnColumnDef>
+		<defName>PuppetEnabled</defName>
+		<workerClass>Puppeteer.PawnColumnWorker_PuppetEnabled</workerClass>
+		<sortable>true</sortable>
+		<headerIcon>UX/ColRemote</headerIcon>
+		<headerTip>Allow control</headerTip>
+		<headerIconSize>(24,24)</headerIconSize>
+	</PawnColumnDef>
+
+	<PawnColumnDef>
+		<defName>PuppetOffLimits</defName>
+		<workerClass>Puppeteer.PawnColumnWorker_PuppetOffLimits</workerClass>
+		<sortable>true</sortable>
+		<headerIcon>UX/OffLimits</headerIcon>
+		<headerTip>Off Limits Areas</headerTip>
+		<headerIconSize>(24,24)</headerIconSize>
+	</PawnColumnDef>
+
+	<PawnTableDef>
+		<defName>PuppeteerTableSettings</defName>
+		<workerClass>Puppeteer.PuppeteerSettingsTable</workerClass>
+		<columns>
+			<li>Label</li>
+			<li>CopyPasteTimetable</li>
+			<li>PuppetEnabled</li>
+			<li>GapTiny</li>
+			<li>PuppetOffLimits</li>
+			<li>RemainingSpace</li>
+		</columns>
+	</PawnTableDef>
+
+	<MainButtonDef>
+		<defName>PuppeteerButton</defName>
+		<label>puppeteer</label>
+		<description>Control and restrict controlled colonists</description>
+		<tabWindowClass>Puppeteer.PuppeteerSettingsWindow</tabWindowClass>
+		<order>499</order>
+		<validWithoutMap>true</validWithoutMap>
+		<minimized>True</minimized>
+		<iconPath>UX/MenuIcon</iconPath>
+	</MainButtonDef>
+
+</Defs>

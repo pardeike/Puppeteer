@@ -110,11 +110,12 @@ namespace Puppeteer
 										{
 											var id = Guid.NewGuid().ToString();
 											Actions.AddAction(pawn, id, choice.action);
+											var restricted = Tools.Restricted(pawn.Map, cell, choice.Label);
 											return new ContextMenu.Choice()
 											{
 												id = id,
-												label = choice.Label,
-												disabled = choice.Disabled
+												label = choice.Label + (restricted != null ? $" [{restricted}]" : ""),
+												disabled = choice.Disabled || restricted != null
 											};
 										}).ToArray();
 								}
@@ -148,7 +149,7 @@ namespace Puppeteer
 						{
 							var things = Selector.SelectableObjectsAt(cell, map);
 							var obj = things.FirstOrDefault();
-							var commands = GizmosHandler.GetCommands(obj);
+							var commands = GizmosHandler.GetCommands(map, cell, obj);
 							if (obj == null || commands == null || commands.Count == 0)
 							{
 								connection.Send(new Selection()
@@ -205,12 +206,13 @@ namespace Puppeteer
 										{
 											var id = Guid.NewGuid().ToString();
 											GizmosHandler.AddAction(pawn, id, gizmo.action);
+											var restricted = Tools.Restricted(pawn.Map, cell, gizmo.label);
 											return new Selection.Gizmo()
 											{
 												id = id,
 												label = gizmo.label,
-												disabled = gizmo.disabled,
-												allowed = gizmo.allowed,
+												disabled = restricted ?? gizmo.disabled,
+												allowed = gizmo.allowed && restricted == null,
 											};
 										}).ToArray();
 								}

@@ -64,6 +64,13 @@ namespace Puppeteer
 			}
 		}
 
+		public static T Box<T>(T val, T min, T max) where T : IComparable
+		{
+			if (val.CompareTo(min) == -1) return min;
+			if (val.CompareTo(max) == 1) return max;
+			return val;
+		}
+
 		public static string GetModVersionString()
 		{
 			var assembly = Assembly.GetAssembly(typeof(Tools));
@@ -223,6 +230,34 @@ namespace Puppeteer
 		{
 			AllColonists(true, null).Do(pawn => State.Instance.UpdatePawn(pawn));
 			State.Save();
+		}
+
+		public static List<Command> GetCommands(ISelectable selectable)
+		{
+			var saved = new List<object>(Find.Selector.SelectedObjects);
+			try
+			{
+				Find.Selector.SelectedObjects.Clear();
+				Find.Selector.SelectedObjects.Add(selectable);
+				return selectable.GetGizmos()
+					.Cast<Command>()
+					.ToList();
+			}
+			catch (Exception)
+			{
+				return new List<Command>();
+			}
+			finally
+			{
+				Find.Selector.SelectedObjects.Clear();
+				Find.Selector.SelectedObjects.AddRange(saved);
+			}
+		}
+
+		public static string Restricted(Map map, IntVec3 cell, string text)
+		{
+			var restriction = map.GetComponent<OffLimitsComponent>()?.areas.FirstOrDefault(area => area.innerGrid[cell] && area.restrictions.Any(res => res.IsRestricted(text)));
+			return restriction?.label;
 		}
 
 		public static List<Pawn> AllColonists(bool forceUpdate, Map forMap = null)
