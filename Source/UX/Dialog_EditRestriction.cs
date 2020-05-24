@@ -219,6 +219,8 @@ namespace Puppeteer
 		}
 
 		static readonly FieldRef<ThingGrid, List<Thing>[]> thingGrid = FieldRefAccess<ThingGrid, List<Thing>[]>("thingGrid");
+		static string lastMatcherText1 = null;
+		static List<string> lastResult1 = null;
 		public List<string> GetMatchingButtons()
 		{
 			var fc = GUI.GetNameOfFocusedControl();
@@ -226,28 +228,34 @@ namespace Puppeteer
 			if (int.TryParse(fc.Substring(8), out var i) == false) return new List<string>();
 			var matcher = restriction.matchers[i];
 			if (matcher.text.IsNullOrEmpty()) return new List<string>();
+			if (lastMatcherText1 != matcher.text)
+			{
+				lastMatcherText1 = matcher.text;
+				var labels = new HashSet<string>();
+				labels.AddRange(
+					Find.ReverseDesignatorDatabase.AllDesignators.Select(des => des.LabelCap)
+				);
+				labels.AddRange(
+					thingGrid(Find.CurrentMap.thingGrid)
+						.SelectMany(g => g)
+						.Where(thing => ThingSelectionUtility.SelectableByMapClick(thing))
+						.SelectMany(thing => GetLabels(thing))
+				);
+				labels.AddRange(
+					Find.CurrentMap.zoneManager.AllZones
+						.SelectMany(zone => GetLabels(zone))
+				);
 
-			var labels = new HashSet<string>();
-			labels.AddRange(
-				Find.ReverseDesignatorDatabase.AllDesignators.Select(des => des.LabelCap)
-			);
-			labels.AddRange(
-				thingGrid(Find.CurrentMap.thingGrid)
-					.SelectMany(g => g)
-					.Where(thing => ThingSelectionUtility.SelectableByMapClick(thing))
-					.SelectMany(thing => GetLabels(thing))
-			);
-			labels.AddRange(
-				Find.CurrentMap.zoneManager.AllZones
-					.SelectMany(zone => GetLabels(zone))
-			);
-
-			return labels
-				.Where(label => label != null && matcher.IsMatch(label))
-				.OrderBy(s => s)
-				.ToList();
+				lastResult1 = labels
+					.Where(label => label != null && matcher.IsMatch(label))
+					.OrderBy(s => s)
+					.ToList();
+			}
+			return lastResult1;
 		}
 
+		static string lastMatcherText2 = null;
+		static List<string> lastResult2 = null;
 		public List<string> GetMatchingMenus()
 		{
 			var fc = GUI.GetNameOfFocusedControl();
@@ -255,11 +263,15 @@ namespace Puppeteer
 			if (int.TryParse(fc.Substring(8), out var i) == false) return new List<string>();
 			var matcher = restriction.matchers[i];
 			if (matcher.text.IsNullOrEmpty()) return new List<string>();
-
-			return Puppeteer.Settings.menuCommands
-				.Where(label => label != null && matcher.IsMatch(label))
-				.OrderBy(s => s)
-				.ToList();
+			if (lastMatcherText2 != matcher.text)
+			{
+				lastMatcherText2 = matcher.text;
+				lastResult2 = Puppeteer.Settings.menuCommands
+					.Where(label => label != null && matcher.IsMatch(label))
+					.OrderBy(s => s)
+					.ToList();
+			}
+			return lastResult2;
 		}
 	}
 }
