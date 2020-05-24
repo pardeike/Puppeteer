@@ -226,6 +226,13 @@
 				]
 			},
 			{
+				"title": "Remote Action Log!",
+				"image": "RemoteActionLog",
+				"texts": [
+					"All action and changes that a viewer causes will now be logged in the colonists log"
+				]
+			},
+			{
 				"title": "Bug fixes",
 				"texts": [
 					"- Grow Zones caused error, fixed"
