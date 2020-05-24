@@ -34,9 +34,16 @@ namespace Puppeteer
 			absorbInputAroundWindow = true;
 		}
 
+		public override void PreOpen()
+		{
+			base.PreOpen();
+			GUI.FocusControl(null);
+		}
+
 		public override void PreClose()
 		{
 			base.PreClose();
+			GUI.FocusControl(null);
 			if (NameIsValid(restrictionName))
 				restriction.label = restrictionName;
 		}
@@ -56,10 +63,10 @@ namespace Puppeteer
 			var b = new Vector2(rect.x, rect.y);
 			var a = new Vector2(rect.x + rect.width, rect.y + rect.height);
 			var vector = a - b;
-			GUI.DrawTexture(new Rect(b.x, b.y, 1, vector.y), Assets.tagBackground);
-			GUI.DrawTexture(new Rect(a.x - 1, b.y, 1, vector.y), Assets.tagBackground);
-			GUI.DrawTexture(new Rect(b.x + 1, b.y, vector.x - 2, 1), Assets.tagBackground);
-			GUI.DrawTexture(new Rect(b.x + 1, a.y - 1, vector.x - 2, 1), Assets.tagBackground);
+			GUI.DrawTexture(new Rect(b.x, b.y, 1, vector.y), Assets.highlight);
+			GUI.DrawTexture(new Rect(a.x - 1, b.y, 1, vector.y), Assets.highlight);
+			GUI.DrawTexture(new Rect(b.x + 1, b.y, vector.x - 2, 1), Assets.highlight);
+			GUI.DrawTexture(new Rect(b.x + 1, a.y - 1, vector.x - 2, 1), Assets.highlight);
 		}
 
 		static void DrawTags(Rect rect, ref Vector2 scroll, string title, List<string> tags)
@@ -75,7 +82,7 @@ namespace Puppeteer
 			Widgets.BeginScrollView(outerRect, ref scroll, innerRect, true);
 			_ = GenUI.DrawElementStack(new Rect(0, 0, innerRect.width - 16f, 99999f), textHeight, tags, (r, s) =>
 			{
-				Widgets.DrawAtlas(r, Assets.tagBackground);
+				Widgets.DrawAtlas(r, Assets.highlight);
 				var oldAnchor = Text.Anchor;
 				Text.Anchor = TextAnchor.MiddleCenter;
 				Widgets.Label(r, s);
@@ -150,6 +157,12 @@ namespace Puppeteer
 			rect.width -= width1 + 4f;
 			rect.width -= width2 + 4f;
 			rect.width -= 24f + 4f;
+			if (matcher.regexError != null)
+			{
+				var rect2 = rect.ExpandedBy(-2);
+				Widgets.DrawBoxSolid(rect2, Color.red);
+				TooltipHandler.TipRegion(rect2, matcher.regexError);
+			}
 			GUI.SetNextControlName($"matcher-{i}");
 			var oldText = matcher.text;
 			matcher.text = Widgets.TextField(rect, matcher.text);
@@ -176,7 +189,10 @@ namespace Puppeteer
 			rect.x += rect.width + 4f;
 			rect.width = 24f;
 			if (Widgets.ButtonImage(rect, Assets.DeleteX))
+			{
+				GUI.FocusControl(null);
 				_ = restriction.matchers.Remove(matcher);
+			}
 		}
 
 		static List<string> GetLabels(ISelectable thing)

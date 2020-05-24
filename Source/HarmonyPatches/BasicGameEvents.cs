@@ -84,7 +84,8 @@ namespace Puppeteer
 	{
 		public static void Postfix()
 		{
-			Find.ColonistBar.MarkColonistsDirty();
+			if (Current.Game != null)
+				Find.ColonistBar?.MarkColonistsDirty();
 		}
 	}
 

@@ -38,6 +38,7 @@ namespace Puppeteer
 				});
 			}
 
+			var settings = PawnSettings.SettingsFor(pawn);
 			switch (job.method)
 			{
 				case "get-attack-targets":
@@ -45,6 +46,7 @@ namespace Puppeteer
 					break;
 
 				case "attack-target":
+					if (settings.enabled == false) return;
 					RunOnQueue(AttackTarget, job.method);
 					break;
 
@@ -53,6 +55,7 @@ namespace Puppeteer
 					break;
 
 				case "select-weapon":
+					if (settings.enabled == false) return;
 					RunOnQueue(SelectWeapon, job.method);
 					break;
 
@@ -61,6 +64,7 @@ namespace Puppeteer
 					break;
 
 				case "do-rest":
+					if (settings.enabled == false) return;
 					RunOnQueue(DoRest, job.method);
 					break;
 
@@ -69,6 +73,7 @@ namespace Puppeteer
 					break;
 
 				case "do-tend":
+					if (settings.enabled == false) return;
 					RunOnQueue(DoTend, job.method);
 					break;
 
@@ -136,6 +141,7 @@ namespace Puppeteer
 						job.playerForced = true;
 						job.expireRequiresEnemiesNearby = false;
 						pawn.jobs.StartJob(job, JobCondition.None, null, false, true, null, null, false, false);
+						pawn.RemoteLog($"Attack {target.LabelCap}", target);
 						return "ok";
 					}
 					return "no-job-package";
@@ -144,6 +150,7 @@ namespace Puppeteer
 				var action = FloatMenuUtility.GetMeleeAttackAction(pawn, target, out var failed);
 				if (action == null) return "no-job";
 				action();
+				pawn.RemoteLog($"Melee {target.LabelCap}", target);
 				return failed.IsNullOrEmpty() ? "ok" : failed;
 			}
 			catch
@@ -198,7 +205,10 @@ namespace Puppeteer
 			var weapon = Tools.GetThingFromArgs<Thing>(pawn, args, 0);
 			if (weapon == null) return "no";
 			if (EquipmentUtility.CanEquip(weapon, pawn) == false) return "no";
-			return pawn.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.Equip, weapon), JobTag.Misc) ? "ok" : "no";
+			var result = pawn.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.Equip, weapon), JobTag.Misc) ? "ok" : "no";
+			if (result == "ok")
+				pawn.RemoteLog($"Equip {weapon.LabelCap}", weapon);
+			return result;
 		}
 
 		// get-rest()
@@ -240,7 +250,10 @@ namespace Puppeteer
 			if (bed == null) return "no-bed";
 			if (pawn.Drafted)
 				pawn.drafter.Drafted = false;
-			return pawn.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.LayDown, bed), JobTag.Misc) ? "ok" : "no";
+			var result = pawn.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.LayDown, bed), JobTag.Misc) ? "ok" : "no";
+			if (result == "ok")
+				pawn.RemoteLog($"Rest", bed);
+			return result;
 		}
 
 		// get-tend()
@@ -267,7 +280,10 @@ namespace Puppeteer
 			if (injured == null) return "not-injured";
 			if (pawn.Drafted)
 				pawn.drafter.Drafted = false;
-			return pawn.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.TendPatient, injured), JobTag.Misc) ? "ok" : "no";
+			var result = pawn.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.TendPatient, injured), JobTag.Misc) ? "ok" : "no";
+			if (result == "ok")
+				pawn.RemoteLog($"Tend", injured);
+			return result;
 		}
 	}
 }

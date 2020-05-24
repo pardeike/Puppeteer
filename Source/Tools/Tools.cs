@@ -254,9 +254,12 @@ namespace Puppeteer
 			}
 		}
 
-		public static string Restricted(Map map, IntVec3 cell, string text)
+		public static string Restricted(Pawn pawn, IntVec3 cell, string text)
 		{
-			var restriction = map.GetComponent<OffLimitsComponent>()?.areas.FirstOrDefault(area => area.innerGrid[cell] && area.restrictions.Any(res => res.IsRestricted(text)));
+			var settings = PawnSettings.SettingsFor(pawn);
+			if (settings.enabled == false) return "Disabled";
+			var restriction = settings.activeAreas
+				.FirstOrDefault(area => area.innerGrid[cell] && area.restrictions.Any(res => res.IsRestricted(text)));
 			return restriction?.label;
 		}
 
@@ -339,6 +342,30 @@ namespace Puppeteer
 				return "";
 			}
 			return me.Content.RootDir;
+		}
+
+		public static OffLimitsArea GetSelectedArea()
+		{
+			return (Find.DesignatorManager.SelectedDesignator as Designator_OffLimits)?.area;
+		}
+
+		public static void SetCurrentOffLimitsDesignator(OffLimitsArea area = null, bool? mode = null)
+		{
+			var designatorManager = Find.DesignatorManager;
+			var des = designatorManager.SelectedDesignator as Designator_OffLimits;
+
+			if (area == null)
+			{
+				if (des != null && des.mode.HasValue == false)
+					designatorManager.Deselect();
+				return;
+			}
+
+			if (des == null || des.area != area || des.mode != mode)
+			{
+				var mStr = mode.HasValue == false ? "null" : (mode.Value ? "true" : "false");
+				designatorManager.Select(new Designator_OffLimits(area, mode));
+			}
 		}
 	}
 }

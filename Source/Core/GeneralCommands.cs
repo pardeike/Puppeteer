@@ -68,7 +68,7 @@ namespace Puppeteer
 				Tools.LogWarning($"{vID.name} joined");
 				State.Instance.SetConnected(vID, true);
 				var pawn = State.Instance.PuppeteerForViewer(vID)?.puppet?.pawn;
-				if (pawn != null) Tools.SetColonistNickname(pawn, vID.name);
+				if (pawn?.Map != null) Tools.SetColonistNickname(pawn, vID.name);
 				State.Save();
 				SendAllState(connection, vID);
 			}
@@ -146,7 +146,7 @@ namespace Puppeteer
 		{
 			var vID = puppeteer?.vID;
 			var pawn = puppeteer?.puppet?.pawn;
-			if (vID != null && pawn != null)
+			if (vID != null && pawn?.Map != null)
 				OperationQueue.Add(OperationType.Portrait, () =>
 				{
 					var portrait = Renderer.GetPawnPortrait(pawn, new Vector2(35f, 55f));
@@ -161,7 +161,7 @@ namespace Puppeteer
 				var vID = puppeteer?.vID;
 				var pawn = puppeteer?.puppet?.pawn;
 
-				if (pawn != null)
+				if (pawn?.Map != null)
 					connection.Send(new OutgoingState<T>() { viewer = vID, key = key, val = valueFunction(pawn) });
 			}
 

@@ -44,20 +44,72 @@ namespace Puppeteer
 		}
 	}
 
+	public class PawnSettings : IExposable
+	{
+		public bool enabled = true;
+		public HashSet<OffLimitsArea> activeAreas = new HashSet<OffLimitsArea>();
+
+		public PawnSettings()
+		{
+		}
+
+		public void ExposeData()
+		{
+			Scribe_Values.Look(ref enabled, "enabled");
+			Scribe_Collections.Look(ref activeAreas, "activeAreas", LookMode.Reference);
+		}
+
+		public static PawnSettings SettingsFor(Pawn pawn)
+		{
+			var pawnSettings = Find.CurrentMap.GetComponent<OffLimitsComponent>().pawnSettings;
+			if (pawnSettings.TryGetValue(pawn, out var settings) == false)
+			{
+				settings = new PawnSettings();
+				pawnSettings[pawn] = settings;
+			}
+			return settings;
+		}
+	}
+
 	public class OffLimitsComponent : MapComponent
 	{
 		public List<OffLimitsArea> areas = new List<OffLimitsArea>();
 		public List<Restriction> restrictions = new List<Restriction>();
+		public Dictionary<Pawn, PawnSettings> pawnSettings = new Dictionary<Pawn, PawnSettings>();
 
 		public OffLimitsComponent(Map map) : base(map) { }
 
 		static readonly Color transparentBlack = new Color(0, 0, 0, 0.15f);
 
+		List<Pawn> tmpKeys;
+		List<PawnSettings> tmpVals;
 		public override void ExposeData()
 		{
 			base.ExposeData();
+
 			Scribe_Collections.Look(ref areas, "areas", LookMode.Deep, Array.Empty<OffLimitsArea>());
 			Scribe_Collections.Look(ref restrictions, "restrictions", LookMode.Deep, Array.Empty<Restriction>());
+
+			if (areas == null)
+				areas = new List<OffLimitsArea>();
+			if (restrictions == null)
+				restrictions = new List<Restriction>();
+
+			if (Scribe.mode == LoadSaveMode.Saving)
+			{
+				tmpKeys = new List<Pawn>(pawnSettings.Keys);
+				tmpVals = new List<PawnSettings>(pawnSettings.Values);
+			}
+
+			Scribe_Collections.Look(ref tmpKeys, "pawnSettings.pawns", LookMode.Reference);
+			Scribe_Collections.Look(ref tmpVals, "pawnSettings.settings", LookMode.Deep);
+
+			if (Scribe.mode == LoadSaveMode.PostLoadInit)
+			{
+				pawnSettings = new Dictionary<Pawn, PawnSettings>();
+				for (var i = 0; i < tmpKeys.Count; i++)
+					pawnSettings[tmpKeys[i]] = tmpVals[i];
+			}
 		}
 
 		public OffLimitsArea GetLabeled(string label)
@@ -69,7 +121,7 @@ namespace Puppeteer
 		{
 			base.MapComponentOnGUI();
 
-			var selectedArea = (Find.DesignatorManager.SelectedDesignator as Designator_OffLimits)?.area;
+			var selectedArea = Tools.GetSelectedArea();
 			areas.DoIf(area => area.drawer != null, area =>
 			{
 				var material = StripesCellBoolDrawer.materialRef(area.drawer);

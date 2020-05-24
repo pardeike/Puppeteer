@@ -30,7 +30,7 @@ namespace Puppeteer
 		public override void PostOpen()
 		{
 			base.PostOpen();
-			Find.DesignatorManager.Select(new Designator_OffLimits(area, null));
+			Tools.SetCurrentOffLimitsDesignator(area, null);
 		}
 
 		public override void PreClose()
@@ -38,7 +38,8 @@ namespace Puppeteer
 			base.PreClose();
 			if (areaName.Length > 0)
 				area.label = areaName;
-			Find.DesignatorManager.Deselect();
+
+			Tools.SetCurrentOffLimitsDesignator();
 		}
 
 		bool NameIsValid(string name)

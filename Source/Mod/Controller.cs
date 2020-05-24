@@ -175,10 +175,7 @@ namespace Puppeteer
 					case "state":
 					{
 						var state = IncomingState.Create(msg);
-						OperationQueue.Add(OperationType.SetState, () =>
-						{
-							StateCommand.Set(connection, state);
-						});
+						OperationQueue.Add(OperationType.SetState, () => StateCommand.Set(connection, state));
 						break;
 					}
 					case "job":

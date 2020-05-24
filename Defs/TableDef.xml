@@ -29,7 +29,7 @@
 		<workerClass>Puppeteer.PuppeteerSettingsTable</workerClass>
 		<columns>
 			<li>Label</li>
-			<li>CopyPasteTimetable</li>
+			<li>CopyPastePuppeteerSettings</li>
 			<li>PuppetEnabled</li>
 			<li>GapTiny</li>
 			<li>PuppetOffLimits</li>

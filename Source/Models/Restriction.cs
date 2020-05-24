@@ -18,6 +18,7 @@ namespace Puppeteer
 	public class Matcher : IExposable
 	{
 		private Regex regex;
+		public string regexError;
 		public string text;
 		public Anchor anchor;
 		public bool caseSensitive;
@@ -31,7 +32,22 @@ namespace Puppeteer
 			this.text = text;
 			this.anchor = anchor;
 			this.caseSensitive = caseSensitive;
-			regex = new Regex(text, caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase);
+			regex = Compile(text);
+		}
+
+		Regex Compile(string reg)
+		{
+			try
+			{
+				var result = new Regex(reg, caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase);
+				regexError = null;
+				return result;
+			}
+			catch (Exception ex)
+			{
+				regexError = ex.Message;
+				return null;
+			}
 		}
 
 		public void UpdateRegex()
@@ -52,7 +68,7 @@ namespace Puppeteer
 					regText = $"^{Regex.Escape(text)}$";
 					break;
 			}
-			regex = new Regex(regText, caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase);
+			regex = Compile(regText);
 		}
 
 		public void ExposeData()
@@ -67,7 +83,7 @@ namespace Puppeteer
 
 		public bool IsMatch(string text)
 		{
-			return regex.IsMatch(text);
+			return regex?.IsMatch(text) ?? false;
 		}
 	}
 

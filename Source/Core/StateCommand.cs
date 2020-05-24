@@ -25,33 +25,45 @@ namespace Puppeteer
 				puppeteer.lastCommand = $"set-{state.key}";
 			}
 
+			var settings = PawnSettings.SettingsFor(pawn);
 			switch (state.key)
 			{
 				case "hostile-response":
+					if (settings.enabled == false) return;
 					var responseMode = (HostilityResponseMode)Enum.Parse(typeof(HostilityResponseMode), state.val.ToString());
 					pawn.playerSettings.hostilityResponse = responseMode;
+					pawn.RemoteLog($"Response Mode to {responseMode}");
 					break;
 				case "drafted":
+					if (settings.enabled == false) return;
 					var drafted = Convert.ToBoolean(state.val);
 					if (Tools.CannotMoveOrDo(pawn) == false)
 						pawn.drafter.Drafted = drafted;
+					pawn.RemoteLog(drafted ? "Drafted" : "Undrafted");
 					break;
 				case "zone":
+					if (settings.enabled == false) return;
 					var area = pawn.Map.areaManager.AllAreas.Where(a => a.AssignableAsAllowed()).FirstOrDefault(a => a.Label == state.val.ToString());
 					pawn.playerSettings.AreaRestriction = area;
+					pawn.RemoteLog($"Zone restricted to {area.Label}");
 					break;
 				case "priority":
 				{
+					if (settings.enabled == false) return;
 					var val = Convert.ToInt32(state.val);
 					var idx = val / 100;
 					var prio = val % 100;
 					var defs = Integrations.GetWorkTypeDefs().ToArray();
 					if (idx >= 0 && idx < defs.Length)
+					{
 						pawn.workSettings.SetPriority(defs[idx], prio);
+						pawn.RemoteLog($"Changed {defs[idx].label} priority to {prio}");
+					}
 					break;
 				}
 				case "schedule":
 				{
+					if (settings.enabled == false) return;
 					var pair = Convert.ToString(state.val).Split(':');
 					if (pair.Length == 2)
 					{
@@ -60,6 +72,7 @@ namespace Puppeteer
 						{
 							var type = Defs.Assignments.FirstOrDefault(ass => ass.Value == pair[1]).Key;
 							pawn.timetable.SetAssignment(idx.Value, type);
+							pawn.RemoteLog($"Defined {idx.Value}h to {type.label}");
 						}
 					}
 					break;
@@ -72,6 +85,7 @@ namespace Puppeteer
 				}
 				case "goto":
 				{
+					if (settings.enabled == false) return;
 					var val = Convert.ToString(state.val);
 					var coordinates = val.Split(',').Select(v => { if (int.TryParse(v, out var n)) return n; else return -1000; }).ToArray();
 					if (coordinates.Length == 2)
@@ -84,6 +98,7 @@ namespace Puppeteer
 								var job = JobMaker.MakeJob(JobDefOf.Goto, cell);
 								pawn.drafter.Drafted = true;
 								pawn.jobs.StartJob(job, JobCondition.InterruptForced);
+								pawn.RemoteLog($"Drafted to {cell.x}x{cell.z}");
 							}
 						}
 					}
@@ -109,8 +124,8 @@ namespace Puppeteer
 										.Select(choice =>
 										{
 											var id = Guid.NewGuid().ToString();
-											Actions.AddAction(pawn, id, choice.action);
-											var restricted = Tools.Restricted(pawn.Map, cell, choice.Label);
+											Actions.AddAction(pawn, id, choice);
+											var restricted = Tools.Restricted(pawn, cell, choice.Label);
 											return new ContextMenu.Choice()
 											{
 												id = id,
@@ -131,6 +146,7 @@ namespace Puppeteer
 				}
 				case "action":
 				{
+					if (settings.enabled == false) return;
 					var id = Convert.ToString(state.val);
 					_ = Actions.RunAction(pawn, id);
 					break;
@@ -149,7 +165,7 @@ namespace Puppeteer
 						{
 							var things = Selector.SelectableObjectsAt(cell, map);
 							var obj = things.FirstOrDefault();
-							var commands = GizmosHandler.GetCommands(map, cell, obj);
+							var commands = GizmosHandler.GetCommands(pawn, cell, obj);
 							if (obj == null || commands == null || commands.Count == 0)
 							{
 								connection.Send(new Selection()
@@ -205,8 +221,8 @@ namespace Puppeteer
 										.Select(gizmo =>
 										{
 											var id = Guid.NewGuid().ToString();
-											GizmosHandler.AddAction(pawn, id, gizmo.action);
-											var restricted = Tools.Restricted(pawn.Map, cell, gizmo.label);
+											GizmosHandler.AddAction(pawn, id, gizmo, obj as Thing);
+											var restricted = Tools.Restricted(pawn, cell, gizmo.label);
 											return new Selection.Gizmo()
 											{
 												id = id,
@@ -232,6 +248,7 @@ namespace Puppeteer
 				}
 				case "gizmo":
 				{
+					if (settings.enabled == false) return;
 					var id = Convert.ToString(state.val);
 					_ = GizmosHandler.RunAction(pawn, id);
 					break;

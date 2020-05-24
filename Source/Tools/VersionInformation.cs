@@ -47,7 +47,7 @@ namespace Puppeteer
 				if (Current.ProgramState == ProgramState.Playing)
 				{
 					Find.DesignatorManager.Dragger.EndDrag();
-					Find.DesignatorManager.Deselect();
+					Tools.SetCurrentOffLimitsDesignator();
 					Find.Selector.Notify_DialogOpened();
 				}
 			}

@@ -13,15 +13,15 @@ namespace Puppeteer
 		public static readonly Texture2D puppet = LoadTexture("Puppet");
 		public static readonly Texture2D bubble = LoadTexture("Bubble");
 		public static readonly Texture2D colonist = LoadTexture("Colonist");
+		public static readonly Texture2D puppeteerMote = LoadTexture("PuppeteerMote");
 		public static readonly Texture2D[] connected = LoadTextures("Connected0", "Connected1", "Connected2");
 		public static readonly Texture2D[] status = LoadTextures("Status0", "Status1");
-		public static readonly Texture2D[] numbers = LoadTextureRow("Numbers", new[] { 10, 7, 10, 9, 10, 10, 10, 9, 10, 10, 23 });
+		public static readonly Texture2D[] numbers = LoadTextureRow("Numbers", new[] { 9, 4, 10, 8, 10, 8, 8, 8, 8, 9, 20, 5 });
 		public static readonly Texture2D DeleteX = ContentFinder<Texture2D>.Get("UI/Buttons/Delete");
 		public static readonly Texture2D ShowOffLimits = ContentFinder<Texture2D>.Get("UX/ShowOffLimits", true);
-		public static readonly Texture2D OffLimitsAdd = ContentFinder<Texture2D>.Get("UX/OffLimitsAdd", true);
-		public static readonly Texture2D OffLimitsSub = ContentFinder<Texture2D>.Get("UX/OffLimitsSub", true);
 		public static readonly Texture2D[] AreaEdit = LoadTextures("UX/AreaSub", "UX/AreaAdd");
-		public static readonly Texture2D tagBackground = SolidColorMaterials.NewSolidColorTexture(new Color(1, 1, 1, 0.1f));
+		public static readonly Texture2D highlight = SolidColorMaterials.NewSolidColorTexture(new Color(1, 1, 1, 0.1f));
+		public static readonly Texture2D dimmer = SolidColorMaterials.NewSolidColorTexture(new Color(0, 0, 0, 0.1f));
 
 		static Material _stripesMaterial = null;
 		public static Material StripesMaterial

@@ -11,8 +11,15 @@ namespace Puppeteer
 {
 	public static class GizmosHandler
 	{
+		public class GizmoAction
+		{
+			public string label;
+			public Thing target;
+			public Action action;
+		}
+
 		static readonly Event mouseClick = new Event(0) { type = EventType.MouseDown, button = 0, clickCount = 1 };
-		static readonly Dictionary<Pawn, Dictionary<string, Action>> allActions = new Dictionary<Pawn, Dictionary<string, Action>>();
+		static readonly Dictionary<Pawn, Dictionary<string, GizmoAction>> allActions = new Dictionary<Pawn, Dictionary<string, GizmoAction>>();
 		static readonly Dictionary<Command, Command> actionCommands = new Dictionary<Command, Command>();
 
 		[HarmonyPatch(typeof(BuildCopyCommandUtility))]
@@ -55,23 +62,24 @@ namespace Puppeteer
 			}
 		}
 
-		public static void AddAction(Pawn pawn, string id, Action action)
+		public static void AddAction(Pawn pawn, string id, GizmosHandler.Item gizmo, Thing target)
 		{
 			if (allActions.TryGetValue(pawn, out var actions) == false)
 			{
-				actions = new Dictionary<string, Action>();
+				actions = new Dictionary<string, GizmoAction>();
 				allActions[pawn] = actions;
 			}
-			actions[id] = action;
+			actions[id] = new GizmoAction() { label = gizmo.label, target = target, action = gizmo.action };
 		}
 
 		public static bool RunAction(Pawn pawn, string id)
 		{
 			if (allActions.TryGetValue(pawn, out var actions) == false)
 				return false;
-			if (actions.TryGetValue(id, out var action) == false)
+			if (actions.TryGetValue(id, out var tuple) == false)
 				return false;
-			action();
+			pawn.RemoteLog(tuple.label, tuple.target);
+			tuple.action();
 			_ = actions.Remove(id);
 			return true;
 		}
@@ -104,7 +112,7 @@ namespace Puppeteer
 			}
 		*/
 
-		public static List<Command> GetCommands(Map map, IntVec3 cell, object obj)
+		public static List<Command> GetCommands(Pawn pawn, IntVec3 cell, object obj)
 		{
 			if (obj == null) return null;
 			var result = new List<Command>();
@@ -118,7 +126,7 @@ namespace Puppeteer
 				var cmds = Tools.GetCommands(selectable);
 				cmds.Do(cmd =>
 				{
-					var reason = Tools.Restricted(map, cell, cmd.LabelCap);
+					var reason = Tools.Restricted(pawn, cell, cmd.LabelCap);
 					if (reason != null)
 						cmd.Disable(reason);
 				});

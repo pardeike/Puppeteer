@@ -55,11 +55,15 @@ namespace Puppeteer
 			var characters = val.ToString() + (useMilliseconds ? "$" : "");
 			foreach (var c in characters)
 			{
-				var numTex = c == '$' ? Assets.numbers[10] : Assets.numbers[c - '0'];
-				rect.width = numTex.width / 2f;
-				if (direction == TextAlignment.Right) rect.x -= rect.width;
-				GUI.DrawTexture(rect, numTex);
-				rect.x += direction == TextAlignment.Left ? rect.width + 1 : -1;
+				var idx = "0123456789$-".IndexOf(c);
+				if (idx >= 0)
+				{
+					var numTex = Assets.numbers[idx];
+					rect.width = numTex.width / 2f;
+					if (direction == TextAlignment.Right) rect.x -= rect.width;
+					GUI.DrawTexture(rect, numTex);
+					rect.x += direction == TextAlignment.Left ? rect.width + 1 : -1;
+				}
 			}
 		}
 

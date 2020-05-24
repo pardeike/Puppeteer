@@ -46,7 +46,7 @@ namespace Puppeteer
 				listing_Standard.Gap(6f);
 			}
 			if (selected == false && Find.WindowStack.IsOpen<Dialog_EditOffLimitsArea>() == false)
-				Find.DesignatorManager.Deselect();
+				Tools.SetCurrentOffLimitsDesignator();
 			if (allAreas.Count < 10)
 			{
 				listing_Standard.Gap(30f * (9 - allAreas.Count));
@@ -77,7 +77,7 @@ namespace Puppeteer
 			rect2.width = labelWidth;
 			if (Mouse.IsOver(rect2))
 			{
-				Find.DesignatorManager.Select(new Designator_OffLimits(area, null));
+				Tools.SetCurrentOffLimitsDesignator(area, null);
 				selected = true;
 
 				GUI.color = area.color;
@@ -97,13 +97,13 @@ namespace Puppeteer
 			if (widgetRow.ButtonIcon(Assets.AreaEdit[1]))
 			{
 				Close(true);
-				Find.DesignatorManager.Select(new Designator_OffLimits(area, true));
+				Tools.SetCurrentOffLimitsDesignator(area, true);
 			}
 
 			if (widgetRow.ButtonIcon(Assets.AreaEdit[0]))
 			{
 				Close(true);
-				Find.DesignatorManager.Select(new Designator_OffLimits(area, false));
+				Tools.SetCurrentOffLimitsDesignator(area, false);
 			}
 
 			if (widgetRow.ButtonText("Edit"))
