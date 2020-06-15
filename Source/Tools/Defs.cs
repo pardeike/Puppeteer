@@ -11,6 +11,7 @@ namespace Puppeteer
 		{
 			{ TimeAssignmentDefOf.Anything, "A" },
 			{ TimeAssignmentDefOf.Work, "W" },
+			{ TimeAssignmentDefOf.Meditate, "M" },
 			{ TimeAssignmentDefOf.Joy, "J" },
 			{ TimeAssignmentDefOf.Sleep, "S" },
 		};

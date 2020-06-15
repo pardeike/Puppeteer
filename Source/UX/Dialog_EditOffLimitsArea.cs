@@ -7,7 +7,7 @@ namespace Puppeteer
 {
 	public class Dialog_EditOffLimitsArea : Window
 	{
-		const int maxRestrictions = 12;
+		const int maxRestrictions = 10;
 
 		readonly OffLimitsArea area;
 		bool firstTime = true;
@@ -82,7 +82,7 @@ namespace Puppeteer
 			list.Gap(10f);
 
 			Text.Font = GameFont.Small;
-			_ = list.Label("Active restrictions");
+			_ = list.Label("Restrictions (select the active ones)");
 
 			var allRestrictions = Find.CurrentMap.GetComponent<OffLimitsComponent>().restrictions;
 			var extra = (allRestrictions.Count < maxRestrictions ? 24f : -6f) + 1f;
@@ -112,6 +112,8 @@ namespace Puppeteer
 				}
 			}
 			list.EndSection(list2);
+
+			list.Dialog_Text(GameFont.Tiny, "EditAreaHelp");
 
 			list.End();
 

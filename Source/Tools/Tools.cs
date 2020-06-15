@@ -259,7 +259,7 @@ namespace Puppeteer
 			var settings = PawnSettings.SettingsFor(pawn);
 			if (settings.enabled == false) return "Disabled";
 			var restriction = settings.activeAreas
-				.FirstOrDefault(area => area.innerGrid[cell] && area.restrictions.Any(res => res.IsRestricted(text)));
+				.FirstOrDefault(area => (area.innerGrid.TrueCount == 0 || area.innerGrid[cell]) && area.restrictions.Any(res => res.IsRestricted(text)));
 			return restriction?.label;
 		}
 

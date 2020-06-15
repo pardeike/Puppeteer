@@ -175,7 +175,10 @@ namespace Puppeteer
 					case "state":
 					{
 						var state = IncomingState.Create(msg);
-						OperationQueue.Add(OperationType.SetState, () => StateCommand.Set(connection, state));
+						if (state?.key != null && state?.val != null)
+							OperationQueue.Add(OperationType.SetState, () => StateCommand.Set(connection, state));
+						else
+							Tools.LogWarning($"Bad state command from {state?.user}, key='{state?.key}' val='{state?.val}'");
 						break;
 					}
 					case "job":

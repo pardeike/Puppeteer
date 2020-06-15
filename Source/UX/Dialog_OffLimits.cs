@@ -8,7 +8,7 @@ namespace Puppeteer
 {
 	public class Dialog_OffLimits : Window
 	{
-		public override Vector2 InitialSize => new Vector2(450f, 400f);
+		public override Vector2 InitialSize => new Vector2(450f, 450f);
 		bool showOffLimitZones;
 
 		public Dialog_OffLimits()
@@ -55,6 +55,7 @@ namespace Puppeteer
 					var area = new OffLimitsArea(Find.CurrentMap);
 					offLimits.areas.Add(area);
 				}
+				listing_Standard.Dialog_Text(GameFont.Tiny, "CreateAreaHelp");
 			}
 			listing_Standard.End();
 		}
