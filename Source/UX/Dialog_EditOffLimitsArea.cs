@@ -106,6 +106,7 @@ namespace Puppeteer
 						{
 							var newRestriction = new Restriction() { label = label };
 							allRestrictions.Add(newRestriction);
+							area.restrictions.Add(newRestriction);
 							break;
 						}
 					}
