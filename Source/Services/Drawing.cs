@@ -18,7 +18,7 @@ namespace Puppeteer
 		{
 			if (Event.current.type != EventType.Repaint) return;
 
-			if (pawn == null) return;
+			if (pawn == null || pawn.Spawned == false) return;
 			var puppet = State.Instance.PuppetForPawn(pawn);
 			var puppeteer = puppet?.puppeteer;
 			if (puppeteer == null) return;

@@ -114,7 +114,7 @@ namespace Puppeteer
 
 		public static string OriginalName(this Pawn pawn)
 		{
-			if (pawn == null) return "";
+			if (pawn == null || pawn.Spawned == false) return "";
 			var name = pawn.Name;
 			if (name is NameTriple triple)
 				return $"{triple.First} {triple.Last}";
@@ -286,7 +286,7 @@ namespace Puppeteer
 
 		public static void SetColonistNickname(Pawn pawn, string nick)
 		{
-			if (pawn == null) return;
+			if (pawn == null || pawn.Spawned == false) return;
 			var name3 = pawn.Name as NameTriple;
 			if (name3 != null)
 				pawn.Name = new NameTriple(name3.First, nick ?? name3.First, name3.Last);

@@ -194,6 +194,13 @@ namespace Puppeteer
 		public Info info;
 	}
 
+	public class ColonistAvailable : JSONConvertable<ColonistAvailable>
+	{
+		public ColonistAvailable() { type = "colonist-available"; }
+		public ViewerID viewer;
+		public bool state;
+	}
+
 	public class Assignment : JSONConvertable<Assignment>
 	{
 		public Assignment() { type = "assignment"; }

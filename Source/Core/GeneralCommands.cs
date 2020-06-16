@@ -84,13 +84,21 @@ namespace Puppeteer
 			}
 		}
 
+		public static void Availability(Connection connection, Pawn pawn)
+		{
+			var pawnID = pawn.ThingID;
+			var puppeteer = State.Instance.ConnectedPuppeteers().FirstOrDefault(p => p.puppet?.pawn.ThingID == pawnID);
+			if (puppeteer != null)
+				connection.Send(new ColonistAvailable() { viewer = puppeteer.vID, state = pawn.Spawned });
+		}
+
 		public static void Assign(Connection connection, Pawn pawn, ViewerID vID)
 		{
 			void SendAssignment(ViewerID v, bool state) => connection.Send(new Assignment() { viewer = v, state = state });
 
 			if (vID == null)
 			{
-				if (pawn == null) return;
+				if (pawn == null || pawn.Spawned == false) return;
 				// Tools.SetColonistNickname(pawn, null);
 				Tools.LogWarning($"{pawn.OriginalName()} lost control");
 				vID = State.Instance.PuppetForPawn(pawn)?.puppeteer?.vID;

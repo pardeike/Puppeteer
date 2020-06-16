@@ -11,6 +11,7 @@ namespace Puppeteer
 	[HarmonyPatch(typeof(CellBoolDrawer), "ActuallyDraw")]
 	class CellBoolDrawer_ActuallyDraw_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static bool Prefix(CellBoolDrawer __instance)
 		{
 			if (__instance is StripesCellBoolDrawer)
@@ -22,6 +23,7 @@ namespace Puppeteer
 	[HarmonyPatch(typeof(CellBoolDrawer), "FinalizeWorkingDataIntoMesh")]
 	class CellBoolDrawer_FinalizeWorkingDataIntoMesh_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static void Postfix(CellBoolDrawer __instance, Mesh mesh)
 		{
 			if ((__instance is StripesCellBoolDrawer) == false) return;

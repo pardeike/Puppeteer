@@ -216,6 +216,7 @@ namespace Puppeteer
 		public void PawnAvailable(Pawn pawn)
 		{
 			State.Instance.UpdatePawn(pawn);
+			GeneralCommands.Availability(connection, pawn);
 			State.Save();
 			GeneralCommands.SendAllColonists(connection);
 		}
@@ -223,6 +224,7 @@ namespace Puppeteer
 		public void PawnUnavailable(Pawn pawn)
 		{
 			GeneralCommands.Assign(connection, pawn, null);
+			GeneralCommands.Availability(connection, pawn);
 			if (State.Instance.RemovePawn(pawn))
 				State.Save();
 			GeneralCommands.SendAllColonists(connection);
@@ -232,6 +234,11 @@ namespace Puppeteer
 		{
 			GeneralCommands.Assign(connection, pawn, vID);
 			GeneralCommands.SendAllColonists(connection);
+		}
+
+		public void UpdateAvailability(Pawn pawn)
+		{
+			GeneralCommands.Availability(connection, pawn);
 		}
 
 		public void UpdatePortrait(Pawn pawn)
@@ -368,7 +375,7 @@ namespace Puppeteer
 		public void UpdateColonist(State.Puppeteer puppeteer)
 		{
 			var pawn = puppeteer?.puppet?.pawn;
-			if (pawn == null) return;
+			if (pawn == null || pawn.Spawned == false) return;
 
 			string IncapableInfo(WorkTags t)
 			{

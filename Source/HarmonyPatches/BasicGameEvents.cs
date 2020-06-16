@@ -13,6 +13,7 @@ namespace Puppeteer
 	[HarmonyPatch(nameof(Root_Play.Start))]
 	static class Root_Play_Start_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static void Postfix()
 		{
 			LongEventHandler.QueueLongEvent(delegate ()
@@ -31,6 +32,7 @@ namespace Puppeteer
 	{
 		public static bool gameEntered = false;
 
+		[HarmonyPriority(Priority.First)]
 		public static void Postfix()
 		{
 			if (gameEntered)
@@ -44,6 +46,7 @@ namespace Puppeteer
 	[HarmonyPatch(nameof(PlaySettings.DoPlaySettingsGlobalControls))]
 	static class PlaySettings_DoPlaySettingsGlobalControls_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static void Postfix(WidgetRow row, bool worldView)
 		{
 			if (worldView) return;
@@ -58,9 +61,10 @@ namespace Puppeteer
 	[HarmonyPatch(new[] { typeof(string), typeof(Action), typeof(MenuOptionPriority), typeof(Action), typeof(Thing), typeof(float), typeof(Func<Rect, bool>), typeof(WorldObject) })]
 	static class FloatMenuOption_Constructor_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static void Postfix(string label, Action action)
 		{
-			if (action == null) return;
+			if (action == null || label == null) return;
 			var idx = label.IndexOf(" (");
 			if (idx > 0) label = label.Remove(idx);
 			if (Puppeteer.Settings.menuCommands.Add(label))
@@ -72,6 +76,7 @@ namespace Puppeteer
 	[HarmonyPatch(nameof(LearningReadout.LearningReadoutOnGUI))]
 	static class LearningReadout_WindowOnGUI_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static bool Prefix()
 		{
 			return PuppetCommentator.IsShowing == false;
@@ -82,6 +87,7 @@ namespace Puppeteer
 	[HarmonyPatch(nameof(Prefs.DevMode), MethodType.Setter)]
 	static class Prefs_DevMode_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static void Postfix()
 		{
 			if (Current.Game != null)
@@ -95,6 +101,7 @@ namespace Puppeteer
 	{
 		static int firstTimeCounter = 120;
 
+		[HarmonyPriority(Priority.First)]
 		public static void Postfix()
 		{
 			if (firstTimeCounter >= 0)
@@ -113,6 +120,7 @@ namespace Puppeteer
 	[HarmonyPatch(nameof(GlobalControls.GlobalControlsOnGUI))]
 	static class GlobalControls_GlobalControlsOnGUI_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static void Postfix()
 		{
 			if (Event.current.type != EventType.Layout)
@@ -124,6 +132,7 @@ namespace Puppeteer
 	[HarmonyPatch(nameof(Current.Notify_LoadedSceneChanged))]
 	class Current_Notify_LoadedSceneChanged_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		static void Postfix()
 		{
 			if (GenScene.InPlayScene)
@@ -135,11 +144,13 @@ namespace Puppeteer
 	[HarmonyPatch(nameof(Map.MapUpdate))]
 	static class Map_MapUpdate_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static void Prefix(Map __instance)
 		{
 			PlayerPawns.Update(__instance);
 		}
 
+		[HarmonyPriority(Priority.First)]
 		public static void Postfix(Map __instance)
 		{
 			Controller.instance.SetEvent(PuppeteerEvent.SendChangedPriorities);
@@ -164,6 +175,7 @@ namespace Puppeteer
 			yield return SymbolExtensions.GetMethodInfo(() => GenScene.GoToMainMenu());
 		}
 
+		[HarmonyPriority(Priority.First)]
 		public static void Postfix()
 		{
 			Controller.instance.SetEvent(PuppeteerEvent.Save);
@@ -179,6 +191,7 @@ namespace Puppeteer
 			yield return SymbolExtensions.GetMethodInfo(() => new TickManager().TogglePaused());
 		}
 
+		[HarmonyPriority(Priority.First)]
 		public static void Postfix()
 		{
 			Controller.instance.SetEvent(PuppeteerEvent.TimeChanged);

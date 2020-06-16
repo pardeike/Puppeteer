@@ -239,5 +239,23 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "0.4.0.0",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"- Update site when colonist become temporarily unavailable",
+					"- Reconnect after colonist become temporarily unavailable",
+					"- Added help texts for restriction zones",
+					"- An empty zone will cover the whole map",
+					"- New restrictions are active as default",
+					"- Connection numbers were scrambled",
+					"- No more error when unrestricting zone",
+					"- Apply all patches earlier for more compatibility"
+				]
+			}
+		]
 	}
 ]

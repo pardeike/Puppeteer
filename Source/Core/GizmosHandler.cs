@@ -32,6 +32,7 @@ namespace Puppeteer
 				return action;
 			}
 
+			[HarmonyPriority(Priority.First)]
 			public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
 			{
 				var m_FindAllowedDesignator = SymbolExtensions.GetMethodInfo(() => BuildCopyCommandUtility.FindAllowedDesignator(default, false));

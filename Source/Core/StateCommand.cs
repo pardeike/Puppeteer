@@ -17,7 +17,7 @@ namespace Puppeteer
 			if (vID == null) return;
 			var puppeteer = State.Instance.PuppeteerForViewer(vID);
 			var pawn = puppeteer?.puppet?.pawn;
-			if (pawn == null) return;
+			if (pawn == null || pawn.Spawned == false) return;
 
 			if (puppeteer != null)
 			{

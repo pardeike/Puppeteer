@@ -195,14 +195,14 @@ namespace Puppeteer
 
 		public Puppet PuppetForPawn(Pawn pawn)
 		{
-			if (pawn == null) return null;
+			if (pawn == null || pawn.Spawned == false) return null;
 			_ = pawnToPuppet.TryGetValue(pawn.thingIDNumber, out var puppet);
 			return puppet;
 		}
 
 		public void UpdatePawn(Pawn pawn)
 		{
-			if (pawn == null) return;
+			if (pawn == null || pawn.Spawned == false) return;
 			var puppet = PuppetForPawn(pawn);
 			if (puppet != null)
 			{
@@ -218,7 +218,7 @@ namespace Puppeteer
 
 		public bool RemovePawn(Pawn pawn)
 		{
-			if (pawn == null) return false;
+			if (pawn == null || pawn.Spawned == false) return false;
 			if (pawnToPuppet.TryRemove(pawn.thingIDNumber, out var puppet))
 			{
 				if (puppet?.puppeteer != null)

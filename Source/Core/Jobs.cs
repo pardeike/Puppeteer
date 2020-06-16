@@ -15,7 +15,7 @@ namespace Puppeteer
 		public static void Run(Connection connection, State.Puppeteer puppeteer, IncomingJob job)
 		{
 			var pawn = puppeteer?.puppet?.pawn;
-			if (pawn == null) return;
+			if (pawn == null || pawn.Spawned == false) return;
 
 			void RunOnQueue(Func<Pawn, string[], object> action, string actionName = null)
 			{
@@ -86,7 +86,7 @@ namespace Puppeteer
 		// get-attack-targets(melee=true/false)
 		static object GetAttackTargets(Pawn pawn, string[] args)
 		{
-			if (pawn == null) return "no-pawn";
+			if (pawn == null || pawn.Spawned == false) return "no-pawn";
 			if (args.Length != 1) return "need-1-arg";
 			var melee = bool.Parse(args[0]);
 

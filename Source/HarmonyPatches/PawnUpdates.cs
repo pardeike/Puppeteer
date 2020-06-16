@@ -14,6 +14,7 @@ namespace Puppeteer
 	[HarmonyPatch(nameof(CameraDriver.CurrentViewRect), MethodType.Getter)]
 	static class CameraDriver_CurrentViewRect_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static bool Prefix(ref CellRect __result)
 		{
 			if (Renderer.fakeViewRect.IsEmpty) return true;
@@ -26,6 +27,7 @@ namespace Puppeteer
 	[HarmonyPatch(nameof(CameraDriver.CurrentZoom), MethodType.Getter)]
 	static class CameraDriver_get_CurrentZoom_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static bool Prefix(ref CameraZoomRange __result)
 		{
 			if (Renderer.fakeZoom == false) return true;
@@ -50,6 +52,7 @@ namespace Puppeteer
 	[HarmonyPatch(nameof(Pawn.Name), MethodType.Setter)]
 	static class Pawn_set_Name_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static void Postfix(Pawn __instance)
 		{
 			if (__instance.IsColonist)
@@ -67,6 +70,7 @@ namespace Puppeteer
 			yield return AccessTools.Method(typeof(Area_Allowed), "SetLabel");
 		}
 
+		[HarmonyPriority(Priority.First)]
 		public static void Postfix()
 		{
 			Controller.instance.SetEvent(PuppeteerEvent.AreasChanged);
@@ -77,6 +81,7 @@ namespace Puppeteer
 	[HarmonyPatch("Internal_DrawMesh")]
 	static class Graphics_Internal_DrawMesh_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static void Prefix(ref Matrix4x4 matrix)
 		{
 			if (Renderer.renderOffset == 0f) return;
@@ -89,6 +94,7 @@ namespace Puppeteer
 	[HarmonyPatch(new[] { typeof(Mesh), typeof(int), typeof(Material), typeof(Matrix4x4[]), typeof(int), typeof(MaterialPropertyBlock), typeof(ShadowCastingMode), typeof(bool), typeof(int), typeof(Camera), typeof(LightProbeUsage), typeof(LightProbeProxyVolume) })]
 	static class Graphics_DrawMeshInstanced_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static void Prefix(Matrix4x4[] matrices)
 		{
 			if (Renderer.renderOffset == 0f) return;
@@ -101,6 +107,7 @@ namespace Puppeteer
 	[HarmonyPatch("Internal_DrawMeshInstancedIndirect")]
 	static class Graphics_Internal_DrawMeshInstancedIndirect_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static void Prefix(ref Bounds bounds)
 		{
 			if (Renderer.renderOffset == 0f) return;
@@ -112,6 +119,7 @@ namespace Puppeteer
 	[HarmonyPatch("Internal_DrawMeshNow1")]
 	static class Graphics_Internal_DrawMeshNow1_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static void Prefix(ref Vector3 position)
 		{
 			if (Renderer.renderOffset == 0f) return;
@@ -123,6 +131,7 @@ namespace Puppeteer
 	[HarmonyPatch("Internal_DrawMeshNow2")]
 	static class Graphics_Internal_DrawMeshNow2_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static void Prefix(ref Matrix4x4 matrix)
 		{
 			if (Renderer.renderOffset == 0f) return;
@@ -134,6 +143,7 @@ namespace Puppeteer
 	[HarmonyPatch(nameof(Game.UpdatePlay))]
 	static class Game_UpdatePlay_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static void Postfix()
 		{
 			if (Event.current.type == EventType.Repaint)
@@ -150,6 +160,7 @@ namespace Puppeteer
 	[HarmonyPatch(nameof(WindowStack.WindowStackOnGUI))]
 	static class WindowStack_WindowStackOnGUI_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static void Postfix()
 		{
 			if (Event.current.type == EventType.Repaint)
@@ -161,6 +172,7 @@ namespace Puppeteer
 	[HarmonyPatch(nameof(Widgets.WidgetsOnGUI))]
 	static class Widgets_WidgetsOnGUI_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static void Postfix()
 		{
 			OperationQueue.Process(OperationType.Job);
@@ -172,6 +184,7 @@ namespace Puppeteer
 	[HarmonyPatch(nameof(PortraitsCache.SetDirty))]
 	static class PortraitsCache_SetDirty_Patch
 	{
+		[HarmonyPriority(Priority.First)]
 		public static void Postfix(Pawn pawn)
 		{
 			Controller.instance.UpdatePortrait(pawn);
@@ -191,6 +204,7 @@ namespace Puppeteer
 			previousChangedPawns.AddRange(changedPawns);
 		}
 
+		[HarmonyPriority(Priority.First)]
 		public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
 		{
 			var m_ObserveChanges = SymbolExtensions.GetMethodInfo(() => ObserveChanges(null));

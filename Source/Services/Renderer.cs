@@ -192,19 +192,12 @@ namespace Puppeteer
 			renderOffset = Tools.CurrentMapOffset();
 			fakeViewRect = new CellRect(0, 0, map.Size.x, map.Size.z);
 
-			// if (!WorldRendererUtility.WorldRenderedNow)
-			// map.weatherManager.DrawAllWeather();
+			// flickers with Z-Levels
+			//map.skyManager.SkyManagerUpdate();
 
-			// TODO: needed?
-			//map.glowGrid.MarkGlowGridDirty(pawn.Position);
-
-			map.skyManager.SkyManagerUpdate();
 			map.powerNetManager.UpdatePowerNetsAndConnections_First();
 			map.glowGrid.GlowGridUpdate_First();
-
 			PlantFallColors.SetFallShaderGlobals(map);
-
-			// TODO: expensive?
 			map.waterInfo.SetTextures();
 
 			var pos = pawn.Position;
@@ -231,7 +224,7 @@ namespace Puppeteer
 		{
 			var pawn = puppeteer?.puppet?.pawn;
 			pawn = Tools.GetCarrier(pawn) ?? pawn;
-			if (pawn == null) return;
+			if (pawn == null || pawn.Spawned == false) return;
 
 			var vID = puppeteer.vID;
 			var px = pawn.Position.x;
