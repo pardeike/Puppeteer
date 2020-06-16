@@ -241,7 +241,7 @@
 		]
 	},
 	{
-		"version": "0.4.0.0",
+		"version": "0.4.1.0",
 		"infos": [
 			{
 				"title": "Bug fixes",
@@ -254,6 +254,12 @@
 					"- Connection numbers were scrambled",
 					"- No more error when unrestricting zone",
 					"- Apply all patches earlier for more compatibility"
+				]
+			},
+			{
+				"title": "More control",
+				"texts": [
+					"Viewers no can set outfit and drug policies"
 				]
 			}
 		]

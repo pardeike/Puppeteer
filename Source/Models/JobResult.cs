@@ -19,6 +19,7 @@ namespace Puppeteer
 		{
 			public string name;
 			public int id;
+			public bool selected;
 		}
 
 		public List<Result> results;

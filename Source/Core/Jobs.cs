@@ -59,6 +59,24 @@ namespace Puppeteer
 					RunOnQueue(SelectWeapon, job.method);
 					break;
 
+				case "get-outfits":
+					RunOnQueue(GetOutfits);
+					break;
+
+				case "select-outfit":
+					if (settings.enabled == false) return;
+					RunOnQueue(SelectOutfit, job.method);
+					break;
+
+				case "get-drugs":
+					RunOnQueue(GetDrugs);
+					break;
+
+				case "select-drug":
+					if (settings.enabled == false) return;
+					RunOnQueue(SelectDrug, job.method);
+					break;
+
 				case "get-rest":
 					RunOnQueue(GetRest);
 					break;
@@ -209,6 +227,60 @@ namespace Puppeteer
 			if (result == "ok")
 				pawn.RemoteLog($"Equip {weapon.LabelCap}", weapon);
 			return result;
+		}
+
+		// get-outfits()
+		static object GetOutfits(Pawn pawn, string[] args)
+		{
+			var current = pawn.outfits.CurrentOutfit.label;
+			var results = Current.Game.outfitDatabase.AllOutfits
+				.Select((item, idx) => new ItemResult.Result()
+				{
+					name = item.label,
+					id = idx,
+					selected = current == item.label
+				});
+			return new ItemResult() { results = results.ToList() };
+		}
+
+		// select-outfit(index)
+		static object SelectOutfit(Pawn pawn, string[] args)
+		{
+			if (args.Length != 1) return "no";
+			if (int.TryParse(args[0], out var idx) == false) return "no";
+			var items = Current.Game.outfitDatabase.AllOutfits;
+			if (idx < 0 || idx >= items.Count) return "no";
+			var item = items[idx];
+			pawn.outfits.CurrentOutfit = item;
+			pawn.RemoteLog($"Select outfit {item.label}");
+			return "ok";
+		}
+
+		// get-drugs()
+		static object GetDrugs(Pawn pawn, string[] args)
+		{
+			var current = pawn.drugs.CurrentPolicy.label;
+			var results = Current.Game.drugPolicyDatabase.AllPolicies
+				.Select((item, idx) => new ItemResult.Result()
+				{
+					name = item.label,
+					id = idx,
+					selected = current == item.label
+				});
+			return new ItemResult() { results = results.ToList() };
+		}
+
+		// select-drug(index)
+		static object SelectDrug(Pawn pawn, string[] args)
+		{
+			if (args.Length != 1) return "no";
+			if (int.TryParse(args[0], out var idx) == false) return "no";
+			var items = Current.Game.drugPolicyDatabase.AllPolicies;
+			if (idx < 0 || idx >= items.Count) return "no";
+			var item = items[idx];
+			pawn.drugs.CurrentPolicy = item;
+			pawn.RemoteLog($"Select drug policy {item.label}");
+			return "ok";
 		}
 
 		// get-rest()
