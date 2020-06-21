@@ -206,6 +206,7 @@ namespace Puppeteer
 
 		public static double GetPathingTime(Pawn pawn, IntVec3 destination)
 		{
+			if (pawn == null) return 0;
 			var pos = pawn.Position;
 			var traverseParams = TraverseParms.For(pawn, Danger.Deadly, TraverseMode.PassDoors, false);
 			var path = pawn.Map.pathFinder.FindPath(pawn.Position, destination, traverseParams, PathEndMode.Touch);

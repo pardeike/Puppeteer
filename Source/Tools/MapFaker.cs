@@ -12,7 +12,7 @@ namespace Puppeteer
 		{
 			var game = Current.Game;
 			savedMapIndex = game.currentMapIndex;
-			game.currentMapIndex = (sbyte)pawn.Map.Index;
+			if (pawn != null) game.currentMapIndex = (sbyte)pawn.Map.Index;
 		}
 
 		public void Dispose()

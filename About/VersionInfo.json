@@ -263,5 +263,17 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "0.4.2.0",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"- Improved general stability",
+					"- Support for Camera+ pawn rendering"
+				]
+			}
+		]
 	}
 ]

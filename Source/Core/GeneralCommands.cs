@@ -87,7 +87,7 @@ namespace Puppeteer
 		public static void Availability(Connection connection, Pawn pawn)
 		{
 			var pawnID = pawn.ThingID;
-			var puppeteer = State.Instance.ConnectedPuppeteers().FirstOrDefault(p => p.puppet?.pawn.ThingID == pawnID);
+			var puppeteer = State.Instance.ConnectedPuppeteers().FirstOrDefault(p => p.puppet?.pawn?.ThingID == pawnID);
 			if (puppeteer != null)
 				connection.Send(new ColonistAvailable() { viewer = puppeteer.vID, state = pawn.Spawned });
 		}

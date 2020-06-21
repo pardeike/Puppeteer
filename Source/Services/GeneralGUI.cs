@@ -134,7 +134,7 @@ namespace Puppeteer
 			var baseLetterText = def.letterText.Formatted(pawn.Named("PAWN")).AdjustedFor(pawn, "PAWN", true);
 			var baseLetterLabel = def.letterLabel.Formatted(pawn.Named("PAWN")).AdjustedFor(pawn, "PAWN", true);
 			_ = PawnRelationUtility.TryAppendRelationsWithColonistsInfo(ref baseLetterText, ref baseLetterLabel, pawn);
-			var worker = new IncidentWorker();
+			var worker = new IncidentWorker() { def = IncidentDefOf.WandererJoin };
 			var mSendStandardLetter = AccessTools.Method(typeof(IncidentWorker), "SendStandardLetter", new[] { typeof(TaggedString), typeof(TaggedString), typeof(LetterDef), typeof(IncidentParms), typeof(LookTargets), typeof(NamedArgument[]) });
 			var parms = StorytellerUtility.DefaultParmsNow(def.category, Find.CurrentMap);
 			//var storytellerComp = Find.Storyteller.storytellerComps.First((StorytellerComp x) => x is StorytellerComp_OnOffCycle || x is StorytellerComp_RandomMain);

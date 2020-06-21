@@ -13,7 +13,7 @@ namespace Puppeteer
 
 		public override void DoCell(Rect rect, Pawn pawn, PawnTable table)
 		{
-			if (pawn.timetable == null) return;
+			if (pawn?.timetable == null) return;
 			base.DoCell(rect, pawn, table);
 		}
 

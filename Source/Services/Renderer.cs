@@ -1,4 +1,5 @@
-﻿using RimWorld;
+﻿using HarmonyLib;
+using RimWorld;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,12 +9,22 @@ using Verse;
 
 namespace Puppeteer
 {
+	[StaticConstructorOnStartup]
 	public static class Renderer
 	{
 		public static float renderOffset = 0f;
 		public static Vector3 RenderOffsetVector => new Vector3(renderOffset, 0f, 0f);
 		public static CellRect fakeViewRect = CellRect.Empty;
 		public static bool fakeZoom = false;
+		public static AccessTools.FieldRef<bool> skipCustomRendering = null;
+
+		static Renderer()
+		{
+			var t = AccessTools.TypeByName("CameraPlus.CameraPlusMain");
+			if (t == null) return;
+			var f = AccessTools.Field(t, "skipCustomRendering");
+			skipCustomRendering = AccessTools.StaticFieldRefAccess<bool>(f);
+		}
 
 		public static byte[] GetPawnPortrait(Pawn pawn, Vector2 boundings)
 		{
@@ -203,6 +214,9 @@ namespace Puppeteer
 			var pos = pawn.Position;
 			fakeViewRect = viewRect.ContractedBy(-1);
 
+			if (skipCustomRendering != null)
+				skipCustomRendering() = true;
+
 			map.mapDrawer.MapMeshDrawerUpdate_First();
 			map.mapDrawer.DrawMapMesh();
 			map.dynamicDrawManager.DrawDynamicThings();
@@ -213,6 +227,9 @@ namespace Puppeteer
 			map.overlayDrawer.DrawAllOverlays();
 
 			renderer();
+
+			if (skipCustomRendering != null)
+				skipCustomRendering() = false;
 
 			fakeViewRect = CellRect.Empty;
 			renderOffset = 0f;
