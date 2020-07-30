@@ -274,12 +274,14 @@ namespace Puppeteer
 
 		public static void SendGameInfoToAll()
 		{
+			if (Current.Game == null) return;
 			var puppeteers = State.Instance.ConnectedPuppeteers();
 			puppeteers.Do(puppeteer => SendGameInfo(Controller.instance.connection, puppeteer.vID));
 		}
 
 		public static void SendTimeInfoToAll()
 		{
+			if (Current.Game == null) return;
 			var puppeteers = State.Instance.ConnectedPuppeteers();
 			puppeteers.Do(puppeteer => SendTimeInfo(Controller.instance.connection, puppeteer.vID));
 		}
