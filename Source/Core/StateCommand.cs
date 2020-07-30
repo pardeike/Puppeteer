@@ -73,8 +73,13 @@ namespace Puppeteer
 							if (idx.HasValue)
 							{
 								var type = Defs.Assignments.FirstOrDefault(ass => ass.Value == pair[1]).Key;
-								pawn.timetable.SetAssignment(idx.Value, type);
-								pawn.RemoteLog($"Defined {idx.Value}h to {type.label}");
+								if (type != null)
+								{
+									pawn.timetable.SetAssignment(idx.Value, type);
+									pawn.RemoteLog($"Defined {idx.Value}h to {type.label}");
+								}
+								else
+									GeneralCommands.SendSchedules(connection);
 							}
 						}
 						break;

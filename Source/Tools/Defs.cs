@@ -7,13 +7,27 @@ namespace Puppeteer
 	[StaticConstructorOnStartup]
 	public static class Defs
 	{
-		public static readonly Dictionary<TimeAssignmentDef, string> Assignments = new Dictionary<TimeAssignmentDef, string>()
+		static Dictionary<TimeAssignmentDef, string> assignments;
+
+		public static Dictionary<TimeAssignmentDef, string> Assignments
 		{
-			{ TimeAssignmentDefOf.Anything, "A" },
-			{ TimeAssignmentDefOf.Work, "W" },
-			{ TimeAssignmentDefOf.Meditate, "M" },
-			{ TimeAssignmentDefOf.Joy, "J" },
-			{ TimeAssignmentDefOf.Sleep, "S" },
-		};
+			get
+			{
+				if (assignments == null)
+				{
+					assignments = new Dictionary<TimeAssignmentDef, string>()
+					{
+						{ TimeAssignmentDefOf.Anything, "A" },
+						{ TimeAssignmentDefOf.Work, "W" },
+						{ TimeAssignmentDefOf.Joy, "J" },
+						{ TimeAssignmentDefOf.Sleep, "S" },
+					};
+
+					if (ModLister.RoyaltyInstalled)
+						assignments[TimeAssignmentDefOf.Meditate] = "M";
+				}
+				return assignments;
+			}
+		}
 	}
 }

@@ -125,7 +125,17 @@ namespace Puppeteer
 
 		static void SendGameInfo(Connection connection, ViewerID vID)
 		{
-			connection.Send(new GameInfo() { viewer = vID, info = new GameInfo.Info() { version = Tools.GetModVersionString(), mapFreq = Puppeteer.Settings.mapUpdateFrequency } });
+			var features = new List<string>();
+			if (ModLister.RoyaltyInstalled)
+				features.Add("royalty");
+			Log.Warning(features.Join());
+			var info = new GameInfo.Info()
+			{
+				version = Tools.GetModVersionString(),
+				mapFreq = Puppeteer.Settings.mapUpdateFrequency,
+				features = features.ToArray()
+			};
+			connection.Send(new GameInfo() { viewer = vID, info = info });
 		}
 
 		static void SendTimeInfo(Connection connection, ViewerID vID)

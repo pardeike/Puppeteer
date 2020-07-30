@@ -49,6 +49,7 @@
     <Compile Include="Core\Actions.cs" />
     <Compile Include="Core\OffLimitsComponent.cs" />
     <Compile Include="Core\GizmosHandler.cs" />
+    <Compile Include="Misc\ModCounter.cs" />
     <Compile Include="Models\OffLimitsArea.cs" />
     <Compile Include="Models\Restriction.cs" />
     <Compile Include="Services\GeneralGUI.cs" />
@@ -101,8 +102,8 @@
     <Compile Include="UX\SettingsTable.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="0Harmony, Version=2.0.0.8, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Lib.Harmony.2.0.0.8\lib\net472\0Harmony.dll</HintPath>
+    <Reference Include="0Harmony, Version=2.0.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Lib.Harmony.2.0.2\lib\net472\0Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Assembly-CSharp">

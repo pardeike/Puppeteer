@@ -190,7 +190,7 @@ namespace Puppeteer
 
 			var things = map.listerThings
 				.ThingsInGroup(ThingRequestGroup.Weapon)
-				.Where(thing => EquipmentUtility.CanEquip(thing, pawn))
+				.Where(thing => thing.Fogged() == false && EquipmentUtility.CanEquip(thing, pawn))
 				.ToList();
 
 			if (selector == "best")
@@ -293,7 +293,7 @@ namespace Puppeteer
 			var bedInfos = map.listerThings
 				.ThingsInGroup(ThingRequestGroup.Bed)
 				.OfType<Building_Bed>()
-				.Where(bed => bed.Medical)
+				.Where(bed => bed.Fogged() == false && bed.Medical)
 				.Select(bed =>
 				{
 					var info = bed.LabelShortCap;

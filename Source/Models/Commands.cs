@@ -23,6 +23,7 @@ namespace Puppeteer
 		{
 			public string version;
 			public int mapFreq;
+			public string[] features;
 		}
 
 		public GameInfo() { type = "game-info"; }

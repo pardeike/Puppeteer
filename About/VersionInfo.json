@@ -275,5 +275,17 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "0.4.3.0",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"- Support missing royalty dlc",
+					"- Do not show/select things that are undiscovered"
+				]
+			}
+		]
 	}
 ]
