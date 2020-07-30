@@ -277,8 +277,14 @@
 		]
 	},
 	{
-		"version": "0.4.3.0",
+		"version": "1.0.0.0",
 		"infos": [
+			{
+				"title": "Official 1.0",
+				"texts": [
+					"After a lot of testing, it is time to declare this version 1.0"
+				]
+			},
 			{
 				"title": "Bug fixes",
 				"texts": [
