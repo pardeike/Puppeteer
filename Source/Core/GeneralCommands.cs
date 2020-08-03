@@ -92,6 +92,11 @@ namespace Puppeteer
 				connection.Send(new ColonistAvailable() { viewer = puppeteer.vID, state = pawn.Spawned });
 		}
 
+		public static void SendChatMessage(Connection connection, ViewerID vID, string message)
+		{
+			connection.Send(new ChatMsg() { viewer = vID, info = new ChatMsg.Info() { message = message } });
+		}
+
 		public static void Assign(Connection connection, Pawn pawn, ViewerID vID)
 		{
 			void SendAssignment(ViewerID v, bool state) => connection.Send(new Assignment() { viewer = v, state = state });
@@ -128,14 +133,18 @@ namespace Puppeteer
 			var features = new List<string>();
 			if (ModLister.RoyaltyInstalled)
 				features.Add("royalty");
-			Log.Warning(features.Join());
-			var info = new GameInfo.Info()
+			if (TwitchToolkit.Exists)
 			{
-				version = Tools.GetModVersionString(),
-				mapFreq = Puppeteer.Settings.mapUpdateFrequency,
-				features = features.ToArray()
-			};
-			connection.Send(new GameInfo() { viewer = vID, info = info });
+				features.Add("twitch-toolkit");
+				TwitchToolkit.SendMessage(vID.id, vID.name, "!bal");
+				var info = new GameInfo.Info()
+				{
+					version = Tools.GetModVersionString(),
+					mapFreq = Puppeteer.Settings.mapUpdateFrequency,
+					features = features.ToArray()
+				};
+				connection.Send(new GameInfo() { viewer = vID, info = info });
+			}
 		}
 
 		static void SendTimeInfo(Connection connection, ViewerID vID)

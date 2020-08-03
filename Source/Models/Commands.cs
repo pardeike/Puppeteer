@@ -56,6 +56,18 @@ namespace Puppeteer
 		public Info info;
 	}
 
+	public class ChatMsg : JSONConvertable<ChatMsg>
+	{
+		public class Info
+		{
+			public string message;
+		}
+
+		public ChatMsg() { type = "chat-msg"; }
+		public ViewerID viewer;
+		public Info info;
+	}
+
 	public class Portrait : JSONConvertable<Portrait>
 	{
 		public class Info

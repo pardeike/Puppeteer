@@ -109,6 +109,11 @@ namespace Puppeteer
 
 		// viewers
 
+		public Puppeteer PuppeteerForViewerName(string name)
+		{
+			return viewerToPuppeteer.Values.FirstOrDefault(puppeteer => puppeteer.vID.name == name);
+		}
+
 		public Puppeteer PuppeteerForViewer(ViewerID vID)
 		{
 			if (vID == null) return null;

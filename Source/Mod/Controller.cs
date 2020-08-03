@@ -213,6 +213,11 @@ namespace Puppeteer
 			}
 		}
 
+		public void SendChatMessage(ViewerID vID, string message)
+		{
+			GeneralCommands.SendChatMessage(connection, vID, message);
+		}
+
 		public void PawnAvailable(Pawn pawn)
 		{
 			State.Instance.UpdatePawn(pawn);
