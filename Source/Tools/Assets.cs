@@ -29,11 +29,7 @@ namespace Puppeteer
 			get
 			{
 				if (_stripesMaterial == null)
-				{
-					var path = Path.Combine(Tools.GetModRootDirectory(), "Resources", "offlimits");
-					var assets = AssetBundle.LoadFromFile(path).LoadAllAssets<Material>();
-					_stripesMaterial = assets[0];
-				}
+					_stripesMaterial = Tools.LoadAssets<Material>()[0];
 				return _stripesMaterial;
 			}
 		}
@@ -44,11 +40,7 @@ namespace Puppeteer
 			get
 			{
 				if (_stripesShader == null)
-				{
-					var path = Path.Combine(Tools.GetModRootDirectory(), "Resources", "offlimits");
-					var assets = AssetBundle.LoadFromFile(path).LoadAllAssets<Shader>();
-					_stripesShader = assets[0];
-				}
+					_stripesShader = Tools.LoadAssets<Shader>()[0];
 				return _stripesShader;
 			}
 		}

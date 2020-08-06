@@ -293,5 +293,16 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "1.1.0.0",
+		"infos": [
+			{
+				"title": "Twitch Toolkit Integration",
+				"texts": [
+					"You can now interact with Twitch Toolkit from your Puppeteer browser and leave chat for chatting!"
+				]
+			}
+		]
 	}
 ]

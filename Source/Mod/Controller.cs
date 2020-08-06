@@ -36,11 +36,10 @@ namespace Puppeteer
 	{
 		public static Controller instance = new Controller();
 
-		readonly Timer earnTimer = new Timer(earnIntervalInSeconds * 1000) { AutoReset = true };
+		readonly Timer coinRefreshTimer = new Timer(coinRefreshIntervalInSeconds * 1000) { AutoReset = true };
 		public Timer connectionRetryTimer = new Timer(10000) { AutoReset = true };
 
-		const int earnIntervalInSeconds = 2;
-		const int earnAmount = 10;
+		const int coinRefreshIntervalInSeconds = 10;
 
 		public Connection connection;
 		bool firstTime = true;
@@ -64,12 +63,12 @@ namespace Puppeteer
 				}
 			});
 
-			earnTimer.Elapsed += new ElapsedEventHandler((sender, e) =>
+			coinRefreshTimer.Elapsed += new ElapsedEventHandler((sender, e) =>
 			{
 				if (Find.CurrentMap != null)
-					GeneralCommands.SendEarnToAll(connection, earnAmount);
+					GeneralCommands.SendCoinsToAll(connection);
 			});
-			earnTimer.Start();
+			coinRefreshTimer.Start();
 
 			connectionRetryTimer.Elapsed += new ElapsedEventHandler((sender, e) =>
 			{
@@ -81,7 +80,7 @@ namespace Puppeteer
 		~Controller()
 		{
 			connectionRetryTimer?.Stop();
-			earnTimer?.Stop();
+			coinRefreshTimer?.Stop();
 		}
 
 		public void SetEvent(PuppeteerEvent evt)
@@ -198,6 +197,14 @@ namespace Puppeteer
 							var state = puppeteer.stalling ? "started" : "ends";
 							Tools.LogWarning($"{stalling.viewer.name} {state} stalling");
 						}
+						break;
+					}
+					case "chat":
+					{
+						var chat = IncomingChat.Create(msg);
+						TwitchToolkit.SendMessage(chat.viewer.id, chat.viewer.name, chat.message);
+						var puppeteer = State.Instance.PuppeteerForViewer(chat.viewer);
+						GeneralCommands.SendCoins(connection, puppeteer);
 						break;
 					}
 					default:

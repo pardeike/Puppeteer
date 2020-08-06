@@ -72,7 +72,6 @@ namespace Puppeteer
 			public bool stalling;
 			public DateTime lastCommandIssued;
 			public string lastCommand;
-			public int coinsEarned;
 		}
 
 		// new associations are automatically create for:
@@ -111,7 +110,7 @@ namespace Puppeteer
 
 		public Puppeteer PuppeteerForViewerName(string name)
 		{
-			return viewerToPuppeteer.Values.FirstOrDefault(puppeteer => puppeteer.vID.name == name);
+			return viewerToPuppeteer.Values.FirstOrDefault(puppeteer => puppeteer.vID.name.ToLower() == name.ToLower());
 		}
 
 		public Puppeteer PuppeteerForViewer(ViewerID vID)

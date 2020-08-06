@@ -11,7 +11,7 @@ namespace Puppeteer
 	{
 	}
 
-	public class Ping : JSONConvertable<Earned>
+	public class Ping : JSONConvertable<Ping>
 	{
 		public bool game = true;
 		public Ping() { type = "ping"; }
@@ -56,18 +56,6 @@ namespace Puppeteer
 		public Info info;
 	}
 
-	public class ChatMsg : JSONConvertable<ChatMsg>
-	{
-		public class Info
-		{
-			public string message;
-		}
-
-		public ChatMsg() { type = "chat-msg"; }
-		public ViewerID viewer;
-		public Info info;
-	}
-
 	public class Portrait : JSONConvertable<Portrait>
 	{
 		public class Info
@@ -78,6 +66,13 @@ namespace Puppeteer
 		public Portrait() { type = "portrait"; }
 		public ViewerID viewer;
 		public Info info;
+	}
+
+	public class OutgoingChat : JSONConvertable<OutgoingChat>
+	{
+		public OutgoingChat() { type = "chat"; }
+		public ViewerID viewer;
+		public string message;
 	}
 
 	public class Tag
@@ -234,6 +229,12 @@ namespace Puppeteer
 	public class Welcome : JSONConvertable<Welcome>
 	{
 		public string minVersion;
+	}
+
+	public class IncomingChat : JSONConvertable<IncomingChat>
+	{
+		public string message;
+		public ViewerID viewer;
 	}
 
 	public class Assign : JSONConvertable<Assign>

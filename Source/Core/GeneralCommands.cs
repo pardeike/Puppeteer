@@ -71,6 +71,7 @@ namespace Puppeteer
 				if (pawn?.Map != null) Tools.SetColonistNickname(pawn, vID.name);
 				State.Save();
 				SendAllState(connection, vID);
+				TwitchToolkit.RefreshViewers();
 			}
 		}
 
@@ -94,7 +95,7 @@ namespace Puppeteer
 
 		public static void SendChatMessage(Connection connection, ViewerID vID, string message)
 		{
-			connection.Send(new ChatMsg() { viewer = vID, info = new ChatMsg.Info() { message = message } });
+			connection.Send(new OutgoingChat() { viewer = vID, message = message });
 		}
 
 		public static void Assign(Connection connection, Pawn pawn, ViewerID vID)
@@ -136,7 +137,7 @@ namespace Puppeteer
 			if (TwitchToolkit.Exists)
 			{
 				features.Add("twitch-toolkit");
-				TwitchToolkit.SendMessage(vID.id, vID.name, "!bal");
+				// TwitchToolkit.SendMessage(vID.id, vID.name, "bal");
 				var info = new GameInfo.Info()
 				{
 					version = Tools.GetModVersionString(),
@@ -154,19 +155,17 @@ namespace Puppeteer
 			connection.Send(new TimeInfo() { viewer = vID, info = new TimeInfo.Info() { time = dateStr, speed = (int)Find.TickManager.CurTimeSpeed } });
 		}
 
-		public static void SendEarnToAll(Connection connection, int amount)
+		public static void SendCoinsToAll(Connection connection)
 		{
 			var puppeteers = State.Instance.ConnectedPuppeteers();
-			puppeteers.Do(puppeteer =>
-			{
-				puppeteer.coinsEarned += amount;
-				SendEarned(connection, puppeteer);
-			});
+			puppeteers.Do(puppeteer => SendCoins(connection, puppeteer));
 		}
 
-		static void SendEarned(Connection connection, State.Puppeteer puppeteer)
+		public static void SendCoins(Connection connection, State.Puppeteer puppeteer)
 		{
-			connection.Send(new Earned() { viewer = puppeteer.vID, info = new Earned.Info() { amount = puppeteer.coinsEarned } });
+			if (puppeteer == null) return;
+			var coins = TwitchToolkit.GetCurrentCoins(puppeteer.vID.name);
+			connection.Send(new Earned() { viewer = puppeteer.vID, info = new Earned.Info() { amount = coins } });
 		}
 
 		public static void SendPortrait(Connection connection, State.Puppeteer puppeteer)
@@ -274,7 +273,7 @@ namespace Puppeteer
 
 			SendGameInfo(connection, vID);
 			SendTimeInfo(connection, vID);
-			SendEarned(connection, puppeteer);
+			SendCoins(connection, puppeteer);
 			SendPortrait(connection, puppeteer);
 			SendAreas(connection, puppeteer);
 			SendPriorities(connection);
