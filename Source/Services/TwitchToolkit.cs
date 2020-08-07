@@ -34,7 +34,8 @@ namespace Puppeteer
 		public static int GetCurrentCoins(string userName)
 		{
 			if (Exists == false) return -1;
-			var viewer = GetViewer(userName);
+			var userNameLowerCase = userName.ToLower();
+			var viewer = GetViewer(userNameLowerCase);
 			if (viewer == null) return -2;
 			if (UnlimitedCoins()) return 99999999;
 			return (int)m_GetViewerCoins.Invoke(viewer, new object[0]);
