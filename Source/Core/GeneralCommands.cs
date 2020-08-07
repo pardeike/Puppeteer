@@ -63,16 +63,14 @@ namespace Puppeteer
 
 		public static void Join(Connection connection, ViewerID vID)
 		{
-			if (vID.IsValid)
-			{
-				Tools.LogWarning($"{vID.name} joined");
-				State.Instance.SetConnected(vID, true);
-				var pawn = State.Instance.PuppeteerForViewer(vID)?.puppet?.pawn;
-				if (pawn?.Map != null) Tools.SetColonistNickname(pawn, vID.name);
-				State.Save();
-				SendAllState(connection, vID);
-				TwitchToolkit.RefreshViewers();
-			}
+			if (connection == null || vID.IsValid == false) return;
+			Tools.LogWarning($"{vID.name} joined");
+			State.Instance.SetConnected(vID, true);
+			var pawn = State.Instance.PuppeteerForViewer(vID)?.puppet?.pawn;
+			if (pawn?.Map != null) Tools.SetColonistNickname(pawn, vID.name);
+			State.Save();
+			SendAllState(connection, vID);
+			TwitchToolkit.RefreshViewers();
 		}
 
 		public static void Leave(ViewerID vID)
@@ -87,6 +85,7 @@ namespace Puppeteer
 
 		public static void Availability(Connection connection, Pawn pawn)
 		{
+			if (connection == null || pawn == null) return;
 			var pawnID = pawn.ThingID;
 			var puppeteer = State.Instance.ConnectedPuppeteers().FirstOrDefault(p => p.puppet?.pawn?.ThingID == pawnID);
 			if (puppeteer != null)
@@ -95,6 +94,7 @@ namespace Puppeteer
 
 		public static void SendChatMessage(Connection connection, ViewerID vID, string message)
 		{
+			if (connection == null || message == null || message.Length == 0) return;
 			connection.Send(new OutgoingChat() { viewer = vID, message = message });
 		}
 

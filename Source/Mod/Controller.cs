@@ -148,7 +148,7 @@ namespace Puppeteer
 			try
 			{
 				var cmd = SimpleCmd.Create(msg);
-				// Log.Warning($"MSG {cmd.type}");
+				// Tools.LogWarning($"--> {cmd.type}");
 				switch (cmd.type)
 				{
 					case "welcome":
@@ -191,7 +191,7 @@ namespace Puppeteer
 					{
 						var stalling = StallingState.Create(msg);
 						var puppeteer = State.Instance.PuppeteerForViewer(stalling.viewer);
-						if (puppeteer != null)
+						if (puppeteer != null && puppeteer.connected)
 						{
 							puppeteer.stalling = stalling.state;
 							var state = puppeteer.stalling ? "started" : "ends";

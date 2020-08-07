@@ -304,5 +304,17 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "1.2.0.0",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"- fixes capitalisation of twitch names",
+					"- Other bug fixes and improvements too hard to describe"
+				]
+			}
+		]
 	}
 ]

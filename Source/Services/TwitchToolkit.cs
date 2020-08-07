@@ -42,6 +42,9 @@ namespace Puppeteer
 
 		public static void SendMessage(string userId, string userName, string message)
 		{
+			// Tools.LogWarning($"USER {userName} SEND {message}");
+			var userNameLowerCase = userName.ToLower();
+
 			if (Exists == false) return;
 
 			var tags = new Dictionary<string, string>
@@ -50,7 +53,7 @@ namespace Puppeteer
 				["user-type"] = "viewer"
 			};
 			if (message.StartsWith("!") == false) message = $"!{message}";
-			var ircMessage = new IrcMessage(TwitchLib.Client.Enums.Internal.IrcCommand.Unknown, new string[] { "", message }, userName, tags);
+			var ircMessage = new IrcMessage(TwitchLib.Client.Enums.Internal.IrcCommand.Unknown, new string[] { "", message }, userNameLowerCase, tags);
 			var channelEmotes = new MessageEmoteCollection();
 			var chatMessage = new ChatMessage("Puppeteer", ircMessage, ref channelEmotes, false);
 
@@ -77,6 +80,8 @@ namespace Puppeteer
 
 			public static bool Prefix(string message)
 			{
+				// Tools.LogWarning($"CHAT RECEIVED {message}");
+
 				message = Tools.PureAscii(message
 					.Replace("💰", "Coins")
 					.Replace("⚖", "Karma")
@@ -95,7 +100,7 @@ namespace Puppeteer
 				var userMessage = $"{msg1} {mgs2}".Trim();
 
 				var puppeteer = State.Instance.PuppeteerForViewerName(userName);
-				if (puppeteer == null || puppeteer.connected == false) return true;
+				if (puppeteer == null || puppeteer.IsConnected == false) return true;
 
 				Controller.instance.SendChatMessage(puppeteer.vID, userMessage);
 				return false;

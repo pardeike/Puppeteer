@@ -72,6 +72,8 @@ namespace Puppeteer
 			public bool stalling;
 			public DateTime lastCommandIssued;
 			public string lastCommand;
+
+			public bool IsConnected => connected && stalling == false;
 		}
 
 		// new associations are automatically create for:
@@ -160,7 +162,7 @@ namespace Puppeteer
 		public IEnumerable<Puppeteer> ConnectedPuppeteers()
 		{
 			return viewerToPuppeteer.Values
-				.Where(puppeteer => puppeteer.connected);
+				.Where(puppeteer => puppeteer.IsConnected);
 		}
 
 		public void Assign(ViewerID vID, Pawn pawn)
