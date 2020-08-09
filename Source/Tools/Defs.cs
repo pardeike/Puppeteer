@@ -24,7 +24,11 @@ namespace Puppeteer
 					};
 
 					if (ModLister.RoyaltyInstalled)
-						assignments[TimeAssignmentDefOf.Meditate] = "M";
+					{
+						var meditate = TimeAssignmentDefOf.Meditate;
+						if (meditate != null)
+							assignments.Add(meditate, "M");
+					}
 				}
 				return assignments;
 			}

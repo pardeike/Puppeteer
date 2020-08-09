@@ -142,23 +142,30 @@ namespace Puppeteer
 			{
 				features.Add("twitch-toolkit");
 				// TwitchToolkit.SendMessage(vID.id, vID.name, "bal");
-				var info = new GameInfo.Info()
-				{
-					version = Tools.GetModVersionString(),
-					mapFreq = Puppeteer.Settings.mapUpdateFrequency,
-					hairStyles = Customizer.AllHairStyle,
-					bodyTypes = Customizer.AllBodyTypes,
-					features = features.ToArray(),
-					style = Customizer.GetStyle(pawn)
-				};
-				connection.Send(new GameInfo() { viewer = vID, info = info });
 			}
+
+			var info = new GameInfo.Info()
+			{
+				version = Tools.GetModVersionString(),
+				mapFreq = Puppeteer.Settings.mapUpdateFrequency,
+				hairStyles = Customizer.AllHairStyle,
+				bodyTypes = Customizer.AllBodyTypes,
+				features = features.ToArray(),
+				style = Customizer.GetStyle(pawn)
+			};
+			connection.Send(new GameInfo() { viewer = vID, info = info });
 		}
 
 		static void SendTimeInfo(Connection connection, ViewerID vID)
 		{
-			var vector = Find.WorldGrid.LongLatOf(Find.CurrentMap.Tile);
-			var dateStr = GenDate.DateFullStringWithHourAt(Find.TickManager.TicksAbs, vector);
+			var map = Find.CurrentMap;
+			if (map == null) return;
+
+			var tickManager = Find.TickManager;
+			if (tickManager == null) return;
+
+			var vector = Find.WorldGrid.LongLatOf(map.Tile);
+			var dateStr = GenDate.DateFullStringWithHourAt(tickManager.TicksAbs, vector);
 			connection.Send(new TimeInfo() { viewer = vID, info = new TimeInfo.Info() { time = dateStr, speed = (int)Find.TickManager.CurTimeSpeed } });
 		}
 
@@ -204,7 +211,7 @@ namespace Puppeteer
 				return;
 			}
 			var puppeteers = State.Instance.ConnectedPuppeteers();
-			puppeteers.Do(p => SendState(p));
+			puppeteers?.Do(p => SendState(p));
 		}
 
 		public static void SendAreas(Connection connection, State.Puppeteer forPuppeteer = null)
@@ -263,7 +270,9 @@ namespace Puppeteer
 			{
 				string GetValues(Pawn p)
 				{
-					var schedules = Enumerable.Range(0, 24).Select(hour => p.timetable.GetAssignment(hour)).ToArray();
+					var schedules = Enumerable.Range(0, 24)
+						.Select(hour => p.timetable.GetAssignment(hour) ?? TimeAssignmentDefOf.Anything)
+						.ToArray();
 					return schedules.Join(s => Defs.Assignments[s], "");
 				}
 				var rows = AllColonistsWithCurrentTop(pawn)

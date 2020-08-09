@@ -63,7 +63,9 @@ namespace Puppeteer
 
 		public static PawnSettings SettingsFor(Pawn pawn)
 		{
-			var pawnSettings = Find.CurrentMap.GetComponent<OffLimitsComponent>().pawnSettings;
+			var map = Find.CurrentMap;
+			if (map == null) return new PawnSettings();
+			var pawnSettings = map.GetComponent<OffLimitsComponent>().pawnSettings;
 			if (pawnSettings.TryGetValue(pawn, out var settings) == false)
 			{
 				settings = new PawnSettings();

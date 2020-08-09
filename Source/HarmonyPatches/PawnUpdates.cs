@@ -204,6 +204,7 @@ namespace Puppeteer
 				_ = State.pawnsToRefresh.Remove(___pawn);
 				___pawn.Drawer.renderer.graphics.ResolveAllGraphics();
 				Controller.instance.UpdatePortrait(___pawn);
+				PortraitsCache.SetDirty(___pawn);
 			}
 		}
 	}

@@ -34,7 +34,7 @@ namespace Puppeteer
 			internal void Restore(State state)
 			{
 				pawn = Tools.ColonistForThingID(_pawn);
-				puppeteer = state.viewerToPuppeteer.Values.FirstOrDefault(v => v._id == _puppeteer);
+				puppeteer = state.viewerToPuppeteer.Values.FirstOrDefault(v => v != null && v._id == _puppeteer);
 			}
 
 			[JsonIgnore] public Pawn pawn;
@@ -95,7 +95,7 @@ namespace Puppeteer
 			var data = saveFileName.ReadConfig();
 			if (data == null) return new State();
 			var state = JsonConvert.DeserializeObject<State>(data);
-			state.viewerToPuppeteer.Values.Do(p => p.Restore(state));
+			state.viewerToPuppeteer.Values.Do(p => p?.Restore(state));
 			state.pawnToPuppet.Values.Do(p => p.Restore(state));
 			return state;
 		}
@@ -105,9 +105,9 @@ namespace Puppeteer
 			if (_instance == null) return;
 			var id = 0;
 			_instance.viewerToPuppeteer.Values.Do(p => p.Init(ref id));
-			_instance.pawnToPuppet.Values.Do(p => p.Init(ref id));
+			_instance.pawnToPuppet.Values.Do(p => p?.Init(ref id));
 			_instance.viewerToPuppeteer.Values.Do(p => p.Update());
-			_instance.pawnToPuppet.Values.Do(p => p.Update());
+			_instance.pawnToPuppet.Values.Do(p => p?.Update());
 			var data = JsonConvert.SerializeObject(_instance, Tools.IsLocalDev ? Formatting.Indented : Formatting.None);
 			saveFileName.WriteConfig(data);
 		}
@@ -160,13 +160,13 @@ namespace Puppeteer
 
 		public List<Puppeteer> AllPuppeteers()
 		{
-			return viewerToPuppeteer.Values.ToList();
+			return viewerToPuppeteer.Values.Where(puppeteer => puppeteer != null).ToList();
 		}
 
 		public IEnumerable<Puppeteer> ConnectedPuppeteers()
 		{
 			return viewerToPuppeteer.Values
-				.Where(puppeteer => puppeteer.IsConnected);
+				.Where(puppeteer => puppeteer != null && puppeteer.IsConnected);
 		}
 
 		public void Assign(ViewerID vID, Pawn pawn)
@@ -245,7 +245,7 @@ namespace Puppeteer
 
 		public HashSet<Puppet> AssignedPuppets()
 		{
-			return viewerToPuppeteer.Values.Select(puppeteer => puppeteer.puppet).OfType<Puppet>().ToHashSet();
+			return viewerToPuppeteer.Values.Where(puppeteer => puppeteer != null).Select(puppeteer => puppeteer.puppet).OfType<Puppet>().ToHashSet();
 		}
 
 		public IEnumerable<Puppet> AvailablePuppets()

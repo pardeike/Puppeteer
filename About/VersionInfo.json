@@ -327,5 +327,17 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "1.3.1.0",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"- fixes a bug where base information was not send if Twitch Toolkit was not installed (Puppeteer never requires it)",
+					"- more defensive coding to be more compatible with other mods (Puppeteer works best at the bottom of your mod list)"
+				]
+			}
+		]
 	}
 ]

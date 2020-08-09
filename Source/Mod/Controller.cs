@@ -210,7 +210,6 @@ namespace Puppeteer
 					case "customize":
 					{
 						var info = Customize.Create(msg);
-						Tools.LogWarning($"# {info.key} {info.val}");
 						var puppeteer = State.Instance.PuppeteerForViewer(info.viewer);
 						var pawn = puppeteer?.puppet?.pawn;
 						if (pawn != null)
