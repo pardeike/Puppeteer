@@ -19,11 +19,23 @@ namespace Puppeteer
 
 	public class GameInfo : JSONConvertable<GameInfo>
 	{
+		public class ColonistStyle
+		{
+			public string gender;
+			public string hairStyle;
+			public string bodyType;
+			public int melanin;
+			public int[] hairColor;
+		}
+
 		public class Info
 		{
 			public string version;
 			public int mapFreq;
+			public string[] hairStyles;
+			public string[] bodyTypes;
 			public string[] features;
+			public ColonistStyle style;
 		}
 
 		public GameInfo() { type = "game-info"; }
@@ -395,5 +407,12 @@ namespace Puppeteer
 		public Corner[] frame;
 		public Gizmo[] gizmos;
 		public byte[] atlas;
+	}
+
+	public class Customize : JSONConvertable<Customize>
+	{
+		public string key;
+		public string val;
+		public ViewerID viewer;
 	}
 }

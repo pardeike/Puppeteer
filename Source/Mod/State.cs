@@ -86,6 +86,10 @@ namespace Puppeteer
 
 		//
 
+		public static HashSet<Pawn> pawnsToRefresh = new HashSet<Pawn>();
+
+		//
+
 		static State Load()
 		{
 			var data = saveFileName.ReadConfig();

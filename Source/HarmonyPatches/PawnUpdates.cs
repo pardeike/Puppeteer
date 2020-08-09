@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using RimWorld;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -188,6 +189,22 @@ namespace Puppeteer
 		public static void Postfix(Pawn pawn)
 		{
 			Controller.instance.UpdatePortrait(pawn);
+		}
+	}
+
+	[HarmonyPatch(typeof(PawnRenderer))]
+	[HarmonyPatch("RenderPawnInternal")]
+	[HarmonyPatch(new Type[] { typeof(Vector3), typeof(float), typeof(bool), typeof(Rot4), typeof(Rot4), typeof(RotDrawMode), typeof(bool), typeof(bool), typeof(bool) })]
+	static class PawnRenderer_RenderPawnInternal_Patch
+	{
+		public static void Prefix(Pawn ___pawn)
+		{
+			if (State.pawnsToRefresh.Contains(___pawn))
+			{
+				_ = State.pawnsToRefresh.Remove(___pawn);
+				___pawn.Drawer.renderer.graphics.ResolveAllGraphics();
+				Controller.instance.UpdatePortrait(___pawn);
+			}
 		}
 	}
 

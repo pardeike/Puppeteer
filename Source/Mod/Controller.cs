@@ -207,6 +207,16 @@ namespace Puppeteer
 						GeneralCommands.SendCoins(connection, puppeteer);
 						break;
 					}
+					case "customize":
+					{
+						var info = Customize.Create(msg);
+						Tools.LogWarning($"# {info.key} {info.val}");
+						var puppeteer = State.Instance.PuppeteerForViewer(info.viewer);
+						var pawn = puppeteer?.puppet?.pawn;
+						if (pawn != null)
+							Customizer.Change(pawn, info.key, info.val);
+						break;
+					}
 					default:
 					{
 						Tools.LogWarning($"unknown command '{cmd.type}'");
@@ -433,7 +443,6 @@ namespace Puppeteer
 			info.skills = GetSkills(pawn);
 			info.incapable = disabledTags.Select(tag => new Tag(tag.LabelTranslated().CapitalizeFirst(), IncapableInfo(tag))).ToArray();
 			info.traits = pawn.story.traits.allTraits.Select(trait => new Tag(trait.LabelCap, trait.TipString(pawn))).ToArray();
-
 			connection.Send(new ColonistBaseInfo() { viewer = puppeteer.vID, info = info });
 		}
 	}

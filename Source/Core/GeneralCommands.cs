@@ -131,6 +131,10 @@ namespace Puppeteer
 
 		static void SendGameInfo(Connection connection, ViewerID vID)
 		{
+			var puppeteer = State.Instance.PuppeteerForViewer(vID);
+			var pawn = puppeteer?.puppet?.pawn;
+			if (pawn == null) return;
+
 			var features = new List<string>();
 			if (ModLister.RoyaltyInstalled)
 				features.Add("royalty");
@@ -142,7 +146,10 @@ namespace Puppeteer
 				{
 					version = Tools.GetModVersionString(),
 					mapFreq = Puppeteer.Settings.mapUpdateFrequency,
-					features = features.ToArray()
+					hairStyles = Customizer.AllHairStyle,
+					bodyTypes = Customizer.AllBodyTypes,
+					features = features.ToArray(),
+					style = Customizer.GetStyle(pawn)
 				};
 				connection.Send(new GameInfo() { viewer = vID, info = info });
 			}
