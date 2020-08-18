@@ -51,7 +51,8 @@ namespace Puppeteer
 			var tags = new Dictionary<string, string>
 			{
 				["user-id"] = userId,
-				["user-type"] = "viewer"
+				["user-type"] = "viewer",
+				["color"] = "#FFFFFF",
 			};
 			if (message.StartsWith("!") == false) message = $"!{message}";
 			var ircMessage = new IrcMessage(TwitchLib.Client.Enums.Internal.IrcCommand.Unknown, new string[] { "", message }, userNameLowerCase, tags);
