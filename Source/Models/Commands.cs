@@ -415,4 +415,11 @@ namespace Puppeteer
 		public string val;
 		public ViewerID viewer;
 	}
+
+	public class ToolkitCommands : JSONConvertable<ToolkitCommands>
+	{
+		public ToolkitCommands() { type = "toolkit-commands"; }
+		public string[] commands;
+		public ViewerID viewer;
+	}
 }

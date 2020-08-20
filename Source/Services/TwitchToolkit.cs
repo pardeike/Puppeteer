@@ -1,6 +1,9 @@
 ﻿using HarmonyLib;
+using RimWorld;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using TwitchLib.Client.Events;
@@ -39,6 +42,30 @@ namespace Puppeteer
 			if (viewer == null) return -2;
 			if (UnlimitedCoins()) return 99999999;
 			return (int)m_GetViewerCoins.Invoke(viewer, new object[0]);
+		}
+
+		public static string[] GetAllCommands()
+		{
+			var t_DefDatabase = typeof(DefDatabase<>).MakeGenericType(TypeByName("TwitchToolkit.Command"));
+			return Traverse.Create(t_DefDatabase)
+				.Field("defsList").GetValue<IEnumerable>().Cast<Def>()
+				.Select(def => MakeDeepCopy<TTCommand>(def))
+				.Where(cmd => !cmd.requiresAdmin && !cmd.requiresMod && cmd.enabled)
+				.Select(cmd => cmd.command)
+				.OrderBy(txt => txt)
+				.ToArray();
+		}
+
+		static readonly FieldRef<bool> MinifiableBuildings = Tools.GetOptionalStaticFieldRef<bool>("TwitchToolkit.ToolkitSettings", "MinifiableBuildings");
+		public static string[] GetFilteredItems(string searchTerm = null)
+		{
+			var minifiableBuildings = MinifiableBuildings();
+			return DefDatabase<ThingDef>.AllDefs
+				.Where(def => (def.tradeability.TraderCanSell() || ThingSetMakerUtility.CanGenerate(def)) && (def.building == null || def.Minifiable || minifiableBuildings) && (def.FirstThingCategory != null || def.race != null) && def.BaseMarketValue > 0f)
+				.Select(def => def.label.Replace(" ", ""))
+				.Where(name => searchTerm == null || searchTerm == "" || name.ToLower().Contains(searchTerm.ToLower()))
+				.OrderBy(name => name)
+				.ToArray();
 		}
 
 		public static void SendMessage(string userId, string userName, string message)
@@ -108,5 +135,13 @@ namespace Puppeteer
 				return false;
 			}
 		}
+	}
+
+	class TTCommand
+	{
+		public bool requiresAdmin;
+		public bool requiresMod;
+		public bool enabled;
+		public string command;
 	}
 }

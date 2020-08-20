@@ -350,5 +350,27 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "1.3.3.0",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"- fixes a bug with not sending basic game info without assignment (no toolkit ux on queue screen)"
+				]
+			}
+		]
+	},
+	{
+		"version": "1.3.4.0",
+		"infos": [
+			{
+				"title": "Twitch Toolkit Auto Complete",
+				"texts": [
+					"The input field for the Toolkit integration now does auto compete for items and commands"
+				]
+			}
+		]
 	}
 ]

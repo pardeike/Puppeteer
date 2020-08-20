@@ -98,6 +98,13 @@ namespace Puppeteer
 			connection.Send(new OutgoingChat() { viewer = vID, message = message });
 		}
 
+		public static void SendToolkitCommands(Connection connection, ViewerID vID)
+		{
+			if (connection == null) return;
+			var commands = TwitchToolkit.GetAllCommands();
+			connection.Send(new ToolkitCommands() { viewer = vID, commands = commands });
+		}
+
 		public static void Assign(Connection connection, Pawn pawn, ViewerID vID)
 		{
 			void SendAssignment(ViewerID v, bool state) => connection.Send(new Assignment() { viewer = v, state = state });
@@ -133,7 +140,6 @@ namespace Puppeteer
 		{
 			var puppeteer = State.Instance.PuppeteerForViewer(vID);
 			var pawn = puppeteer?.puppet?.pawn;
-			if (pawn == null) return;
 
 			var features = new List<string>();
 			if (ModLister.RoyaltyInstalled)
@@ -151,7 +157,7 @@ namespace Puppeteer
 				hairStyles = Customizer.AllHairStyle,
 				bodyTypes = Customizer.AllBodyTypes,
 				features = features.ToArray(),
-				style = Customizer.GetStyle(pawn)
+				style = pawn == null ? null : Customizer.GetStyle(pawn)
 			};
 			connection.Send(new GameInfo() { viewer = vID, info = info });
 		}
@@ -294,6 +300,9 @@ namespace Puppeteer
 			SendAreas(connection, puppeteer);
 			SendPriorities(connection);
 			SendSchedules(connection);
+
+			if (TwitchToolkit.Exists)
+				SendToolkitCommands(connection, vID);
 		}
 
 		public static void SendGameInfoToAll()
@@ -301,6 +310,9 @@ namespace Puppeteer
 			if (Current.Game == null) return;
 			var puppeteers = State.Instance.ConnectedPuppeteers();
 			puppeteers.Do(puppeteer => SendGameInfo(Controller.instance.connection, puppeteer.vID));
+
+			//if (TwitchToolkit.Exists)
+			//	puppeteers.Do(puppeteer => SendToolkitCommands(Controller.instance.connection, puppeteer.vID));
 		}
 
 		public static void SendTimeInfoToAll()
