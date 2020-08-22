@@ -174,7 +174,7 @@ namespace Puppeteer
 			area.color.b = Widgets.HorizontalSlider(rect, area.color.b, 0f, 1f, true, "Blue");
 
 			if (area.color.r + area.color.g + area.color.b != sum)
-				area.texture = null; // recalculate
+				area.SetDirty();
 		}
 	}
 }

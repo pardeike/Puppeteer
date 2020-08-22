@@ -38,8 +38,6 @@ namespace Puppeteer
 		{
 			if (mode != null)
 				GenUI.RenderMouseoverBracket();
-			if (area != null)
-				area.MarkForDraw();
 		}
 
 		public override void ProcessInput(Event ev)

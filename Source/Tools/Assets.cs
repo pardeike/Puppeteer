@@ -23,28 +23,6 @@ namespace Puppeteer
 		public static readonly Texture2D highlight = SolidColorMaterials.NewSolidColorTexture(new Color(1, 1, 1, 0.1f));
 		public static readonly Texture2D dimmer = SolidColorMaterials.NewSolidColorTexture(new Color(0, 0, 0, 0.1f));
 
-		static Material _stripesMaterial = null;
-		public static Material StripesMaterial
-		{
-			get
-			{
-				if (_stripesMaterial == null)
-					_stripesMaterial = Tools.LoadAssets<Material>()[0];
-				return _stripesMaterial;
-			}
-		}
-
-		static Shader _stripesShader = null;
-		public static Shader StripesShader
-		{
-			get
-			{
-				if (_stripesShader == null)
-					_stripesShader = Tools.LoadAssets<Shader>()[0];
-				return _stripesShader;
-			}
-		}
-
 		static Texture2D LoadTexture(string path, bool makeReadonly = true)
 		{
 			var fullPath = Path.Combine(Tools.GetModRootDirectory(), "Textures", $"{path}.png");

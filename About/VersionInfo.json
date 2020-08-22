@@ -372,5 +372,16 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "1.3.5.0",
+		"infos": [
+			{
+				"title": "Improvements",
+				"texts": [
+					"Restriction zones rendering now uses a simple color pattern and is much faster for larger areas. Also compatible with Linux and macOS."
+				]
+			}
+		]
 	}
 ]

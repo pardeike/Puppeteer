@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Verse;
-using static HarmonyLib.AccessTools;
 
 namespace Puppeteer
 {
@@ -15,34 +14,24 @@ namespace Puppeteer
 		public static bool Prefix(CellBoolDrawer __instance)
 		{
 			if (__instance is StripesCellBoolDrawer)
-				return Puppeteer.Settings.showOffLimitZones;
+				return Puppeteer.Settings.showOffLimitZones || Find.DesignatorManager.SelectedDesignator is Designator_OffLimits;
 			return true;
 		}
 	}
 
-	[HarmonyPatch(typeof(CellBoolDrawer), "FinalizeWorkingDataIntoMesh")]
-	class CellBoolDrawer_FinalizeWorkingDataIntoMesh_Patch
+	[HarmonyPatch(typeof(CellBoolDrawer), "CreateMaterialIfNeeded")]
+	class CellBoolDrawer_CreateMaterialIfNeeded_Patch
 	{
 		[HarmonyPriority(Priority.First)]
-		public static void Postfix(CellBoolDrawer __instance, Mesh mesh)
+		public static bool Prefix(CellBoolDrawer __instance, ref Material ___material, Func<Color> ___colorGetter, ref bool ___materialCaresAboutVertexColors)
 		{
-			if ((__instance is StripesCellBoolDrawer) == false) return;
+			if ((__instance is StripesCellBoolDrawer) == false) return true;
 
-			var uvs = new Vector2[mesh.vertices.Length];
-			if (mesh.vertices.Length > 0)
-			{
-				var xs = mesh.vertices.Select(v => v.x);
-				var zs = mesh.vertices.Select(v => v.z);
-				var mx = (xs.Min() + xs.Max()) / 2;
-				var mz = (zs.Min() + zs.Max()) / 2;
-
-				for (var i = 0; i < uvs.Length; i++)
-				{
-					var v = mesh.vertices[i];
-					uvs[i] = new Vector2(v.x - mx, v.z - mz);
-				}
-			}
-			mesh.uv = uvs;
+			var color = ___colorGetter();
+			___material = SolidColorMaterials.SimpleSolidColorMaterial(new Color(color.r, color.g, color.b, 0.4f), false);
+			___materialCaresAboutVertexColors = true;
+			___material.renderQueue = 3699;
+			return false;
 		}
 	}
 
@@ -84,8 +73,6 @@ namespace Puppeteer
 
 		public OffLimitsComponent(Map map) : base(map) { }
 
-		static readonly Color transparentBlack = new Color(0, 0, 0, 0.15f);
-
 		List<Pawn> tmpKeys;
 		List<PawnSettings> tmpVals;
 		public override void ExposeData()
@@ -121,40 +108,10 @@ namespace Puppeteer
 		{
 			return areas.FirstOrDefault(area => area.label == label);
 		}
-
-		public override void MapComponentOnGUI()
-		{
-			base.MapComponentOnGUI();
-
-			var selectedArea = Tools.GetSelectedArea();
-			areas.DoIf(area => area.drawer != null, area =>
-			{
-				var material = StripesCellBoolDrawer.materialRef(area.drawer);
-
-				var c1 = area.color;
-				c1.a = 0.25f;
-				var c2 = transparentBlack;
-				if (selectedArea == area)
-				{
-					c1.a = 0.5f;
-					c2.a = 0.5f;
-				}
-				material.SetColor("_Color1", c1);
-				material.SetColor("_Color2", c2);
-			});
-		}
 	}
 
 	public class StripesCellBoolDrawer : CellBoolDrawer
 	{
-		public static readonly FieldRef<CellBoolDrawer, Material> materialRef = FieldRefAccess<CellBoolDrawer, Material>("material");
-
-		public StripesCellBoolDrawer(ICellBoolGiver giver, Map map) : base(giver, map.Size.x, map.Size.z, 3699)
-		{
-			var material = new Material(Assets.StripesMaterial);
-			material.SetColor("_Color1", Color.clear);
-			material.SetColor("_Color2", Color.clear);
-			materialRef(this) = material;
-		}
+		public StripesCellBoolDrawer(ICellBoolGiver giver, Map map) : base(giver, map.Size.x, map.Size.z) { }
 	}
 }

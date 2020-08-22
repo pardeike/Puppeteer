@@ -80,12 +80,6 @@ namespace Puppeteer
 			return attribute.Version;
 		}
 
-		public static T[] LoadAssets<T>() where T : UnityEngine.Object
-		{
-			var path = Path.Combine(Tools.GetModRootDirectory(), "Resources", "offlimits");
-			return AssetBundle.LoadFromFile(path).LoadAllAssets<T>();
-		}
-
 		public static T GetOptionalMethod<T>(string typeName, string methodName) where T : Delegate
 		{
 			var type = TypeByName(typeName);
