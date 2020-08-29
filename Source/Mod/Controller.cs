@@ -36,11 +36,10 @@ namespace Puppeteer
 	{
 		public static Controller instance = new Controller();
 
-		readonly Timer earnTimer = new Timer(earnIntervalInSeconds * 1000) { AutoReset = true };
+		readonly Timer coinRefreshTimer = new Timer(coinRefreshIntervalInSeconds * 1000) { AutoReset = true };
 		public Timer connectionRetryTimer = new Timer(10000) { AutoReset = true };
 
-		const int earnIntervalInSeconds = 2;
-		const int earnAmount = 10;
+		const int coinRefreshIntervalInSeconds = 10;
 
 		public Connection connection;
 		bool firstTime = true;
@@ -64,12 +63,12 @@ namespace Puppeteer
 				}
 			});
 
-			earnTimer.Elapsed += new ElapsedEventHandler((sender, e) =>
+			coinRefreshTimer.Elapsed += new ElapsedEventHandler((sender, e) =>
 			{
 				if (Find.CurrentMap != null)
-					GeneralCommands.SendEarnToAll(connection, earnAmount);
+					GeneralCommands.SendCoinsToAll(connection);
 			});
-			earnTimer.Start();
+			coinRefreshTimer.Start();
 
 			connectionRetryTimer.Elapsed += new ElapsedEventHandler((sender, e) =>
 			{
@@ -81,7 +80,7 @@ namespace Puppeteer
 		~Controller()
 		{
 			connectionRetryTimer?.Stop();
-			earnTimer?.Stop();
+			coinRefreshTimer?.Stop();
 		}
 
 		public void SetEvent(PuppeteerEvent evt)
@@ -149,7 +148,7 @@ namespace Puppeteer
 			try
 			{
 				var cmd = SimpleCmd.Create(msg);
-				// Log.Warning($"MSG {cmd.type}");
+				// Tools.LogWarning($"--> {cmd.type}");
 				switch (cmd.type)
 				{
 					case "welcome":
@@ -192,12 +191,29 @@ namespace Puppeteer
 					{
 						var stalling = StallingState.Create(msg);
 						var puppeteer = State.Instance.PuppeteerForViewer(stalling.viewer);
-						if (puppeteer != null)
+						if (puppeteer != null && puppeteer.connected)
 						{
 							puppeteer.stalling = stalling.state;
 							var state = puppeteer.stalling ? "started" : "ends";
 							Tools.LogWarning($"{stalling.viewer.name} {state} stalling");
 						}
+						break;
+					}
+					case "chat":
+					{
+						var chat = IncomingChat.Create(msg);
+						TwitchToolkit.SendMessage(chat.viewer.id, chat.viewer.name, chat.message);
+						var puppeteer = State.Instance.PuppeteerForViewer(chat.viewer);
+						GeneralCommands.SendCoins(connection, puppeteer);
+						break;
+					}
+					case "customize":
+					{
+						var info = Customize.Create(msg);
+						var puppeteer = State.Instance.PuppeteerForViewer(info.viewer);
+						var pawn = puppeteer?.puppet?.pawn;
+						if (pawn != null)
+							Customizer.Change(pawn, info.key, info.val);
 						break;
 					}
 					default:
@@ -211,6 +227,11 @@ namespace Puppeteer
 			{
 				Tools.LogWarning($"While handling {msg}: {e}");
 			}
+		}
+
+		public void SendChatMessage(ViewerID vID, string message)
+		{
+			GeneralCommands.SendChatMessage(connection, vID, message);
 		}
 
 		public void PawnAvailable(Pawn pawn)
@@ -421,7 +442,6 @@ namespace Puppeteer
 			info.skills = GetSkills(pawn);
 			info.incapable = disabledTags.Select(tag => new Tag(tag.LabelTranslated().CapitalizeFirst(), IncapableInfo(tag))).ToArray();
 			info.traits = pawn.story.traits.allTraits.Select(trait => new Tag(trait.LabelCap, trait.TipString(pawn))).ToArray();
-
 			connection.Send(new ColonistBaseInfo() { viewer = puppeteer.vID, info = info });
 		}
 	}

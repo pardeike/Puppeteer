@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 using Verse;
 using Verse.AI;
+using static HarmonyLib.AccessTools;
 
 namespace Puppeteer
 {
@@ -77,6 +78,26 @@ namespace Puppeteer
 			var t_attribute = typeof(AssemblyFileVersionAttribute);
 			var attribute = (AssemblyFileVersionAttribute)Attribute.GetCustomAttribute(assembly, t_attribute, false);
 			return attribute.Version;
+		}
+
+		public static T GetOptionalMethod<T>(string typeName, string methodName) where T : Delegate
+		{
+			var type = TypeByName(typeName);
+			if (type == null) return null;
+
+			var method = Method(type, methodName);
+			if (method == null) return null;
+
+			return MethodDelegate<T>(method);
+		}
+
+		public static FieldRef<T> GetOptionalStaticFieldRef<T>(string typeName, string fieldName)
+		{
+			var type = TypeByName(typeName);
+			if (type == null) return default;
+			var fieldInfo = Field(type, fieldName);
+			if (fieldInfo == null) return default;
+			return StaticFieldRefAccess<T>(fieldInfo);
 		}
 
 		public static void LogWarning(string message)
@@ -146,7 +167,7 @@ namespace Puppeteer
 				.FirstOrDefault(pawn => pawn.thingIDNumber == thingID);
 		}
 
-		static readonly MethodInfo m_HasRangedAttack = AccessTools.Method(typeof(AttackTargetFinder), "HasRangedAttack");
+		static readonly MethodInfo m_HasRangedAttack = Method(typeof(AttackTargetFinder), "HasRangedAttack");
 		static readonly FastInvokeHandler d_HasRangedAttack = MethodInvoker.GetHandler(m_HasRangedAttack);
 		public static bool HasRangedAttack(Pawn pawn)
 		{
@@ -303,13 +324,13 @@ namespace Puppeteer
 		public static void AutoExposeDataWithDefaults<T>(this T settings) where T : new()
 		{
 			var defaults = new T();
-			AccessTools.GetFieldNames(settings).Do(name =>
+			GetFieldNames(settings).Do(name =>
 			{
-				var finfo = AccessTools.Field(settings.GetType(), name);
+				var finfo = Field(settings.GetType(), name);
 				var value = finfo.GetValue(settings);
 				var type = value.GetType();
 				var defaultValue = Traverse.Create(defaults).Field(name).GetValue();
-				var m_Look = AccessTools.Method(typeof(Scribe_Values), "Look", null, new Type[] { type });
+				var m_Look = Method(typeof(Scribe_Values), "Look", null, new Type[] { type });
 				var arguments = new object[] { value, name, defaultValue, false };
 				_ = m_Look.Invoke(null, arguments);
 				finfo.SetValue(settings, arguments[0]);
@@ -367,6 +388,14 @@ namespace Puppeteer
 				var mStr = mode.HasValue == false ? "null" : (mode.Value ? "true" : "false");
 				designatorManager.Select(new Designator_OffLimits(area, mode));
 			}
+		}
+
+		public static string PureAscii(this string source, char nil = ' ')
+		{
+			var min = '\u0000';
+			var max = '\u007F';
+			var chars = source.Select(c => c < min ? nil : c > max ? nil : c).ToArray();
+			return new string(chars);
 		}
 	}
 }

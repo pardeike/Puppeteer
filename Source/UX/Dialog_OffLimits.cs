@@ -35,9 +35,13 @@ namespace Puppeteer
 
 		public override void DoWindowContents(Rect inRect)
 		{
+			var map = Find.CurrentMap;
+			if (map == null) return;
+
 			var listing_Standard = new Listing_Standard { ColumnWidth = inRect.width };
 			listing_Standard.Begin(inRect);
-			var offLimits = Find.CurrentMap.GetComponent<OffLimitsComponent>();
+			var offLimits = map.GetComponent<OffLimitsComponent>();
+			if (offLimits == null) return;
 			var allAreas = offLimits.areas.ToArray().ToList();
 			var selected = false;
 			foreach (var area in allAreas)
@@ -52,7 +56,7 @@ namespace Puppeteer
 				listing_Standard.Gap(30f * (9 - allAreas.Count));
 				if (listing_Standard.ButtonText("NewArea".Translate(), null))
 				{
-					var area = new OffLimitsArea(Find.CurrentMap);
+					var area = new OffLimitsArea(map);
 					offLimits.areas.Add(area);
 				}
 				listing_Standard.Dialog_Text(GameFont.Tiny, "CreateAreaHelp");

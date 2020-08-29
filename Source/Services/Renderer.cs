@@ -198,6 +198,8 @@ namespace Puppeteer
 			if (map == null) return;
 
 			var savedMap = Find.CurrentMap;
+			if (savedMap == null) return;
+
 			fakeZoom = true;
 			Tools.SetCurrentMapDirectly(map);
 			renderOffset = Tools.CurrentMapOffset();

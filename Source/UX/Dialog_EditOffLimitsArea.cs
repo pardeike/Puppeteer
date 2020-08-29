@@ -45,7 +45,8 @@ namespace Puppeteer
 		bool NameIsValid(string name)
 		{
 			if (name.Length > 28) return false;
-			var offLimits = Find.CurrentMap.GetComponent<OffLimitsComponent>();
+			var offLimits = Find.CurrentMap?.GetComponent<OffLimitsComponent>();
+			if (offLimits == null) return false;
 			return offLimits.areas.Any(a => a != area && a.label == name) == false;
 		}
 
@@ -56,6 +57,9 @@ namespace Puppeteer
 
 		public override void DoWindowContents(Rect inRect)
 		{
+			var map = Find.CurrentMap;
+			if (map == null) return;
+
 			if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return)
 			{
 				Event.current.Use();
@@ -84,7 +88,7 @@ namespace Puppeteer
 			Text.Font = GameFont.Small;
 			_ = list.Label("Restrictions (select the active ones)");
 
-			var allRestrictions = Find.CurrentMap.GetComponent<OffLimitsComponent>().restrictions;
+			var allRestrictions = map.GetComponent<OffLimitsComponent>().restrictions;
 			var extra = (allRestrictions.Count < maxRestrictions ? 24f : -6f) + 1f;
 			var list2 = list.BeginSection(allRestrictions.Count * (24f + 6f) + extra);
 			var restrictions = allRestrictions.ToArray();
@@ -144,10 +148,13 @@ namespace Puppeteer
 
 			if (widgetRow.ButtonText("Delete"))
 			{
-				var offLimits = Find.CurrentMap.GetComponent<OffLimitsComponent>();
-				var allRestrictions = offLimits.restrictions;
-				_ = allRestrictions.Remove(restriction);
-				offLimits.areas.Do(area => area.restrictions.Remove(restriction));
+				var offLimits = Find.CurrentMap?.GetComponent<OffLimitsComponent>();
+				if (offLimits != null)
+				{
+					var allRestrictions = offLimits.restrictions;
+					_ = allRestrictions.Remove(restriction);
+					offLimits.areas.Do(area => area.restrictions.Remove(restriction));
+				}
 			}
 
 			GUI.EndGroup();
@@ -167,7 +174,7 @@ namespace Puppeteer
 			area.color.b = Widgets.HorizontalSlider(rect, area.color.b, 0f, 1f, true, "Blue");
 
 			if (area.color.r + area.color.g + area.color.b != sum)
-				area.texture = null; // recalculate
+				area.SetDirty();
 		}
 	}
 }

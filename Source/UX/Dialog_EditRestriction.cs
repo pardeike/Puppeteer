@@ -223,6 +223,8 @@ namespace Puppeteer
 		static List<string> lastResult1 = null;
 		public List<string> GetMatchingButtons()
 		{
+			var map = Find.CurrentMap;
+			if (map == null) return new List<string>();
 			var fc = GUI.GetNameOfFocusedControl();
 			if (fc.NullOrEmpty() || fc.StartsWith("matcher-") == false) return new List<string>();
 			if (int.TryParse(fc.Substring(8), out var i) == false) return new List<string>();
@@ -236,13 +238,13 @@ namespace Puppeteer
 					Find.ReverseDesignatorDatabase.AllDesignators.Select(des => des.LabelCap)
 				);
 				labels.AddRange(
-					thingGrid(Find.CurrentMap.thingGrid)
+					thingGrid(map.thingGrid)
 						.SelectMany(g => g)
 						.Where(thing => ThingSelectionUtility.SelectableByMapClick(thing))
 						.SelectMany(thing => GetLabels(thing))
 				);
 				labels.AddRange(
-					Find.CurrentMap.zoneManager.AllZones
+					map.zoneManager.AllZones
 						.SelectMany(zone => GetLabels(zone))
 				);
 

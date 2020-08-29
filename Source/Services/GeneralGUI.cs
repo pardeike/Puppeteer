@@ -97,6 +97,8 @@ namespace Puppeteer
 		static void CreateColonist(ViewerID vID, Pawn pawn)
 		{
 			var map = Find.CurrentMap;
+			if (map == null) return;
+
 			if (CellFinder.TryFindRandomEdgeCellWith(c => map.reachability.CanReachColony(c) && !c.Fogged(map), map, CellFinder.EdgeRoadChance_Neutral, out var cell) == false) return;
 
 			_ = GenSpawn.Spawn(pawn, cell, map, WipeMode.Vanish);
@@ -130,13 +132,15 @@ namespace Puppeteer
 
 		static void ShowWandererJoinedLetter(Pawn pawn)
 		{
+			var map = Find.CurrentMap;
+			if (map == null) return;
 			var def = IncidentDefOf.WandererJoin;
 			var baseLetterText = def.letterText.Formatted(pawn.Named("PAWN")).AdjustedFor(pawn, "PAWN", true);
 			var baseLetterLabel = def.letterLabel.Formatted(pawn.Named("PAWN")).AdjustedFor(pawn, "PAWN", true);
 			_ = PawnRelationUtility.TryAppendRelationsWithColonistsInfo(ref baseLetterText, ref baseLetterLabel, pawn);
 			var worker = new IncidentWorker() { def = IncidentDefOf.WandererJoin };
 			var mSendStandardLetter = AccessTools.Method(typeof(IncidentWorker), "SendStandardLetter", new[] { typeof(TaggedString), typeof(TaggedString), typeof(LetterDef), typeof(IncidentParms), typeof(LookTargets), typeof(NamedArgument[]) });
-			var parms = StorytellerUtility.DefaultParmsNow(def.category, Find.CurrentMap);
+			var parms = StorytellerUtility.DefaultParmsNow(def.category, map);
 			//var storytellerComp = Find.Storyteller.storytellerComps.First((StorytellerComp x) => x is StorytellerComp_OnOffCycle || x is StorytellerComp_RandomMain);
 			//parms = storytellerComp.GenerateParms(def.category, parms.target);
 			_ = mSendStandardLetter.Invoke(worker, new object[] { baseLetterLabel, baseLetterText, LetterDefOf.PositiveEvent, parms, (LookTargets)pawn, Array.Empty<NamedArgument>() });

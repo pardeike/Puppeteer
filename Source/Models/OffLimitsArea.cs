@@ -124,9 +124,9 @@ namespace Puppeteer
 				Drawer.MarkForDraw();
 		}
 
-		public void AreaUpdate()
+		public void SetDirty()
 		{
-			Drawer.CellBoolDrawerUpdate();
+			Drawer.SetDirty();
 		}
 
 		public void Invert()
@@ -142,7 +142,8 @@ namespace Puppeteer
 
 		public Color GetCellExtraColor(int index)
 		{
-			return Color.white;
+			if (color == Color.white) return new Color(1f, 1f, 1f, 0.99f);
+			return color;
 		}
 
 		public string GetUniqueLoadID()

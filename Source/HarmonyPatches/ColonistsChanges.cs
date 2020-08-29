@@ -52,6 +52,30 @@ namespace Puppeteer
 		}
 	}
 
+	[HarmonyPatch(typeof(Pawn))]
+	[HarmonyPatch(nameof(Pawn.SetFaction))]
+	static class Pawn_SetFaction_Patch
+	{
+		[HarmonyPriority(Priority.First)]
+		public static void Postfix(Pawn __instance, Faction newFaction)
+		{
+			if (newFaction.IsPlayer)
+				Controller.instance.PawnAvailable(__instance);
+		}
+	}
+
+	[HarmonyPatch(typeof(Thing))]
+	[HarmonyPatch(nameof(Thing.SetFactionDirect))]
+	static class Thing_SetFactionDirect_Patch
+	{
+		[HarmonyPriority(Priority.First)]
+		public static void Postfix(Thing __instance, Faction newFaction)
+		{
+			if (newFaction.IsPlayer && __instance is Pawn pawn)
+				Controller.instance.PawnAvailable(pawn);
+		}
+	}
+
 	[HarmonyPatch(typeof(GenSpawn))]
 	[HarmonyPatch(nameof(GenSpawn.Spawn))]
 	[HarmonyPatch(new[] { typeof(Thing), typeof(IntVec3), typeof(Map), typeof(Rot4), typeof(WipeMode), typeof(bool) })]

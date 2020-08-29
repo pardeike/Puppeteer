@@ -15,7 +15,6 @@ namespace Puppeteer
 		public static void Run(Connection connection, State.Puppeteer puppeteer, IncomingJob job)
 		{
 			var pawn = puppeteer?.puppet?.pawn;
-			if (pawn == null || pawn.Spawned == false) return;
 
 			void RunOnQueue(Func<Pawn, string[], object> action, string actionName = null)
 			{
@@ -95,6 +94,10 @@ namespace Puppeteer
 					RunOnQueue(DoTend, job.method);
 					break;
 
+				case "toolkit-item-search":
+					RunOnQueue(GetToolkitItems, job.method);
+					break;
+
 				default:
 					Tools.LogWarning($"unknown job method '{job.method}'");
 					break;
@@ -136,6 +139,7 @@ namespace Puppeteer
 		// attack-target(thingID=#,melee=true/false)
 		static object AttackTarget(Pawn pawn, string[] args)
 		{
+			if (pawn == null || pawn.Spawned == false) return "no-pawn";
 			try
 			{
 				if (args.Length != 2) return "need-2-args";
@@ -180,7 +184,7 @@ namespace Puppeteer
 		// get-weapons(best/near)
 		static object GetWeapons(Pawn pawn, string[] args)
 		{
-			var map = pawn.Map;
+			var map = pawn?.Map;
 			if (map == null) return "no-pawn";
 			if (pawn.WorkTagIsDisabled(WorkTags.Violent)) return "no-violence";
 			if (Tools.CannotMoveOrDo(pawn)) return "no-action";
@@ -220,6 +224,7 @@ namespace Puppeteer
 		// select-weapon(thingID=#)
 		static object SelectWeapon(Pawn pawn, string[] args)
 		{
+			if (pawn == null || pawn.Spawned == false) return "no-pawn";
 			var weapon = Tools.GetThingFromArgs<Thing>(pawn, args, 0);
 			if (weapon == null) return "no";
 			if (EquipmentUtility.CanEquip(weapon, pawn) == false) return "no";
@@ -232,6 +237,7 @@ namespace Puppeteer
 		// get-outfits()
 		static object GetOutfits(Pawn pawn, string[] args)
 		{
+			if (pawn == null || pawn.Spawned == false) return "no-pawn";
 			var current = pawn.outfits.CurrentOutfit.label;
 			var results = Current.Game.outfitDatabase.AllOutfits
 				.Select((item, idx) => new ItemResult.Result()
@@ -246,6 +252,7 @@ namespace Puppeteer
 		// select-outfit(index)
 		static object SelectOutfit(Pawn pawn, string[] args)
 		{
+			if (pawn == null || pawn.Spawned == false) return "no-pawn";
 			if (args.Length != 1) return "no";
 			if (int.TryParse(args[0], out var idx) == false) return "no";
 			var items = Current.Game.outfitDatabase.AllOutfits;
@@ -259,6 +266,7 @@ namespace Puppeteer
 		// get-drugs()
 		static object GetDrugs(Pawn pawn, string[] args)
 		{
+			if (pawn == null || pawn.Spawned == false) return "no-pawn";
 			var current = pawn.drugs.CurrentPolicy.label;
 			var results = Current.Game.drugPolicyDatabase.AllPolicies
 				.Select((item, idx) => new ItemResult.Result()
@@ -273,6 +281,7 @@ namespace Puppeteer
 		// select-drug(index)
 		static object SelectDrug(Pawn pawn, string[] args)
 		{
+			if (pawn == null || pawn.Spawned == false) return "no-pawn";
 			if (args.Length != 1) return "no";
 			if (int.TryParse(args[0], out var idx) == false) return "no";
 			var items = Current.Game.drugPolicyDatabase.AllPolicies;
@@ -286,7 +295,7 @@ namespace Puppeteer
 		// get-rest()
 		static object GetRest(Pawn pawn, string[] _args)
 		{
-			var map = pawn.Map;
+			var map = pawn?.Map;
 			if (map == null) return "no-pawn";
 			if (Tools.CannotMoveOrDo(pawn)) return "no-action";
 
@@ -318,6 +327,7 @@ namespace Puppeteer
 		// do-rest(thingID=#)
 		static object DoRest(Pawn pawn, string[] args)
 		{
+			if (pawn == null || pawn.Spawned == false) return "no-pawn";
 			var bed = Tools.GetThingFromArgs<Building_Bed>(pawn, args, 0);
 			if (bed == null) return "no-bed";
 			if (pawn.Drafted)
@@ -331,6 +341,7 @@ namespace Puppeteer
 		// get-tend()
 		static object GetTend(Pawn pawn, string[] _args)
 		{
+			if (pawn == null || pawn.Spawned == false) return "no-pawn";
 			if (pawn.WorkTagIsDisabled(WorkTags.Caring)) return "no-caring";
 			if (Tools.CannotMoveOrDo(pawn)) return "no-action";
 
@@ -348,6 +359,7 @@ namespace Puppeteer
 		// do-tend(thingID=#)
 		static object DoTend(Pawn pawn, string[] args)
 		{
+			if (pawn == null || pawn.Spawned == false) return "no-pawn";
 			var injured = Tools.GetThingFromArgs<Pawn>(pawn, args, 0);
 			if (injured == null) return "not-injured";
 			if (pawn.Drafted)
@@ -356,6 +368,13 @@ namespace Puppeteer
 			if (result == "ok")
 				pawn.RemoteLog($"Tend", injured);
 			return result;
+		}
+
+		// toolkit-item-search(term)
+		static object GetToolkitItems(Pawn pawn, string[] args)
+		{
+			if (args.Length != 2) return new string[0];
+			return TwitchToolkit.GetFilteredItems(args[1]);
 		}
 	}
 }

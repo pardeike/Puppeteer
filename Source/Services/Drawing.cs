@@ -36,7 +36,7 @@ namespace Puppeteer
 			GUI.color = new Color(1f, 1f, 1f, Find.ColonistBar.GetEntryRectAlpha(r));
 			tex.Draw(r.Rounded(), true);
 
-			if (puppeteer.connected && f > 0)
+			if (puppeteer.IsConnected && f > 0)
 			{
 				GUI.color = Color.white;
 				var u = rect.width / tex.width;

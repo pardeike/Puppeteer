@@ -63,15 +63,14 @@ namespace Puppeteer
 
 		public static void Join(Connection connection, ViewerID vID)
 		{
-			if (vID.IsValid)
-			{
-				Tools.LogWarning($"{vID.name} joined");
-				State.Instance.SetConnected(vID, true);
-				var pawn = State.Instance.PuppeteerForViewer(vID)?.puppet?.pawn;
-				if (pawn?.Map != null) Tools.SetColonistNickname(pawn, vID.name);
-				State.Save();
-				SendAllState(connection, vID);
-			}
+			if (connection == null || vID.IsValid == false) return;
+			Tools.LogWarning($"{vID.name} joined");
+			State.Instance.SetConnected(vID, true);
+			var pawn = State.Instance.PuppeteerForViewer(vID)?.puppet?.pawn;
+			if (pawn?.Map != null) Tools.SetColonistNickname(pawn, vID.name);
+			State.Save();
+			SendAllState(connection, vID);
+			TwitchToolkit.RefreshViewers();
 		}
 
 		public static void Leave(ViewerID vID)
@@ -86,10 +85,24 @@ namespace Puppeteer
 
 		public static void Availability(Connection connection, Pawn pawn)
 		{
+			if (connection == null || pawn == null) return;
 			var pawnID = pawn.ThingID;
 			var puppeteer = State.Instance.ConnectedPuppeteers().FirstOrDefault(p => p.puppet?.pawn?.ThingID == pawnID);
 			if (puppeteer != null)
 				connection.Send(new ColonistAvailable() { viewer = puppeteer.vID, state = pawn.Spawned });
+		}
+
+		public static void SendChatMessage(Connection connection, ViewerID vID, string message)
+		{
+			if (connection == null || message == null || message.Length == 0) return;
+			connection.Send(new OutgoingChat() { viewer = vID, message = message });
+		}
+
+		public static void SendToolkitCommands(Connection connection, ViewerID vID)
+		{
+			if (connection == null) return;
+			var commands = TwitchToolkit.GetAllCommands();
+			connection.Send(new ToolkitCommands() { viewer = vID, commands = commands });
 		}
 
 		public static void Assign(Connection connection, Pawn pawn, ViewerID vID)
@@ -125,39 +138,54 @@ namespace Puppeteer
 
 		static void SendGameInfo(Connection connection, ViewerID vID)
 		{
+			var puppeteer = State.Instance.PuppeteerForViewer(vID);
+			var pawn = puppeteer?.puppet?.pawn;
+
 			var features = new List<string>();
 			if (ModLister.RoyaltyInstalled)
 				features.Add("royalty");
-			Log.Warning(features.Join());
+			if (TwitchToolkit.Exists)
+			{
+				features.Add("twitch-toolkit");
+				// TwitchToolkit.SendMessage(vID.id, vID.name, "bal");
+			}
+
 			var info = new GameInfo.Info()
 			{
 				version = Tools.GetModVersionString(),
 				mapFreq = Puppeteer.Settings.mapUpdateFrequency,
-				features = features.ToArray()
+				hairStyles = Customizer.AllHairStyle,
+				bodyTypes = Customizer.AllBodyTypes,
+				features = features.ToArray(),
+				style = pawn == null ? null : Customizer.GetStyle(pawn)
 			};
 			connection.Send(new GameInfo() { viewer = vID, info = info });
 		}
 
 		static void SendTimeInfo(Connection connection, ViewerID vID)
 		{
-			var vector = Find.WorldGrid.LongLatOf(Find.CurrentMap.Tile);
-			var dateStr = GenDate.DateFullStringWithHourAt(Find.TickManager.TicksAbs, vector);
+			var map = Find.CurrentMap;
+			if (map == null) return;
+
+			var tickManager = Find.TickManager;
+			if (tickManager == null) return;
+
+			var vector = Find.WorldGrid.LongLatOf(map.Tile);
+			var dateStr = GenDate.DateFullStringWithHourAt(tickManager.TicksAbs, vector);
 			connection.Send(new TimeInfo() { viewer = vID, info = new TimeInfo.Info() { time = dateStr, speed = (int)Find.TickManager.CurTimeSpeed } });
 		}
 
-		public static void SendEarnToAll(Connection connection, int amount)
+		public static void SendCoinsToAll(Connection connection)
 		{
 			var puppeteers = State.Instance.ConnectedPuppeteers();
-			puppeteers.Do(puppeteer =>
-			{
-				puppeteer.coinsEarned += amount;
-				SendEarned(connection, puppeteer);
-			});
+			puppeteers.Do(puppeteer => SendCoins(connection, puppeteer));
 		}
 
-		static void SendEarned(Connection connection, State.Puppeteer puppeteer)
+		public static void SendCoins(Connection connection, State.Puppeteer puppeteer)
 		{
-			connection.Send(new Earned() { viewer = puppeteer.vID, info = new Earned.Info() { amount = puppeteer.coinsEarned } });
+			if (puppeteer == null) return;
+			var coins = TwitchToolkit.GetCurrentCoins(puppeteer.vID.name);
+			connection.Send(new Earned() { viewer = puppeteer.vID, info = new Earned.Info() { amount = coins } });
 		}
 
 		public static void SendPortrait(Connection connection, State.Puppeteer puppeteer)
@@ -189,7 +217,7 @@ namespace Puppeteer
 				return;
 			}
 			var puppeteers = State.Instance.ConnectedPuppeteers();
-			puppeteers.Do(p => SendState(p));
+			puppeteers?.Do(p => SendState(p));
 		}
 
 		public static void SendAreas(Connection connection, State.Puppeteer forPuppeteer = null)
@@ -248,7 +276,9 @@ namespace Puppeteer
 			{
 				string GetValues(Pawn p)
 				{
-					var schedules = Enumerable.Range(0, 24).Select(hour => p.timetable.GetAssignment(hour)).ToArray();
+					var schedules = Enumerable.Range(0, 24)
+						.Select(hour => p.timetable.GetAssignment(hour) ?? TimeAssignmentDefOf.Anything)
+						.ToArray();
 					return schedules.Join(s => Defs.Assignments[s], "");
 				}
 				var rows = AllColonistsWithCurrentTop(pawn)
@@ -265,11 +295,14 @@ namespace Puppeteer
 
 			SendGameInfo(connection, vID);
 			SendTimeInfo(connection, vID);
-			SendEarned(connection, puppeteer);
+			SendCoins(connection, puppeteer);
 			SendPortrait(connection, puppeteer);
 			SendAreas(connection, puppeteer);
 			SendPriorities(connection);
 			SendSchedules(connection);
+
+			if (TwitchToolkit.Exists)
+				SendToolkitCommands(connection, vID);
 		}
 
 		public static void SendGameInfoToAll()
@@ -277,6 +310,9 @@ namespace Puppeteer
 			if (Current.Game == null) return;
 			var puppeteers = State.Instance.ConnectedPuppeteers();
 			puppeteers.Do(puppeteer => SendGameInfo(Controller.instance.connection, puppeteer.vID));
+
+			//if (TwitchToolkit.Exists)
+			//	puppeteers.Do(puppeteer => SendToolkitCommands(Controller.instance.connection, puppeteer.vID));
 		}
 
 		public static void SendTimeInfoToAll()

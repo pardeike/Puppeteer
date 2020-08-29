@@ -293,5 +293,106 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "1.1.0.0",
+		"infos": [
+			{
+				"title": "Twitch Toolkit Integration",
+				"texts": [
+					"You can now interact with Twitch Toolkit from your Puppeteer browser and leave chat for chatting!"
+				]
+			}
+		]
+	},
+	{
+		"version": "1.2.0.0",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"- fixes capitalisation of twitch names",
+					"- Other bug fixes and improvements too hard to describe"
+				]
+			}
+		]
+	},
+	{
+		"version": "1.3.0.0",
+		"infos": [
+			{
+				"title": "Colonist Customisation",
+				"texts": [
+					"As a viewer you can now change the basic look of your colonist: Gender, Body Type, Hair Style, Skin & Hair Color!"
+				]
+			}
+		]
+	},
+	{
+		"version": "1.3.1.0",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"- fixes a bug where base information was not send if Twitch Toolkit was not installed (Puppeteer never requires it)",
+					"- more defensive coding to be more compatible with other mods (Puppeteer works best at the bottom of your mod list)"
+				]
+			}
+		]
+	},
+	{
+		"version": "1.3.2.0",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"- fixes a bug with integration of the new Twitch Toolkit version"
+				]
+			}
+		]
+	},
+	{
+		"version": "1.3.3.0",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"- fixes a bug with not sending basic game info without assignment (no toolkit ux on queue screen)"
+				]
+			}
+		]
+	},
+	{
+		"version": "1.3.4.0",
+		"infos": [
+			{
+				"title": "Twitch Toolkit Auto Complete",
+				"texts": [
+					"The input field for the Toolkit integration now does auto compete for items and commands"
+				]
+			}
+		]
+	},
+	{
+		"version": "1.3.5.0",
+		"infos": [
+			{
+				"title": "Improvements",
+				"texts": [
+					"Restriction zones rendering now uses a simple color pattern and is much faster for larger areas. Also compatible with Linux and macOS."
+				]
+			}
+		]
+	},
+	{
+		"version": "1.3.6.0",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"Make new colonists assignable in Puppeteer if they got converted instead of spawned (prisoners etc)"
+				]
+			}
+		]
 	}
 ]
