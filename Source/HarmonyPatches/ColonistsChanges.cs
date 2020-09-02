@@ -59,7 +59,7 @@ namespace Puppeteer
 		[HarmonyPriority(Priority.First)]
 		public static void Postfix(Pawn __instance, Faction newFaction)
 		{
-			if (newFaction.IsPlayer)
+			if (newFaction != null && newFaction.IsPlayer)
 				Controller.instance.PawnAvailable(__instance);
 		}
 	}
@@ -71,7 +71,7 @@ namespace Puppeteer
 		[HarmonyPriority(Priority.First)]
 		public static void Postfix(Thing __instance, Faction newFaction)
 		{
-			if (newFaction.IsPlayer && __instance is Pawn pawn)
+			if (newFaction != null && newFaction.IsPlayer && __instance is Pawn pawn)
 				Controller.instance.PawnAvailable(pawn);
 		}
 	}

@@ -394,5 +394,16 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "1.3.7.0",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"Fixes a bug where wildlife would not spawn and throw errors"
+				]
+			}
+		]
 	}
 ]
