@@ -40,7 +40,7 @@ namespace Puppeteer
 						if (settings.enabled == false) return;
 						var drafted = Convert.ToBoolean(state.val);
 						if (Tools.CannotMoveOrDo(pawn) == false)
-							pawn.drafter.Drafted = drafted;
+							pawn.FakeDraft(drafted);
 						pawn.RemoteLog(drafted ? "Drafted" : "Undrafted");
 						break;
 					case "zone":
@@ -103,7 +103,7 @@ namespace Puppeteer
 								if (cell.InBounds(pawn.Map) && cell.Standable(pawn.Map))
 								{
 									var job = JobMaker.MakeJob(JobDefOf.Goto, cell);
-									pawn.drafter.Drafted = true;
+									pawn.FakeDraft(true);
 									pawn.jobs.StartJob(job, JobCondition.InterruptForced);
 									pawn.RemoteLog($"Drafted to {cell.x}x{cell.z}");
 								}

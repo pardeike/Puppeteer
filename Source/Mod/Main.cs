@@ -15,12 +15,12 @@ namespace Puppeteer
 		}
 	}
 
-	public class Puppeteer : Mod
+	public class PuppeteerMod : Mod
 	{
 		const string settingsFileName = "PuppeteerSettings.json";
 		public static Settings Settings = new Settings();
 
-		public Puppeteer(ModContentPack content) : base(content)
+		public PuppeteerMod(ModContentPack content) : base(content)
 		{
 			LoadSettings();
 		}
@@ -32,7 +32,7 @@ namespace Puppeteer
 
 		public override void DoSettingsWindowContents(Rect inRect)
 		{
-			SettingsDrawer.DoWindowContents(ref Puppeteer.Settings, inRect);
+			SettingsDrawer.DoWindowContents(ref PuppeteerMod.Settings, inRect);
 		}
 
 		public override void WriteSettings()

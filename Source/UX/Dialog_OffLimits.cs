@@ -23,14 +23,14 @@ namespace Puppeteer
 		public override void PostOpen()
 		{
 			base.PostOpen();
-			showOffLimitZones = Puppeteer.Settings.showOffLimitZones;
-			Puppeteer.Settings.showOffLimitZones = true;
+			showOffLimitZones = PuppeteerMod.Settings.showOffLimitZones;
+			PuppeteerMod.Settings.showOffLimitZones = true;
 		}
 
 		public override void PreClose()
 		{
 			base.PreClose();
-			Puppeteer.Settings.showOffLimitZones = showOffLimitZones;
+			PuppeteerMod.Settings.showOffLimitZones = showOffLimitZones;
 		}
 
 		public override void DoWindowContents(Rect inRect)

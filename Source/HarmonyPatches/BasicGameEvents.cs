@@ -3,6 +3,7 @@ using RimWorld;
 using RimWorld.Planet;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using Verse;
@@ -50,10 +51,10 @@ namespace Puppeteer
 		public static void Postfix(WidgetRow row, bool worldView)
 		{
 			if (worldView) return;
-			var old = Puppeteer.Settings.showOffLimitZones;
-			row.ToggleableIcon(ref Puppeteer.Settings.showOffLimitZones, Assets.ShowOffLimits, "Toggle Off Limits", SoundDefOf.Mouseover_ButtonToggle, null);
-			if (Puppeteer.Settings.showOffLimitZones != old)
-				Puppeteer.SaveSettings();
+			var old = PuppeteerMod.Settings.showOffLimitZones;
+			row.ToggleableIcon(ref PuppeteerMod.Settings.showOffLimitZones, Assets.ShowOffLimits, "Toggle Off Limits", SoundDefOf.Mouseover_ButtonToggle, null);
+			if (PuppeteerMod.Settings.showOffLimitZones != old)
+				PuppeteerMod.SaveSettings();
 		}
 	}
 
@@ -67,8 +68,8 @@ namespace Puppeteer
 			if (action == null || label == null) return;
 			var idx = label.IndexOf(" (");
 			if (idx > 0) label = label.Remove(idx);
-			if (Puppeteer.Settings.menuCommands.Add(label))
-				Puppeteer.SaveSettings();
+			if (PuppeteerMod.Settings.menuCommands.Add(label))
+				PuppeteerMod.SaveSettings();
 		}
 	}
 
@@ -136,7 +137,10 @@ namespace Puppeteer
 		static void Postfix()
 		{
 			if (GenScene.InPlayScene)
+			{
+				Controller.instance.SetEvent(PuppeteerEvent.MapEntered);
 				RenderCamera.Create();
+			}
 		}
 	}
 
@@ -195,6 +199,102 @@ namespace Puppeteer
 		public static void Postfix()
 		{
 			Controller.instance.SetEvent(PuppeteerEvent.TimeChanged);
+		}
+	}
+
+	[HarmonyPatch(typeof(GizmoGridDrawer))]
+	[HarmonyPatch(nameof(GizmoGridDrawer.DrawGizmoGrid))]
+	static class GizmoGridDrawer_DrawGizmoGrid_Patch
+	{
+		static Command_Action CreateDeleteResurrectionPortal(ResurrectionPortal portal)
+		{
+			var h = (portal.created + GenDate.TicksPerDay - Find.TickManager.TicksGame + GenDate.TicksPerHour - 1) / GenDate.TicksPerHour;
+			var hours = $"{h} hour" + (h != 1 ? "s" : "");
+			return new Command_Action
+			{
+				defaultLabel = "Remove",
+				icon = ContentFinder<Texture2D>.Get("RemoveResurrectionPortal", true),
+				disabled = h > 0,
+				disabledReason = "You have to wait " + hours + " to remove the portal",
+				defaultDesc = "Removes the resurrection portal so you can build it somewhere else",
+				order = -20f,
+				action = () => portal.Destroy()
+			};
+		}
+
+		[HarmonyPriority(Priority.First)]
+		public static void Prefix(ref IEnumerable<Gizmo> gizmos)
+		{
+			var portal = Find.Selector.SelectedObjects.FirstOrDefault() as ResurrectionPortal;
+			if (portal == null) return;
+			gizmos = new List<Gizmo>() { CreateDeleteResurrectionPortal(portal) }.AsEnumerable();
+		}
+	}
+
+	[HarmonyPatch()]
+	static class PlayerIssuedOrders_Patch
+	{
+		public static IEnumerable<MethodBase> TargetMethods()
+		{
+			yield return AccessTools.Method(typeof(FloatMenuMakerMap), "AddHumanlikeOrders");
+			yield return AccessTools.Method(typeof(FloatMenuMakerMap), "AddDraftedOrders");
+			yield return AccessTools.Method(typeof(FloatMenuMakerMap), "AddUndraftedOrders");
+			// yield return AccessTools.Method(typeof(FloatMenuMakerMap), "AddJobGiverWorkOrders");
+		}
+
+		[HarmonyPriority(Priority.Last)]
+		public static void Postfix(Pawn pawn, List<FloatMenuOption> opts)
+		{
+			void MarkOverwritten(FloatMenuOption opt)
+			{
+				var puppet = State.Instance.PuppetForPawn(pawn);
+				if (puppet?.puppeteer != null)
+				{
+					Log.Warning($"Cooldown for {pawn.LabelCap} [{opt.Label}]");
+					puppet.lastPlayerCommand = Find.TickManager.TicksAbs;
+				}
+			}
+
+			foreach (var opt in opts)
+			{
+				var savedAction = opt.action;
+				if (savedAction != null)
+					opt.action = () => { MarkOverwritten(opt); savedAction(); };
+			}
+		}
+	}
+
+	[HarmonyPatch(typeof(Pawn_DraftController))]
+	[HarmonyPatch(nameof(Pawn_DraftController.Drafted), MethodType.Setter)]
+	static class Pawn_DraftController_Drafted_Patch
+	{
+		[HarmonyPriority(Priority.Last)]
+		public static void Postfix(bool value, Pawn ___pawn)
+		{
+			if (Tools.IsFakeDrafting) return;
+
+			var puppet = State.Instance.PuppetForPawn(___pawn);
+			if (puppet?.puppeteer != null)
+			{
+				Log.Warning($"Cooldown for {___pawn.LabelCap} [{(value ? "Drafted" : "Undrafted")}]");
+				puppet.lastPlayerCommand = Find.TickManager.TicksAbs;
+			}
+		}
+	}
+
+	[HarmonyPatch(typeof(DebugToolsPawns))]
+	[HarmonyPatch("TryJobGiver")]
+	static class DebugToolsPawns_TryJobGiver_Patch
+	{
+		[HarmonyPriority(Priority.Last)]
+		public static void Postfix(Pawn p)
+		{
+			var puppet = State.Instance.PuppetForPawn(p);
+			if (puppet?.puppeteer != null)
+			{
+				Log.Warning($"Cooldown for {p.LabelCap} [Debug command]");
+				puppet.lastPlayerCommand = Find.TickManager.TicksAbs;
+			}
 		}
 	}
 }

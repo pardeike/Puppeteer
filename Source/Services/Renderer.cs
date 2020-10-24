@@ -167,8 +167,8 @@ namespace Puppeteer
 			SetCamera(camera, ref cameraPos, Math.Max(dx / 2f, dz / 2f));
 
 			var f = GenMath.LerpDouble(1.5f, 8f, 1f, 4f, (float)Math.Sqrt(Math.Min(dx, dz)));
-			var sizeX = (int)(Puppeteer.Settings.mapImageSize * f);
-			var sizeZ = (int)(Puppeteer.Settings.mapImageSize * f * dz / dx);
+			var sizeX = (int)(PuppeteerMod.Settings.mapImageSize * f);
+			var sizeZ = (int)(PuppeteerMod.Settings.mapImageSize * f * dz / dx);
 			var renderTexture = RenderTexture.GetTemporary(sizeX, sizeZ, 24);
 			camera.targetTexture = renderTexture;
 			var active = RenderTexture.active;
@@ -181,8 +181,8 @@ namespace Puppeteer
 			camera.targetTexture = null;
 			RenderTexture.active = active;
 
-			var q_from = GenMath.LerpDouble(1, 9, 100, 65, Puppeteer.Settings.mapImageCompression);
-			var q_to = GenMath.LerpDouble(1, 9, 80, 25, Puppeteer.Settings.mapImageCompression);
+			var q_from = GenMath.LerpDouble(1, 9, 100, 65, PuppeteerMod.Settings.mapImageCompression);
+			var q_to = GenMath.LerpDouble(1, 9, 80, 25, PuppeteerMod.Settings.mapImageCompression);
 			var quality = (int)GenMath.LerpDoubleClamped(8, 40, q_from, q_to, Math.Min(dx, dz));
 			return () =>
 			{

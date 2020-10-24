@@ -42,6 +42,21 @@ namespace Puppeteer
 
 			[JsonIgnore] public Puppeteer puppeteer; // optional
 			[JsonProperty] private int _puppeteer;
+
+			public int lastPlayerCommand;
+
+			// ========= CMD --[cooldown-length]--> END =======>
+			// ==========> 1
+			// ====================> 0.5
+			// =====================================> 0
+			// ===========================================> -x
+			//
+			public float CooldownFactor()
+			{
+				var now = Find.TickManager.TicksAbs;
+				var cooldownTicks = PuppeteerMod.Settings.playerActionCooldownTicks;
+				return GenMath.LerpDoubleClamped(lastPlayerCommand, lastPlayerCommand + cooldownTicks, 1, 0, Find.TickManager.TicksAbs);
+			}
 		}
 
 		public class Puppeteer
@@ -236,6 +251,11 @@ namespace Puppeteer
 				return true;
 			}
 			return false;
+		}
+
+		public void ResetLastControlled()
+		{
+			AllPuppets().Do(puppet => puppet.lastPlayerCommand = 0);
 		}
 
 		public HashSet<Puppet> AllPuppets()

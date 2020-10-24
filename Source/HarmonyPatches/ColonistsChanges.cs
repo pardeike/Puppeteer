@@ -59,7 +59,7 @@ namespace Puppeteer
 		[HarmonyPriority(Priority.First)]
 		public static void Postfix(Pawn __instance, Faction newFaction)
 		{
-			if (newFaction.IsPlayer)
+			if (newFaction != null && newFaction.IsPlayer)
 				Controller.instance.PawnAvailable(__instance);
 		}
 	}
@@ -71,7 +71,7 @@ namespace Puppeteer
 		[HarmonyPriority(Priority.First)]
 		public static void Postfix(Thing __instance, Faction newFaction)
 		{
-			if (newFaction.IsPlayer && __instance is Pawn pawn)
+			if (newFaction != null && newFaction.IsPlayer && __instance is Pawn pawn)
 				Controller.instance.PawnAvailable(pawn);
 		}
 	}
@@ -114,11 +114,45 @@ namespace Puppeteer
 	[HarmonyPatch(nameof(Pawn.Kill))]
 	static class Pawn_Kill_Patch
 	{
+		public struct KillState
+		{
+			public readonly State.Puppeteer puppeteer;
+			public readonly Map map;
+			public readonly Pawn_WorkSettings workSettings;
+
+			public KillState(Pawn pawn)
+			{
+				puppeteer = State.Instance.PuppetForPawn(pawn)?.puppeteer;
+				map = pawn.Map;
+				workSettings = pawn.workSettings;
+			}
+		}
+
 		[HarmonyPriority(Priority.First)]
-		public static void Postfix(Pawn __instance)
+		public static void Prefix(Pawn __instance, ref KillState __state)
+		{
+			__state = new KillState(__instance);
+		}
+
+		[HarmonyPriority(Priority.Last)]
+		public static void Postfix(Pawn __instance, KillState __state)
 		{
 			if (__instance.IsColonist)
+			{
 				Controller.instance.PawnUnavailable(__instance);
+				var puppeteer = __state.puppeteer;
+				if (puppeteer?.puppet == null || puppeteer.IsConnected == false) return;
+				if (puppeteer.puppet.CooldownFactor() > 0) return;
+
+				var portal = ResurrectionPortal.PortalForMap(__state.map);
+				if (portal == null) return;
+				var tickets = Find.World.GetComponent<Tickets>();
+				if (tickets.remaining > 0)
+				{
+					tickets.remaining--;
+					LongEventHandler.ExecuteWhenFinished(() => Tools.Resurrect(__instance, portal.Position, __state.workSettings));
+				}
+			}
 		}
 	}
 

@@ -394,5 +394,28 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "1.3.7.0",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"Fixes a bug where wildlife would not spawn and throw errors"
+				]
+			}
+		]
+	},
+	{
+		"version": "1.4.0.0",
+		"infos": [
+			{
+				"title": "Controlled colonists will respawn!",
+				"image": "Respawning",
+				"texts": [
+					"Build a puppeteer respawn portal and controlled colonists will automatically respawn when they die!"
+				]
+			}
+		]
 	}
 ]

@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using RimWorld;
+using RimWorld.Planet;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -321,6 +322,68 @@ namespace Puppeteer
 				Controller.instance.UpdateColonist(puppeteer);
 		}
 
+		public static bool IsFakeDrafting = false;
+		public static void FakeDraft(this Pawn pawn, bool state)
+		{
+			if (pawn.Drafted != state)
+			{
+				IsFakeDrafting = true;
+				pawn.drafter.Drafted = state;
+				IsFakeDrafting = false;
+			}
+		}
+
+		public static void Resurrect(Pawn pawn, IntVec3 startLocation, Pawn_WorkSettings workSettings)
+		{
+			var corpse = pawn.Corpse;
+			var flag = false;
+			var loc = IntVec3.Invalid;
+			Map map = null;
+			if (corpse != null)
+			{
+				flag = corpse.Spawned;
+				loc = corpse.Position;
+				map = corpse.Map;
+				corpse.InnerPawn = null;
+				corpse.Destroy(DestroyMode.Vanish);
+			}
+			if (flag && pawn.IsWorldPawn())
+				Find.WorldPawns.RemovePawn(pawn);
+			pawn.ForceSetStateToUnspawned();
+			PawnComponentsUtility.CreateInitialComponents(pawn);
+			pawn.health.Notify_Resurrected();
+			pawn.workSettings = workSettings;
+			Find.StoryWatcher.watcherPopAdaptation.Notify_PawnEvent(pawn, PopAdaptationEvent.GainedColonist);
+			if (flag)
+			{
+				_ = GenSpawn.Spawn(pawn, loc, map, WipeMode.Vanish);
+				for (var i = 0; i < 10; i++)
+					MoteMaker.ThrowAirPuffUp(pawn.DrawPos, map);
+				if (pawn.apparel != null)
+				{
+					var wornApparel = pawn.apparel.WornApparel;
+					for (var j = 0; j < wornApparel.Count; j++)
+						wornApparel[j].Notify_PawnResurrected();
+				}
+			}
+			PawnDiedOrDownedThoughtsUtility.RemoveDiedThoughts(pawn);
+
+			for (; ; )
+			{
+				var hediff = pawn.health.hediffSet.hediffs.FirstOrDefault();
+				if (hediff == null) break;
+				pawn.health.RemoveHediff(hediff);
+			}
+
+			if (pawn.royalty != null)
+				pawn.royalty.Notify_Resurrected();
+
+			pawn.Position = startLocation;
+			pawn.Notify_Teleported(true, true);
+			for (var i = 0; i < 10; i++)
+				MoteMaker.ThrowAirPuffUp(startLocation.ToVector3(), map);
+		}
+
 		public static void AutoExposeDataWithDefaults<T>(this T settings) where T : new()
 		{
 			var defaults = new T();
@@ -357,7 +420,7 @@ namespace Puppeteer
 
 		public static string GetModRootDirectory()
 		{
-			var me = LoadedModManager.GetMod<Puppeteer>();
+			var me = LoadedModManager.GetMod<PuppeteerMod>();
 			if (me == null)
 			{
 				Log.Error("LoadedModManager.GetMod<Puppeteer>() failed");

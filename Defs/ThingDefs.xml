@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+	<ThingDef ParentName="BuildingBase">
+		<defName>ResurrectionPortal</defName>
+		<label>resurrection portal</label>
+		<description>A not so final resting place. Puppeteer colonists that die will respawn here.</description>
+		<thingClass>Puppeteer.ResurrectionPortal</thingClass>
+		<graphicData>
+			<texPath>ResurrectionPortal</texPath>
+			<graphicClass>Graphic_Multi</graphicClass>
+			<drawSize>(1,1)</drawSize>
+		</graphicData>
+		<altitudeLayer>FloorEmplacement</altitudeLayer>
+		<statBases>
+			<WorkToBuild>0</WorkToBuild>
+			<WorkTableWorkSpeedFactor>0.5</WorkTableWorkSpeedFactor>
+		</statBases>
+		<scatterableOnMapGen>false</scatterableOnMapGen>
+		<useHitPoints>false</useHitPoints>
+		<size>(1,1)</size>
+		<designationCategory>Structure</designationCategory>
+		<passability>Standable</passability>
+		<hasInteractionCell>False</hasInteractionCell>
+		<surfaceType>Item</surfaceType>
+		<building>
+			<isInert>true</isInert>
+			<claimable>false</claimable>
+			<canPlaceOverImpassablePlant>false</canPlaceOverImpassablePlant>
+			<ai_chillDestination>false</ai_chillDestination>
+			<ai_neverTrashThis>true</ai_neverTrashThis>
+			<artificialForMeditationPurposes>false</artificialForMeditationPurposes>
+			<canPlaceOverWall>false</canPlaceOverWall>
+			<repairable>false</repairable>
+			<deconstructible>false</deconstructible>
+		</building>
+		<inspectorTabs>
+		</inspectorTabs>
+		<placeWorkers>
+			<li>Puppeteer.PlaceWorker_ResurrectionPortal</li>
+		</placeWorkers>
+	</ThingDef>
+
+</Defs>

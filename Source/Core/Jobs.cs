@@ -147,8 +147,7 @@ namespace Puppeteer
 				var target = Tools.GetThingFromArgs<Pawn>(pawn, args, 0);
 				if (target == null) return "no-target";
 
-				if (pawn.Drafted == false)
-					pawn.drafter.Drafted = true;
+				pawn.FakeDraft(true);
 
 				var melee = bool.Parse(args[1]);
 				if (melee == false)
@@ -330,8 +329,7 @@ namespace Puppeteer
 			if (pawn == null || pawn.Spawned == false) return "no-pawn";
 			var bed = Tools.GetThingFromArgs<Building_Bed>(pawn, args, 0);
 			if (bed == null) return "no-bed";
-			if (pawn.Drafted)
-				pawn.drafter.Drafted = false;
+			pawn.FakeDraft(false);
 			var result = pawn.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.LayDown, bed), JobTag.Misc) ? "ok" : "no";
 			if (result == "ok")
 				pawn.RemoteLog($"Rest", bed);

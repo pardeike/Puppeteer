@@ -7,4 +7,7 @@
 	<MapImageCompression>Map Image Compression</MapImageCompression>
 	<MapUpdateFrequency>Map Image Update Frequency</MapUpdateFrequency>
 
+	<StartTickets>Number of respawn tickets</StartTickets>
+	<PlayerActionCooldownTicks>Control cooldown preventing respawn (game hours)</PlayerActionCooldownTicks>
+
 </LanguageData>
