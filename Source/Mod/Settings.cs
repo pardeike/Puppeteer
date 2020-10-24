@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using RimWorld;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Verse;
 
@@ -10,6 +12,9 @@ namespace Puppeteer
 		public int mapImageCompression = 9;
 		public int mapUpdateFrequency = 600;
 		public bool showOffLimitZones = true;
+		public int startTickets = 20;
+		public int playerActionCooldownTicks = GenDate.TicksPerHour;
+
 		public HashSet<string> menuCommands = new HashSet<string>();
 	}
 
@@ -50,6 +55,10 @@ namespace Puppeteer
 				settings.mapUpdateFrequency = val * 10;
 				if (settings.mapUpdateFrequency != oldVal)
 					GeneralCommands.SendGameInfoToAll();
+
+				list.Gap(10f);
+				list.Dialog_IntSlider("StartTickets", n => $"{n} tickets", ref settings.startTickets, 0, 100);
+				list.Dialog_IntSlider("PlayerActionCooldownTicks", n => $"{Math.Floor((float)n / GenDate.TicksPerHour * 10 + 0.5) / 10} hour(s)", ref settings.playerActionCooldownTicks, 0, GenDate.TicksPerDay);
 			}
 
 			list.End();

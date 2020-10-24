@@ -24,6 +24,7 @@ namespace Puppeteer
 		SendChangedSchedules,
 		UpdateColonists,
 		TimeChanged,
+		MapEntered,
 	}
 
 	public interface ICommandProcessor
@@ -133,6 +134,9 @@ namespace Puppeteer
 						break;
 					case PuppeteerEvent.TimeChanged:
 						GeneralCommands.SendTimeInfoToAll();
+						break;
+					case PuppeteerEvent.MapEntered:
+						State.Instance.ResetLastControlled();
 						break;
 				}
 			}

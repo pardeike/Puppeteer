@@ -14,7 +14,7 @@ namespace Puppeteer
 		public static bool Prefix(CellBoolDrawer __instance)
 		{
 			if (__instance is StripesCellBoolDrawer)
-				return Puppeteer.Settings.showOffLimitZones || Find.DesignatorManager.SelectedDesignator is Designator_OffLimits;
+				return PuppeteerMod.Settings.showOffLimitZones || Find.DesignatorManager.SelectedDesignator is Designator_OffLimits;
 			return true;
 		}
 	}

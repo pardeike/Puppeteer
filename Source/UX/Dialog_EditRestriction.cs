@@ -268,7 +268,7 @@ namespace Puppeteer
 			if (lastMatcherText2 != matcher.text)
 			{
 				lastMatcherText2 = matcher.text;
-				lastResult2 = Puppeteer.Settings.menuCommands
+				lastResult2 = PuppeteerMod.Settings.menuCommands
 					.Where(label => label != null && matcher.IsMatch(label))
 					.OrderBy(s => s)
 					.ToList();

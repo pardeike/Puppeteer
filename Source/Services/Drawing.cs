@@ -13,6 +13,7 @@ namespace Puppeteer
 		static readonly DateTime t = DateTime.Now;
 		static readonly long countdownTicks = t.AddSeconds(progressBarTimeInterval).Ticks - t.Ticks;
 		static readonly Color barColor = new Color(0, 166 / 255f, 81 / 255f);
+		static readonly Color overrideColor = new Color(68 / 255f, 81 / 255f, 255f / 255f);
 
 		public static void DrawAssignmentStatus(Pawn pawn, Rect rect)
 		{
@@ -30,25 +31,40 @@ namespace Puppeteer
 
 			var savedColor = GUI.color;
 
+			var currentBarColor = barColor;
+			var cooldown_f = puppet.CooldownFactor();
 			var tex = Assets.connected[puppeteer.stalling ? 2 : (puppeteer.connected ? 1 : 0)];
 			var height = rect.width * tex.height / tex.width;
-			var r = new Rect((int)rect.xMin, (int)rect.yMin - (int)height, (int)rect.width, (int)height);
-			GUI.color = new Color(1f, 1f, 1f, Find.ColonistBar.GetEntryRectAlpha(r));
-			tex.Draw(r.Rounded(), true);
+			var baseRect = new Rect((int)rect.xMin, (int)rect.yMin - (int)height, (int)rect.width, (int)height).Rounded();
+			if (cooldown_f <= 0)
+			{
+				GUI.color = new Color(1f, 1f, 1f, Find.ColonistBar.GetEntryRectAlpha(baseRect));
+				tex.Draw(baseRect, true);
+			}
+			else
+				f = cooldown_f;
 
-			if (puppeteer.IsConnected && f > 0)
+			if ((puppeteer.IsConnected || cooldown_f > 0) && f > 0)
 			{
 				GUI.color = Color.white;
 				var u = rect.width / tex.width;
+				var r = baseRect;
 				r.yMin += 16 * u;
 				r.height = 24 * u;
 				r = r.Rounded();
 				GUI.DrawTexture(r, BaseContent.BlackTex);
 				r = r.ExpandedBy(-(float)Math.Max(1, Math.Round(4f * u)));
 				GUI.DrawTexture(r, BaseContent.WhiteTex);
+				var oldWidth = r.width;
 				r.width *= f;
-				GUI.color = barColor;
+				GUI.color = cooldown_f > 0 ? overrideColor : currentBarColor;
 				GUI.DrawTexture(r, BaseContent.WhiteTex);
+			}
+
+			if (cooldown_f > 0)
+			{
+				GUI.color = new Color(1f, 1f, 1f, Find.ColonistBar.GetEntryRectAlpha(baseRect));
+				Assets.overwritten.Draw(baseRect, true);
 			}
 
 			GUI.color = savedColor;

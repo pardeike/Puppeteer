@@ -49,7 +49,7 @@ namespace Puppeteer
 		{
 			DrawPageTitle(inRect);
 			var mainRect = GetMainRect(inRect, 0f, false);
-			SettingsDrawer.DoWindowContents(ref Puppeteer.Settings, mainRect);
+			SettingsDrawer.DoWindowContents(ref PuppeteerMod.Settings, mainRect);
 			DoBottomButtons(inRect, null, null, null, true, true);
 		}
 	}

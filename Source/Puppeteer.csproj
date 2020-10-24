@@ -55,6 +55,7 @@
     <Compile Include="Services\Customizer.cs" />
     <Compile Include="Services\GeneralGUI.cs" />
     <Compile Include="Services\Dialogs.cs" />
+    <Compile Include="Services\Tickets.cs" />
     <Compile Include="Services\TwitchToolkit.cs" />
     <Compile Include="Tools\Defs.cs" />
     <Compile Include="Tools\GetterSetters.cs" />
@@ -96,6 +97,7 @@
     <Compile Include="Tools\Colors.cs" />
     <Compile Include="Tools\Tools.cs" />
     <Compile Include="Core\GeneralCommands.cs" />
+    <Compile Include="UX\ResurrectionPortal.cs" />
     <Compile Include="UX\Designator_OffLimits.cs" />
     <Compile Include="UX\Dialog_EditOffLimitsArea.cs" />
     <Compile Include="UX\Dialog_EditRestriction.cs" />
@@ -183,6 +185,9 @@
   <ItemGroup>
     <Content Include="..\Defs\TableDef.xml">
       <Link>Defs\TableDef.xml</Link>
+    </Content>
+    <Content Include="..\Defs\ThingDefs.xml">
+      <Link>Defs\ThingDefs.xml</Link>
     </Content>
   </ItemGroup>
   <ItemGroup>

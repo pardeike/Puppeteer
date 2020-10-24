@@ -4,10 +4,12 @@ using Verse;
 
 namespace Puppeteer
 {
+	[DefOf]
 	[StaticConstructorOnStartup]
 	public static class Defs
 	{
 		static Dictionary<TimeAssignmentDef, string> assignments;
+		public static ThingDef ResurrectionPortal;
 
 		public static Dictionary<TimeAssignmentDef, string> Assignments
 		{

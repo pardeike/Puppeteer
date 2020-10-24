@@ -15,6 +15,7 @@ namespace Puppeteer
 		public static readonly Texture2D colonist = LoadTexture("Colonist");
 		public static readonly Texture2D puppeteerMote = LoadTexture("PuppeteerMote");
 		public static readonly Texture2D[] connected = LoadTextures("Connected0", "Connected1", "Connected2");
+		public static readonly Texture2D overwritten = LoadTexture("Overwritten");
 		public static readonly Texture2D[] status = LoadTextures("Status0", "Status1");
 		public static readonly Texture2D[] numbers = LoadTextureRow("Numbers", new[] { 10, 5, 10, 9, 10, 9, 9, 9, 9, 10, 21, 5 });
 		public static readonly Texture2D DeleteX = ContentFinder<Texture2D>.Get("UI/Buttons/Delete");

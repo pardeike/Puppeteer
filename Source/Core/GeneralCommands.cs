@@ -153,7 +153,7 @@ namespace Puppeteer
 			var info = new GameInfo.Info()
 			{
 				version = Tools.GetModVersionString(),
-				mapFreq = Puppeteer.Settings.mapUpdateFrequency,
+				mapFreq = PuppeteerMod.Settings.mapUpdateFrequency,
 				hairStyles = Customizer.AllHairStyle,
 				bodyTypes = Customizer.AllBodyTypes,
 				features = features.ToArray(),
