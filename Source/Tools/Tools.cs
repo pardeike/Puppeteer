@@ -25,6 +25,7 @@ namespace Puppeteer
 		{
 			RoundRobbin.Create("update-colonist", 5f);
 			RoundRobbin.Create("render-colonist", 30f);
+			RoundRobbin.Create("update-socials", 300f);
 		}
 
 		public static string Base64Decode(this string value)

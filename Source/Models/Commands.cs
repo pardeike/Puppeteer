@@ -1,4 +1,5 @@
-﻿using RimWorld;
+﻿using Newtonsoft.Json;
+using RimWorld;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -331,6 +332,39 @@ namespace Puppeteer
 		}
 
 		public Schedules[] rows;
+	}
+
+	public class SocialRelations : JSONConvertable<SocialRelations>
+	{
+		public class Opinion
+		{
+			public string reason;
+			public string value;
+		}
+
+		public class Relation
+		{
+			[JsonIgnore] public List<PawnRelationDef> _relations;
+			[JsonIgnore] public int _ourOpinionNum;
+
+			public string type;
+			public string pawn;
+			public byte[] portrait;
+			public Opinion[] opinions;
+			public string ourOpinion;
+			public string theirOpinion;
+			public string situation;
+		}
+
+		public class Info
+		{
+			public Relation[] relations;
+			public string lastInteraction;
+		}
+
+		public SocialRelations() { type = "socials"; }
+		public ViewerID viewer;
+		public Info info;
 	}
 
 	public class GridUpdate : JSONConvertable<GridUpdate>

@@ -10,7 +10,8 @@ namespace Puppeteer
 		Job,
 		Log,
 		Select,
-		RenderMap
+		RenderMap,
+		SocialRelations
 	}
 
 	public static class OperationQueue

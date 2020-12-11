@@ -289,6 +289,112 @@ namespace Puppeteer
 			SendStates(connection, "schedules", GetResult, null);
 		}
 
+		public static void SendNextSocial(Connection connection)
+		{
+			var puppeteer = RoundRobbin.NextColonist("update-socials");
+			if (puppeteer != null)
+				SendSocialRelations(connection, puppeteer.vID);
+		}
+
+		public static void SendSocialRelations(Connection connection, ViewerID vID)
+		{
+			var pawn = State.Instance.PuppeteerForViewer(vID)?.puppet?.pawn;
+
+			string GetType(List<PawnRelationDef> relations, Pawn other, int ourOpinion)
+			{
+				var text = "";
+				for (var i = 0; i < relations.Count; i++)
+				{
+					var def = relations[i];
+					if (text == "") text += ", ";
+					text = def.GetGenderSpecificLabelCap(other);
+				}
+				if (text != "") return text;
+				if (ourOpinion < -20) { return "Rival".Translate(); }
+				if (ourOpinion > 20) { return "Friend".Translate(); }
+				return "Acquaintance".Translate();
+			}
+
+			bool ShouldShowPawnRelations(Pawn p) => p != pawn && (!p.RaceProps.Animal || !p.Dead || p.Corpse != null) && p.Name != null && !p.Name.Numerical && p.relations.everSeenByPlayer;
+			var others = new List<Pawn>();
+			if (pawn.MapHeld != null)
+			{
+				bool PawnSelector(Pawn p) => p.RaceProps.Humanlike && p != pawn && ShouldShowPawnRelations(p) && (p.relations.OpinionOf(pawn) != 0 || pawn.relations.OpinionOf(p) != 0);
+				others.AddRange(pawn.MapHeld.mapPawns.AllPawns.Where(PawnSelector));
+			}
+			others.AddRange(pawn.relations.RelatedPawns.Where(ShouldShowPawnRelations));
+
+			int relationSorter(SocialRelations.Relation a, SocialRelations.Relation b)
+			{
+				bool anyA = a._relations.Any();
+				bool anyB = b._relations.Any();
+				if (anyA != anyB) return anyB.CompareTo(anyA);
+				if (anyA && anyB)
+				{
+					var importanceA = a._relations.Select(r => r.importance).Max();
+					var importanceB = b._relations.Select(r => r.importance).Max();
+					if (importanceA != importanceB) return importanceB.CompareTo(importanceA);
+				}
+				if (a._ourOpinionNum != b._ourOpinionNum) return b._ourOpinionNum.CompareTo(a._ourOpinionNum);
+				return a.type.CompareTo(b.type);
+			}
+
+			IEnumerable<SocialRelations.Opinion> getOpinions(List<PawnRelationDef> relations, Pawn other)
+			{
+				foreach (var relation in relations)
+					yield return new SocialRelations.Opinion() { reason = relation.GetGenderSpecificLabelCap(other), value = relation.opinionOffset.ToStringWithSign() };
+				if (pawn.RaceProps.Humanlike && pawn.needs.mood != null)
+				{
+					var thoughts = pawn.needs.mood.thoughts;
+					var tmpSocialThoughts = new List<ISocialThought>();
+					thoughts.GetDistinctSocialThoughtGroups(other, tmpSocialThoughts);
+					for (var i = 0; i < tmpSocialThoughts.Count; i++)
+					{
+						var socialThought = tmpSocialThoughts[i];
+						var num = 1;
+						var thought = (Thought)socialThought;
+						if (thought.def.IsMemory) num = thoughts.memories.NumMemoriesInGroup((Thought_MemorySocial)socialThought);
+						yield return new SocialRelations.Opinion() { reason = thought.LabelCapSocial + (num > 1 ? " x" + num : ""), value = thoughts.OpinionOffsetOfGroup(socialThought, other).ToStringWithSign() };
+					}
+				}
+				foreach (var hediff in pawn.health.hediffSet.hediffs)
+				{
+					var curStage = hediff.CurStage;
+					if (curStage != null && curStage.opinionOfOthersFactor != 1f)
+						yield return new SocialRelations.Opinion() { reason = hediff.LabelBaseCap, value = curStage.opinionOfOthersFactor.ToStringPercent() + "%" };
+				}
+				if (pawn.HostileTo(other))
+					yield return new SocialRelations.Opinion() { reason = "Hostile".Translate(), value = "" };
+			}
+
+			var socialRelations = others.Distinct().Select(other =>
+			{
+				var portrait = Renderer.GetPawnPortrait(other, new Vector2(64f, 64f), 2f);
+				var otherNotHuman = other.RaceProps.Humanlike == false;
+				var ourOpinion = pawn.relations.OpinionOf(other);
+				var theirOpinion = other.relations.OpinionOf(pawn);
+				var relations = pawn.GetRelations(other).ToList();
+				relations.Sort((PawnRelationDef a, PawnRelationDef b) => b.importance.CompareTo(a.importance));
+				return new SocialRelations.Relation()
+				{
+					_relations = relations,
+					_ourOpinionNum = ourOpinion,
+
+					type = GetType(relations, other, ourOpinion),
+					pawn = other.LabelShortCap,
+					portrait = portrait,
+					opinions = getOpinions(relations, other).ToArray(),
+					ourOpinion = otherNotHuman ? "" : ourOpinion.ToStringWithSign(),
+					theirOpinion = otherNotHuman ? "" : theirOpinion.ToStringWithSign(),
+					situation = SocialCardUtility.GetPawnSituationLabel(other, pawn)
+				};
+			}).ToList();
+			socialRelations.Sort(relationSorter);
+			var firstEntry = Find.PlayLog.AllEntries.First(entry => entry.Concerns(pawn));
+			var lastInteraction = firstEntry == null ? "" : ((TaggedString)firstEntry.ToGameStringFromPOV(pawn, false)).RawText.StripTags();
+			connection.Send(new SocialRelations() { viewer = vID, info = new SocialRelations.Info() { relations = socialRelations.ToArray(), lastInteraction = lastInteraction } });
+		}
+
 		public static void SendAllState(Connection connection, ViewerID vID)
 		{
 			var puppeteer = State.Instance.PuppeteerForViewer(vID);
@@ -300,6 +406,7 @@ namespace Puppeteer
 			SendAreas(connection, puppeteer);
 			SendPriorities(connection);
 			SendSchedules(connection);
+			OperationQueue.Add(OperationType.SocialRelations, () => SendSocialRelations(connection, vID));
 
 			if (TwitchToolkit.Exists)
 				SendToolkitCommands(connection, vID);
