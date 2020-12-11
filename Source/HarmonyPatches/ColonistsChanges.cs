@@ -140,18 +140,34 @@ namespace Puppeteer
 			if (__instance.IsColonist)
 			{
 				Controller.instance.PawnUnavailable(__instance);
+				var target = new TargetInfo(__instance.Position, __state.map, true);
+
 				var puppeteer = __state.puppeteer;
 				if (puppeteer?.puppet == null || puppeteer.IsConnected == false) return;
-				if (puppeteer.puppet.CooldownFactor() > 0) return;
+				if (puppeteer.puppet.CooldownFactor() > 0)
+				{
+					Messages.Message($"{__instance.LabelCap} died because of player (blue bar) and will not respawn", target, MessageTypeDefOf.NegativeEvent, false);
+					return;
+				}
 
 				var portal = ResurrectionPortal.PortalForMap(__state.map);
-				if (portal == null) return;
-				var tickets = Find.World.GetComponent<Tickets>();
-				if (tickets.remaining > 0)
+				if (portal == null)
 				{
-					tickets.remaining--;
-					LongEventHandler.ExecuteWhenFinished(() => Tools.Resurrect(__instance, portal.Position, __state.workSettings));
+					Messages.Message($"No portal to respawn {__instance.LabelCap}", target, MessageTypeDefOf.NegativeEvent, false);
+					return;
 				}
+				var tickets = Find.World.GetComponent<Tickets>();
+				if (tickets.remaining <= 0)
+				{
+					Messages.Message($"No tickets left to respawn {__instance.LabelCap}", target, MessageTypeDefOf.NegativeEvent, false);
+					return;
+				}
+
+				tickets.remaining--;
+				target = new TargetInfo(portal.Position, portal.Map, true);
+				var ticketStr = tickets.remaining == 0 ? "No tickets" : $"{tickets.remaining} ticket" + (tickets.remaining == 1 ? "" : "s");
+				Messages.Message($"{__instance.LabelCap} respawned. {ticketStr} left.", target, MessageTypeDefOf.PositiveEvent, false);
+				Tools.Resurrect(__instance, portal.Position, __state.workSettings);
 			}
 		}
 	}

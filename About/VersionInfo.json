@@ -417,5 +417,16 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "1.4.1.0",
+		"infos": [
+			{
+				"title": "Make social tab available",
+				"texts": [
+					"This update brings viewers access to the social relations and interactions. Enjoy!"
+				]
+			}
+		]
 	}
 ]
