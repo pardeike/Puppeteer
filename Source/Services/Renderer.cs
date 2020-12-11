@@ -4,11 +4,40 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Emit;
 using UnityEngine;
 using Verse;
 
 namespace Puppeteer
 {
+	[HarmonyPatch(typeof(PawnRenderer))]
+	[HarmonyPatch(nameof(PawnRenderer.RenderPortrait))]
+	static class PawnRenderer_RenderPortrait_Patch
+	{
+		public static Rot4 CustomDirection(Pawn pawn)
+		{
+			return pawn.RaceProps.Humanlike ? Rot4.South : Rot4.East;
+		}
+
+		public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+		{
+			var get_South = AccessTools.PropertyGetter(typeof(Rot4), nameof(Rot4.South));
+			var pawn = AccessTools.Field(typeof(PawnRenderer), "pawn");
+			var customDirection = SymbolExtensions.GetMethodInfo(() => CustomDirection(null));
+			foreach (var code in instructions)
+			{
+				if (code.Calls(get_South))
+				{
+					yield return new CodeInstruction(OpCodes.Ldarg_0);
+					yield return new CodeInstruction(OpCodes.Ldfld, pawn);
+					yield return new CodeInstruction(OpCodes.Call, customDirection);
+				}
+				else
+					yield return code;
+			}
+		}
+	}
+
 	[StaticConstructorOnStartup]
 	public static class Renderer
 	{
@@ -26,9 +55,13 @@ namespace Puppeteer
 			skipCustomRendering = AccessTools.StaticFieldRefAccess<bool>(f);
 		}
 
-		public static byte[] GetPawnPortrait(Pawn pawn, Vector2 boundings)
+		public static byte[] GetPawnPortrait(Pawn pawn, Vector2 boundings, float extraScale = 1.28205f)
 		{
-			var renderTexture = PortraitsCache.Get(pawn, boundings, new Vector3(0f, 0f, 0.11f), 1.28205f);
+			var drawSize = Vector2.one;
+			if (pawn.RaceProps.Humanlike == false)
+				drawSize = pawn.ageTracker.CurKindLifeStage.bodyGraphicData.drawSize;
+			var scale = Mathf.Max(drawSize.x, drawSize.y) + 1;
+			var renderTexture = PortraitsCache.Get(pawn, boundings, new Vector3(0f, 0f, 0.11f), extraScale / scale);
 			var w = renderTexture.width;
 			var h = renderTexture.height;
 			var portrait = new Texture2D(w, h, TextureFormat.ARGB32, false);

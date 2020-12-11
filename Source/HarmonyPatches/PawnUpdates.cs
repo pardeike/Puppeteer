@@ -151,6 +151,8 @@ namespace Puppeteer
 			{
 				OperationQueue.Process(OperationType.Portrait);
 				OperationQueue.Process(OperationType.RenderMap);
+				Controller.instance.SetEvent(PuppeteerEvent.UpdateSocials);
+				OperationQueue.Process(OperationType.SocialRelations);
 			}
 			Controller.instance.SetEvent(PuppeteerEvent.UpdateColonists);
 		}

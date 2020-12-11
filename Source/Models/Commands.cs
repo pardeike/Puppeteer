@@ -349,6 +349,7 @@ namespace Puppeteer
 
 			public string type;
 			public string pawn;
+			public byte[] portrait;
 			public Opinion[] opinions;
 			public string ourOpinion;
 			public string theirOpinion;

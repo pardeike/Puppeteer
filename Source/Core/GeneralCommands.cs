@@ -289,6 +289,13 @@ namespace Puppeteer
 			SendStates(connection, "schedules", GetResult, null);
 		}
 
+		public static void SendNextSocial(Connection connection)
+		{
+			var puppeteer = RoundRobbin.NextColonist("update-socials");
+			if (puppeteer != null)
+				SendSocialRelations(connection, puppeteer.vID);
+		}
+
 		public static void SendSocialRelations(Connection connection, ViewerID vID)
 		{
 			var pawn = State.Instance.PuppeteerForViewer(vID)?.puppet?.pawn;
@@ -308,7 +315,7 @@ namespace Puppeteer
 				return "Acquaintance".Translate();
 			}
 
-			bool ShouldShowPawnRelations(Pawn p) => (!p.RaceProps.Animal || !p.Dead || p.Corpse != null) && p.Name != null && !p.Name.Numerical && p.relations.everSeenByPlayer;
+			bool ShouldShowPawnRelations(Pawn p) => p != pawn && (!p.RaceProps.Animal || !p.Dead || p.Corpse != null) && p.Name != null && !p.Name.Numerical && p.relations.everSeenByPlayer;
 			var others = new List<Pawn>();
 			if (pawn.MapHeld != null)
 			{
@@ -361,25 +368,27 @@ namespace Puppeteer
 			}
 
 			var socialRelations = others.Distinct().Select(other =>
+			{
+				var portrait = Renderer.GetPawnPortrait(other, new Vector2(64f, 64f), 2f);
+				var otherNotHuman = other.RaceProps.Humanlike == false;
+				var ourOpinion = pawn.relations.OpinionOf(other);
+				var theirOpinion = other.relations.OpinionOf(pawn);
+				var relations = pawn.GetRelations(other).ToList();
+				relations.Sort((PawnRelationDef a, PawnRelationDef b) => b.importance.CompareTo(a.importance));
+				return new SocialRelations.Relation()
 				{
-					var otherNotHuman = other.RaceProps.Humanlike == false;
-					var ourOpinion = pawn.relations.OpinionOf(other);
-					var theirOpinion = other.relations.OpinionOf(pawn);
-					var relations = pawn.GetRelations(other).ToList();
-					relations.Sort((PawnRelationDef a, PawnRelationDef b) => b.importance.CompareTo(a.importance));
-					return new SocialRelations.Relation()
-					{
-						_relations = relations,
-						_ourOpinionNum = ourOpinion,
+					_relations = relations,
+					_ourOpinionNum = ourOpinion,
 
-						type = GetType(relations, other, ourOpinion),
-						pawn = other.Name?.ToStringFull ?? other.LabelCapNoCount,
-						opinions = getOpinions(relations, other).ToArray(),
-						ourOpinion = otherNotHuman ? "" : ourOpinion.ToStringWithSign(),
-						theirOpinion = otherNotHuman ? "" : theirOpinion.ToStringWithSign(),
-						situation = SocialCardUtility.GetPawnSituationLabel(other, pawn)
-					};
-				}).ToList();
+					type = GetType(relations, other, ourOpinion),
+					pawn = other.LabelShortCap,
+					portrait = portrait,
+					opinions = getOpinions(relations, other).ToArray(),
+					ourOpinion = otherNotHuman ? "" : ourOpinion.ToStringWithSign(),
+					theirOpinion = otherNotHuman ? "" : theirOpinion.ToStringWithSign(),
+					situation = SocialCardUtility.GetPawnSituationLabel(other, pawn)
+				};
+			}).ToList();
 			socialRelations.Sort(relationSorter);
 			var firstEntry = Find.PlayLog.AllEntries.First(entry => entry.Concerns(pawn));
 			var lastInteraction = firstEntry == null ? "" : ((TaggedString)firstEntry.ToGameStringFromPOV(pawn, false)).RawText.StripTags();
@@ -397,7 +406,7 @@ namespace Puppeteer
 			SendAreas(connection, puppeteer);
 			SendPriorities(connection);
 			SendSchedules(connection);
-			SendSocialRelations(connection, vID);
+			OperationQueue.Add(OperationType.SocialRelations, () => SendSocialRelations(connection, vID));
 
 			if (TwitchToolkit.Exists)
 				SendToolkitCommands(connection, vID);

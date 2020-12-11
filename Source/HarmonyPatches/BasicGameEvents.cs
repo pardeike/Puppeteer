@@ -250,7 +250,7 @@ namespace Puppeteer
 				var puppet = State.Instance.PuppetForPawn(pawn);
 				if (puppet?.puppeteer != null)
 				{
-					Log.Warning($"Cooldown for {pawn.LabelCap} [{opt.Label}]");
+					// Log.Warning($"Cooldown for {pawn.LabelCap} [{opt.Label}]");
 					puppet.lastPlayerCommand = Find.TickManager.TicksAbs;
 				}
 			}
@@ -276,7 +276,7 @@ namespace Puppeteer
 			var puppet = State.Instance.PuppetForPawn(___pawn);
 			if (puppet?.puppeteer != null)
 			{
-				Log.Warning($"Cooldown for {___pawn.LabelCap} [{(value ? "Drafted" : "Undrafted")}]");
+				// Log.Warning($"Cooldown for {___pawn.LabelCap} [{(value ? "Drafted" : "Undrafted")}]");
 				puppet.lastPlayerCommand = Find.TickManager.TicksAbs;
 			}
 		}
@@ -292,7 +292,7 @@ namespace Puppeteer
 			var puppet = State.Instance.PuppetForPawn(p);
 			if (puppet?.puppeteer != null)
 			{
-				Log.Warning($"Cooldown for {p.LabelCap} [Debug command]");
+				// Log.Warning($"Cooldown for {p.LabelCap} [Debug command]");
 				puppet.lastPlayerCommand = Find.TickManager.TicksAbs;
 			}
 		}

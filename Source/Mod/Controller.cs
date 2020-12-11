@@ -23,6 +23,7 @@ namespace Puppeteer
 		SchedulesChanged,
 		SendChangedSchedules,
 		UpdateColonists,
+		UpdateSocials,
 		TimeChanged,
 		MapEntered,
 	}
@@ -132,6 +133,9 @@ namespace Puppeteer
 					case PuppeteerEvent.UpdateColonists:
 						Tools.UpdateColonists();
 						break;
+					case PuppeteerEvent.UpdateSocials:
+						GeneralCommands.SendNextSocial(connection);
+						break;
 					case PuppeteerEvent.TimeChanged:
 						GeneralCommands.SendTimeInfoToAll();
 						break;
@@ -156,12 +160,12 @@ namespace Puppeteer
 				switch (cmd.type)
 				{
 					case "welcome":
-					{
-						var info = Welcome.Create(msg);
-						GeneralCommands.CheckVersionRequired(info);
-						GeneralCommands.SendAllColonists(connection);
-						break;
-					}
+						{
+							var info = Welcome.Create(msg);
+							GeneralCommands.CheckVersionRequired(info);
+							GeneralCommands.SendAllColonists(connection);
+							break;
+						}
 					case "join":
 						GeneralCommands.Join(connection, Join.Create(msg).viewer);
 						break;
@@ -169,62 +173,62 @@ namespace Puppeteer
 						GeneralCommands.Leave(Leave.Create(msg).viewer);
 						break;
 					case "assign":
-					{
-						var assign = Assign.Create(msg);
-						var pawn = Tools.ColonistForThingID(assign.colonistID);
-						AssignViewerToPawn(assign.viewer, pawn);
-						break;
-					}
-					case "state":
-					{
-						var state = IncomingState.Create(msg);
-						if (state?.key != null && state?.val != null)
-							OperationQueue.Add(OperationType.SetState, () => StateCommand.Set(connection, state));
-						else
-							Tools.LogWarning($"Bad state command from {state?.user}, key='{state?.key}' val='{state?.val}'");
-						break;
-					}
-					case "job":
-					{
-						var job = IncomingJob.Create(msg);
-						var puppeteer = State.Instance.PuppeteerForViewer(job.user);
-						Jobs.Run(connection, puppeteer, job);
-						break;
-					}
-					case "stalling":
-					{
-						var stalling = StallingState.Create(msg);
-						var puppeteer = State.Instance.PuppeteerForViewer(stalling.viewer);
-						if (puppeteer != null && puppeteer.connected)
 						{
-							puppeteer.stalling = stalling.state;
-							var state = puppeteer.stalling ? "started" : "ends";
-							Tools.LogWarning($"{stalling.viewer.name} {state} stalling");
+							var assign = Assign.Create(msg);
+							var pawn = Tools.ColonistForThingID(assign.colonistID);
+							AssignViewerToPawn(assign.viewer, pawn);
+							break;
 						}
-						break;
-					}
+					case "state":
+						{
+							var state = IncomingState.Create(msg);
+							if (state?.key != null && state?.val != null)
+								OperationQueue.Add(OperationType.SetState, () => StateCommand.Set(connection, state));
+							else
+								Tools.LogWarning($"Bad state command from {state?.user}, key='{state?.key}' val='{state?.val}'");
+							break;
+						}
+					case "job":
+						{
+							var job = IncomingJob.Create(msg);
+							var puppeteer = State.Instance.PuppeteerForViewer(job.user);
+							Jobs.Run(connection, puppeteer, job);
+							break;
+						}
+					case "stalling":
+						{
+							var stalling = StallingState.Create(msg);
+							var puppeteer = State.Instance.PuppeteerForViewer(stalling.viewer);
+							if (puppeteer != null && puppeteer.connected)
+							{
+								puppeteer.stalling = stalling.state;
+								var state = puppeteer.stalling ? "started" : "ends";
+								Tools.LogWarning($"{stalling.viewer.name} {state} stalling");
+							}
+							break;
+						}
 					case "chat":
-					{
-						var chat = IncomingChat.Create(msg);
-						TwitchToolkit.SendMessage(chat.viewer.id, chat.viewer.name, chat.message);
-						var puppeteer = State.Instance.PuppeteerForViewer(chat.viewer);
-						GeneralCommands.SendCoins(connection, puppeteer);
-						break;
-					}
+						{
+							var chat = IncomingChat.Create(msg);
+							TwitchToolkit.SendMessage(chat.viewer.id, chat.viewer.name, chat.message);
+							var puppeteer = State.Instance.PuppeteerForViewer(chat.viewer);
+							GeneralCommands.SendCoins(connection, puppeteer);
+							break;
+						}
 					case "customize":
-					{
-						var info = Customize.Create(msg);
-						var puppeteer = State.Instance.PuppeteerForViewer(info.viewer);
-						var pawn = puppeteer?.puppet?.pawn;
-						if (pawn != null)
-							Customizer.Change(pawn, info.key, info.val);
-						break;
-					}
+						{
+							var info = Customize.Create(msg);
+							var puppeteer = State.Instance.PuppeteerForViewer(info.viewer);
+							var pawn = puppeteer?.puppet?.pawn;
+							if (pawn != null)
+								Customizer.Change(pawn, info.key, info.val);
+							break;
+						}
 					default:
-					{
-						Tools.LogWarning($"unknown command '{cmd.type}'");
-						break;
-					}
+						{
+							Tools.LogWarning($"unknown command '{cmd.type}'");
+							break;
+						}
 				}
 			}
 			catch (Exception e)
