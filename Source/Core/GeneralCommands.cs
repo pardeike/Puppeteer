@@ -299,6 +299,7 @@ namespace Puppeteer
 		public static void SendSocialRelations(Connection connection, ViewerID vID)
 		{
 			var pawn = State.Instance.PuppeteerForViewer(vID)?.puppet?.pawn;
+			if (pawn?.relations == null) return;
 
 			string GetType(List<PawnRelationDef> relations, Pawn other, int ourOpinion)
 			{
@@ -319,10 +320,11 @@ namespace Puppeteer
 			var others = new List<Pawn>();
 			if (pawn.MapHeld != null)
 			{
-				bool PawnSelector(Pawn p) => p.RaceProps.Humanlike && p != pawn && ShouldShowPawnRelations(p) && (p.relations.OpinionOf(pawn) != 0 || pawn.relations.OpinionOf(p) != 0);
+				bool PawnSelector(Pawn p) => p != pawn && p.RaceProps.Humanlike && ShouldShowPawnRelations(p) && (p.relations.OpinionOf(pawn) != 0 || pawn.relations.OpinionOf(p) != 0);
 				others.AddRange(pawn.MapHeld.mapPawns.AllPawns.Where(PawnSelector));
 			}
-			others.AddRange(pawn.relations.RelatedPawns.Where(ShouldShowPawnRelations));
+			if (pawn.relations.RelatedPawns != null)
+				others.AddRange(pawn.relations.RelatedPawns.Where(ShouldShowPawnRelations));
 
 			int relationSorter(SocialRelations.Relation a, SocialRelations.Relation b)
 			{
@@ -343,18 +345,23 @@ namespace Puppeteer
 			{
 				foreach (var relation in relations)
 					yield return new SocialRelations.Opinion() { reason = relation.GetGenderSpecificLabelCap(other), value = relation.opinionOffset.ToStringWithSign() };
-				if (pawn.RaceProps.Humanlike && pawn.needs.mood != null)
+				if (pawn.RaceProps.Humanlike)
 				{
-					var thoughts = pawn.needs.mood.thoughts;
-					var tmpSocialThoughts = new List<ISocialThought>();
-					thoughts.GetDistinctSocialThoughtGroups(other, tmpSocialThoughts);
-					for (var i = 0; i < tmpSocialThoughts.Count; i++)
+					var thoughts = pawn.needs?.mood?.thoughts;
+					if (thoughts != null)
 					{
-						var socialThought = tmpSocialThoughts[i];
-						var num = 1;
-						var thought = (Thought)socialThought;
-						if (thought.def.IsMemory) num = thoughts.memories.NumMemoriesInGroup((Thought_MemorySocial)socialThought);
-						yield return new SocialRelations.Opinion() { reason = thought.LabelCapSocial + (num > 1 ? " x" + num : ""), value = thoughts.OpinionOffsetOfGroup(socialThought, other).ToStringWithSign() };
+						var tmpSocialThoughts = new List<ISocialThought>();
+						thoughts.GetDistinctSocialThoughtGroups(other, tmpSocialThoughts);
+						foreach (var socialThought in tmpSocialThoughts)
+						{
+							var num = 1;
+							var thought = (Thought)socialThought;
+							if (thought != null)
+							{
+								if (thought.def.IsMemory) num = thoughts.memories.NumMemoriesInGroup((Thought_MemorySocial)socialThought);
+								yield return new SocialRelations.Opinion() { reason = thought.LabelCapSocial + (num > 1 ? " x" + num : ""), value = thoughts.OpinionOffsetOfGroup(socialThought, other).ToStringWithSign() };
+							}
+						}
 					}
 				}
 				foreach (var hediff in pawn.health.hediffSet.hediffs)
@@ -390,7 +397,7 @@ namespace Puppeteer
 				};
 			}).ToList();
 			socialRelations.Sort(relationSorter);
-			var firstEntry = Find.PlayLog.AllEntries.First(entry => entry.Concerns(pawn));
+			var firstEntry = Find.PlayLog.AllEntries.FirstOrDefault(entry => entry.Concerns(pawn));
 			var lastInteraction = firstEntry == null ? "" : ((TaggedString)firstEntry.ToGameStringFromPOV(pawn, false)).RawText.StripTags();
 			connection.Send(new SocialRelations() { viewer = vID, info = new SocialRelations.Info() { relations = socialRelations.ToArray(), lastInteraction = lastInteraction } });
 		}

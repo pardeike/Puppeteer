@@ -428,5 +428,16 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "1.4.2.0",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"Some oversights on the social calculations have been fixed"
+				]
+			}
+		]
 	}
 ]
