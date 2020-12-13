@@ -24,7 +24,6 @@ namespace Puppeteer
 		SendChangedSchedules,
 		UpdateColonists,
 		UpdateSocials,
-		UpdateGear,
 		TimeChanged,
 		MapEntered,
 	}
@@ -136,9 +135,6 @@ namespace Puppeteer
 						break;
 					case PuppeteerEvent.UpdateSocials:
 						GeneralCommands.SendNextSocial(connection);
-						break;
-					case PuppeteerEvent.UpdateGear:
-						GeneralCommands.SendNextGear(connection);
 						break;
 					case PuppeteerEvent.TimeChanged:
 						GeneralCommands.SendTimeInfoToAll();
@@ -278,6 +274,20 @@ namespace Puppeteer
 		{
 			var puppet = State.Instance.PuppetForPawn(pawn);
 			GeneralCommands.SendPortrait(connection, puppet?.puppeteer);
+		}
+
+		public void UpdateGear(Pawn pawn)
+		{
+			var vID = State.Instance.PuppetForPawn(pawn)?.puppeteer?.vID;
+			if (vID != null)
+				OperationQueue.Add(OperationType.Inventory, new Operation() { name = pawn.ThingID, action = () => GeneralCommands.SendGear(connection, vID) });
+		}
+
+		public void UpdateInventory(Pawn pawn)
+		{
+			var vID = State.Instance.PuppetForPawn(pawn)?.puppeteer?.vID;
+			if (vID != null)
+				OperationQueue.Add(OperationType.Inventory, new Operation() { name = pawn.ThingID, action = () => GeneralCommands.SendInventory(connection, vID) });
 		}
 
 		ColonistBaseInfo.NeedInfo[] GetNeeds(Pawn pawn)

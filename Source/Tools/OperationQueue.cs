@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Linq;
 
 namespace Puppeteer
 {
@@ -12,21 +13,48 @@ namespace Puppeteer
 		Select,
 		RenderMap,
 		SocialRelations,
-		Gear
+		Gear,
+		Inventory
+	}
+
+	public struct Operation
+	{
+		public string name;
+		public Action action;
+
+		public Operation(Action action)
+		{
+			name = "";
+			this.action = action;
+		}
 	}
 
 	public static class OperationQueue
 	{
-		static readonly ConcurrentDictionary<OperationType, ConcurrentQueue<Action>> state = new ConcurrentDictionary<OperationType, ConcurrentQueue<Action>>();
+		static readonly ConcurrentDictionary<OperationType, ConcurrentQueue<Operation>> state = new ConcurrentDictionary<OperationType, ConcurrentQueue<Operation>>();
 
 		public static void Add(OperationType type, Action action)
 		{
 			if (state.TryGetValue(type, out var queue) == false)
 			{
-				queue = new ConcurrentQueue<Action>();
+				queue = new ConcurrentQueue<Operation>();
 				_ = state.TryAdd(type, queue);
 			}
-			queue.Enqueue(action);
+			queue.Enqueue(new Operation(action));
+		}
+
+		public static void Add(OperationType type, Operation operation)
+		{
+			if (state.TryGetValue(type, out var queue) == false)
+			{
+				queue = new ConcurrentQueue<Operation>();
+				_ = state.TryAdd(type, queue);
+			}
+			lock (queue)
+			{
+				if (operation.name == "" || queue.Where(item => item.name == operation.name).Any() == false)
+					queue.Enqueue(operation);
+			}
 		}
 
 		public static void Process(OperationType type)
@@ -36,7 +64,7 @@ namespace Puppeteer
 				try
 				{
 					if (queue.TryDequeue(out var item))
-						item.Invoke();
+						item.action.Invoke();
 				}
 				catch (Exception e)
 				{

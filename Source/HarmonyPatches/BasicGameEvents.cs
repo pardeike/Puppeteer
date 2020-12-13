@@ -296,4 +296,35 @@ namespace Puppeteer
 			}
 		}
 	}
+
+	[HarmonyPatch]
+	static class Pawn_ThingOwner_Notifications_Patch
+	{
+		public static IEnumerable<MethodBase> TargetMethods()
+		{
+			yield return AccessTools.Method(typeof(ThingOwner), "NotifyAdded");
+			yield return AccessTools.Method(typeof(ThingOwner), "NotifyRemoved");
+		}
+
+		[HarmonyPriority(Priority.Last)]
+		[HarmonyDebug]
+		public static void Postfix(IThingHolder ___owner)
+		{
+			if (___owner is Pawn_ApparelTracker apparel)
+			{
+				Controller.instance.UpdateGear(apparel.pawn);
+				return;
+			}
+			if (___owner is Pawn_InventoryTracker inventory)
+			{
+				Controller.instance.UpdateInventory(inventory.pawn);
+				return;
+			}
+			if (___owner is Pawn_EquipmentTracker equipment)
+			{
+				Controller.instance.UpdateInventory(equipment.pawn);
+				return;
+			}
+		}
+	}
 }

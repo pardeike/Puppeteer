@@ -402,13 +402,6 @@ namespace Puppeteer
 			connection.Send(new SocialRelations() { viewer = vID, info = new SocialRelations.Info() { relations = socialRelations.ToArray(), lastInteraction = lastInteraction } });
 		}
 
-		public static void SendNextGear(Connection connection)
-		{
-			var puppeteer = RoundRobbin.NextColonist("update-gear");
-			if (puppeteer != null)
-				SendGear(connection, puppeteer.vID);
-		}
-
 		static readonly Dictionary<BodyPartGroupDef, int> partImportance = new Dictionary<BodyPartGroupDef, int>()
 		{
 			{ DefDatabase<BodyPartGroupDef>.GetNamed("MiddleFingers"), 0 },
@@ -489,6 +482,7 @@ namespace Puppeteer
 								if (apparel.TryGetQuality(out var q)) quality = 1 + (int)q;
 								return new Gear.Apparel()
 								{
+									id = apparel.ThingID,
 									name = apparel.def.LabelCap,
 									tainted = apparel.WornByCorpse,
 									forced = pawn.outfits?.forcedHandler.IsForced(apparel) ?? false,
@@ -516,6 +510,38 @@ namespace Puppeteer
 			});
 		}
 
+		public static void SendInventory(Connection connection, ViewerID vID)
+		{
+			var pawn = State.Instance.PuppeteerForViewer(vID)?.puppet?.pawn;
+			var inventory = pawn?.inventory.innerContainer;
+			if (inventory == null) return;
+			var equipment = pawn?.equipment?.AllEquipmentListForReading;
+			if (equipment == null) return;
+
+			Inventory.Item[] getItems(IEnumerable<Thing> owner)
+			{
+				return owner.Select(thing => new Inventory.Item()
+				{
+					id = thing.ThingID,
+					name = thing.LabelCap,
+					mass = (thing.stackCount * thing.GetStatValue(StatDefOf.Mass)).ToString("F2"),
+					preview = Renderer.GetThingPreview(thing, new Vector2(32, 32)),
+					consumable = (thing.def.IsNutritionGivingIngestible || thing.def.IsNonMedicalDrug) && thing.IngestibleNow && pawn.WillEat(thing, null)
+				})
+				.ToArray();
+			}
+
+			connection.Send(new Inventory()
+			{
+				viewer = vID,
+				info = new Inventory.Info()
+				{
+					inventory = getItems(inventory),
+					equipment = getItems(equipment)
+				}
+			});
+		}
+
 		public static void SendAllState(Connection connection, ViewerID vID)
 		{
 			var puppeteer = State.Instance.PuppeteerForViewer(vID);
@@ -529,6 +555,7 @@ namespace Puppeteer
 			SendSchedules(connection);
 			OperationQueue.Add(OperationType.SocialRelations, () => SendSocialRelations(connection, vID));
 			OperationQueue.Add(OperationType.Gear, () => SendGear(connection, vID));
+			OperationQueue.Add(OperationType.Inventory, () => SendInventory(connection, vID));
 
 			if (TwitchToolkit.Exists)
 				SendToolkitCommands(connection, vID);

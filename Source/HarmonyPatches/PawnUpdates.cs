@@ -169,8 +169,8 @@ namespace Puppeteer
 			if (Event.current.type != EventType.Repaint) return;
 
 			OperationQueue.Process(OperationType.Select);
-			Controller.instance.SetEvent(PuppeteerEvent.UpdateGear);
 			OperationQueue.Process(OperationType.Gear);
+			OperationQueue.Process(OperationType.Inventory);
 		}
 	}
 

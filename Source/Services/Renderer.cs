@@ -106,7 +106,6 @@ namespace Puppeteer
 			readableTexture.ReadPixels(new Rect(0, 0, w, h), 0, 0);
 			RenderTexture.active = previous;
 			var data = readableTexture.EncodeToPNG();
-			RenderTexture.ReleaseTemporary(renderTexture);
 			return data;
 		}
 

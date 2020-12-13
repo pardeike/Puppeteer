@@ -371,6 +371,7 @@ namespace Puppeteer
 	{
 		public class Apparel
 		{
+			public string id;
 			public string name;
 			public int quality;
 			public bool tainted;
@@ -404,6 +405,28 @@ namespace Puppeteer
 		}
 
 		public Gear() { type = "gear"; }
+		public ViewerID viewer;
+		public Info info;
+	}
+
+	public class Inventory : JSONConvertable<Inventory>
+	{
+		public class Item
+		{
+			public string id;
+			public string name;
+			public string mass;
+			public byte[] preview;
+			public bool consumable;
+		}
+
+		public class Info
+		{
+			public Item[] inventory;
+			public Item[] equipment;
+		}
+
+		public Inventory() { type = "inventory"; }
 		public ViewerID viewer;
 		public Info info;
 	}
