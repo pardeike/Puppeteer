@@ -35,7 +35,7 @@ namespace Puppeteer
 			t_PawnColumnWorker_WorkType = AccessTools.TypeByName("WorkTab.PawnColumnWorker_WorkType");
 		}
 
-		public static IEnumerable<WorkTypeDef> GetWorkTypeDefs()
+		public static IEnumerable<PawnColumnWorker_WorkPriority> GetPawnColumnWorkers()
 		{
 			return PawnTableDefOf.Work.columns
 				.Select(column => column.Worker)
@@ -45,7 +45,7 @@ namespace Puppeteer
 					if (worker.GetType() == t_PawnColumnWorker_WorkType) return true;
 					return false;
 				})
-				.Select(worker => worker.def.workType);
+				.Cast<PawnColumnWorker_WorkPriority>();
 		}
 	}
 }

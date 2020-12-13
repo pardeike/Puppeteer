@@ -243,20 +243,33 @@ namespace Puppeteer
 		{
 			PrioritiyInfo GetResult(Pawn pawn)
 			{
+				bool IsIncapableOfWholeWorkType(WorkTypeDef work)
+				{
+					return work.workGiversByPriority.SelectMany(prio => prio.requiredCapacities)
+						.Any(capacity => pawn.health.capacities.CapableOf(capacity) == false);
+				}
+
 				int[] GetValues(Pawn p)
 				{
-					return Integrations.GetWorkTypeDefs().Select(def =>
+					return Integrations.GetPawnColumnWorkers().Select(worker =>
 					{
-						var priority = p.workSettings.GetPriority(def);
-						var passion = (int)p.skills.MaxPassionOfRelevantSkillsFor(def);
-						var disabled = def.relevantSkills.Any(skill => p.skills.GetSkill(skill).TotallyDisabled);
+						var workType = worker.def.workType;
+						var priority = p.workSettings.GetPriority(workType);
+						var passion = (int)p.skills.MaxPassionOfRelevantSkillsFor(workType);
+						var disabled = IsIncapableOfWholeWorkType(workType) || p.WorkTypeIsDisabled(workType);
 						return disabled ? -1 : passion * 100 + priority;
 					})
 					.ToArray();
 				}
 
-				var columns = Integrations.GetWorkTypeDefs().Select(def => def.labelShort).ToArray();
-				var rows = AllColonistsWithCurrentTop(pawn).Select(colonist => new PrioritiyInfo.Priorities() { pawn = colonist.LabelShortCap, yours = colonist == pawn, val = GetValues(colonist) })
+				var columns = Integrations.GetPawnColumnWorkers().Select(worker => worker.def.workType.labelShort).ToArray();
+				var rows = AllColonistsWithCurrentTop(pawn)
+					.Select(colonist => new PrioritiyInfo.Priorities()
+					{
+						pawn = colonist.LabelShortCap,
+						yours = colonist == pawn,
+						val = GetValues(colonist)
+					})
 					.ToArray();
 				return new PrioritiyInfo()
 				{

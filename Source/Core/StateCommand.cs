@@ -55,7 +55,7 @@ namespace Puppeteer
 							var val = Convert.ToInt32(state.val);
 							var idx = val / 100;
 							var prio = val % 100;
-							var defs = Integrations.GetWorkTypeDefs().ToArray();
+							var defs = Integrations.GetPawnColumnWorkers().Select(worker => worker.def.workType).ToArray();
 							if (idx >= 0 && idx < defs.Length)
 							{
 								pawn.workSettings.SetPriority(defs[idx], prio);

@@ -450,5 +450,16 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "1.5.1.0",
+		"infos": [
+			{
+				"title": "Bug fix",
+				"texts": [
+					"Corrects the logic in which the priority table is drawn (disabled cells now work correctly)"
+				]
+			}
+		]
 	}
 ]
