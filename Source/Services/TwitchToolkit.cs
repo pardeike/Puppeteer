@@ -139,9 +139,11 @@ namespace Puppeteer
 
 	class TTCommand
 	{
+#pragma warning disable 649
 		public bool requiresAdmin;
 		public bool requiresMod;
 		public bool enabled;
 		public string command;
+#pragma warning restore 649
 	}
 }

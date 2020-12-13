@@ -23,9 +23,10 @@ namespace Puppeteer
 
 		static Tools()
 		{
-			RoundRobbin.Create("update-colonist", 5f);
-			RoundRobbin.Create("render-colonist", 30f);
-			RoundRobbin.Create("update-socials", 300f);
+			RoundRobbin.Create("update-colonist", 7f);
+			RoundRobbin.Create("render-colonist", 31f);
+			RoundRobbin.Create("update-socials", 303f);
+			RoundRobbin.Create("update-gear", 307f);
 		}
 
 		public static string Base64Decode(this string value)
@@ -311,8 +312,7 @@ namespace Puppeteer
 		public static void SetColonistNickname(Pawn pawn, string nick)
 		{
 			if (pawn == null || pawn.Spawned == false) return;
-			var name3 = pawn.Name as NameTriple;
-			if (name3 != null)
+			if (pawn.Name is NameTriple name3)
 				pawn.Name = new NameTriple(name3.First, nick ?? name3.First, name3.Last);
 		}
 

@@ -225,8 +225,7 @@ namespace Puppeteer
 		[HarmonyPriority(Priority.First)]
 		public static void Prefix(ref IEnumerable<Gizmo> gizmos)
 		{
-			var portal = Find.Selector.SelectedObjects.FirstOrDefault() as ResurrectionPortal;
-			if (portal == null) return;
+			if (!(Find.Selector.SelectedObjects.FirstOrDefault() is ResurrectionPortal portal)) return;
 			gizmos = new List<Gizmo>() { CreateDeleteResurrectionPortal(portal) }.AsEnumerable();
 		}
 	}
@@ -269,7 +268,7 @@ namespace Puppeteer
 	static class Pawn_DraftController_Drafted_Patch
 	{
 		[HarmonyPriority(Priority.Last)]
-		public static void Postfix(bool value, Pawn ___pawn)
+		public static void Postfix(/*bool value,*/ Pawn ___pawn)
 		{
 			if (Tools.IsFakeDrafting) return;
 

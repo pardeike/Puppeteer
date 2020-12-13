@@ -166,8 +166,11 @@ namespace Puppeteer
 		[HarmonyPriority(Priority.First)]
 		public static void Postfix()
 		{
-			if (Event.current.type == EventType.Repaint)
-				OperationQueue.Process(OperationType.Select);
+			if (Event.current.type != EventType.Repaint) return;
+
+			OperationQueue.Process(OperationType.Select);
+			Controller.instance.SetEvent(PuppeteerEvent.UpdateGear);
+			OperationQueue.Process(OperationType.Gear);
 		}
 	}
 

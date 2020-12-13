@@ -57,6 +57,7 @@
     <Compile Include="Services\Dialogs.cs" />
     <Compile Include="Services\Tickets.cs" />
     <Compile Include="Services\TwitchToolkit.cs" />
+    <Compile Include="Tools\ApparelGroups.cs" />
     <Compile Include="Tools\Defs.cs" />
     <Compile Include="Tools\GetterSetters.cs" />
     <Compile Include="Tools\MapFaker.cs" />

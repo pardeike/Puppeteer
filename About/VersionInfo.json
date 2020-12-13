@@ -439,5 +439,16 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "1.5.0.0",
+		"infos": [
+			{
+				"title": "Adds apparel and inventory tabs",
+				"texts": [
+					"Two new tabs give your viewers full access to all the colonist details"
+				]
+			}
+		]
 	}
 ]

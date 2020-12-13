@@ -11,7 +11,8 @@ namespace Puppeteer
 		Log,
 		Select,
 		RenderMap,
-		SocialRelations
+		SocialRelations,
+		Gear
 	}
 
 	public static class OperationQueue

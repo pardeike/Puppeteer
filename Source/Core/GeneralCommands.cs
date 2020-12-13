@@ -402,6 +402,120 @@ namespace Puppeteer
 			connection.Send(new SocialRelations() { viewer = vID, info = new SocialRelations.Info() { relations = socialRelations.ToArray(), lastInteraction = lastInteraction } });
 		}
 
+		public static void SendNextGear(Connection connection)
+		{
+			var puppeteer = RoundRobbin.NextColonist("update-gear");
+			if (puppeteer != null)
+				SendGear(connection, puppeteer.vID);
+		}
+
+		static readonly Dictionary<BodyPartGroupDef, int> partImportance = new Dictionary<BodyPartGroupDef, int>()
+		{
+			{ DefDatabase<BodyPartGroupDef>.GetNamed("MiddleFingers"), 0 },
+			{ DefDatabase<BodyPartGroupDef>.GetNamed("LeftHand"), 1 },
+			{ DefDatabase<BodyPartGroupDef>.GetNamed("RightHand"), 2 },
+			{ DefDatabase<BodyPartGroupDef>.GetNamed("Eyes"), 3 },
+			{ DefDatabase<BodyPartGroupDef>.GetNamed("Teeth"), 4 },
+			{ DefDatabase<BodyPartGroupDef>.GetNamed("Mouth"), 5 },
+			{ DefDatabase<BodyPartGroupDef>.GetNamed("Hands"), 6 },
+			{ DefDatabase<BodyPartGroupDef>.GetNamed("Feet"), 7 },
+			{ DefDatabase<BodyPartGroupDef>.GetNamed("Arms"), 8 },
+			{ DefDatabase<BodyPartGroupDef>.GetNamed("Legs"), 9 },
+			{ DefDatabase<BodyPartGroupDef>.GetNamed("Neck"), 10 },
+			{ DefDatabase<BodyPartGroupDef>.GetNamed("FullHead"), 11 },
+			{ DefDatabase<BodyPartGroupDef>.GetNamed("UpperHead"), 12 },
+			{ DefDatabase<BodyPartGroupDef>.GetNamed("Shoulders"), 13 },
+			{ DefDatabase<BodyPartGroupDef>.GetNamed("Waist"), 14 },
+			{ DefDatabase<BodyPartGroupDef>.GetNamed("Torso"), 15 },
+		};
+		static BodyPartGroupDef MostImportantPart(Apparel apparel) => apparel.def.apparel.bodyPartGroups.OrderBy(def => partImportance.TryGetValue(def)).Last();
+
+		public static void SendGear(Connection connection, ViewerID vID)
+		{
+			var pawn = State.Instance.PuppeteerForViewer(vID)?.puppet?.pawn;
+			var wornApparel = pawn?.apparel?.WornApparel;
+			if (wornApparel == null) return;
+
+			string GetOverallArmor(StatDef stat)
+			{
+				var value = 0f;
+				var statValue = Mathf.Clamp01(pawn.GetStatValue(stat, true) / 2f);
+				var allParts = pawn.RaceProps.body.AllParts;
+				var list = pawn.apparel?.WornApparel;
+				for (var i = 0; i < allParts.Count; i++)
+				{
+					var val = 1f - statValue;
+					if (list != null)
+					{
+						for (var j = 0; j < list.Count; j++)
+						{
+							if (list[j].def.apparel.CoversBodyPart(allParts[i]))
+							{
+								var num4 = Mathf.Clamp01(list[j].GetStatValue(stat, true) / 2f);
+								val *= 1f - num4;
+							}
+						}
+					}
+					value += allParts[i].coverageAbs * (1f - val);
+				}
+				return Mathf.Clamp(value * 2f, 0f, 2f).ToStringPercent();
+			}
+
+			connection.Send(new Gear()
+			{
+				viewer = vID,
+				info = new Gear.Info()
+				{
+					currentMass = MassUtility.GearAndInventoryMass(pawn).ToString("F2"),
+					maxMass = MassUtility.Capacity(pawn, null).ToString("F2"),
+					comfortableTemps = new[] {
+						pawn.GetStatValue(StatDefOf.ComfyTemperatureMin, true).ToStringTemperature("F0"),
+						pawn.GetStatValue(StatDefOf.ComfyTemperatureMax, true).ToStringTemperature("F0"),
+					},
+					overallArmor = new[] {
+						GetOverallArmor(StatDefOf.ArmorRating_Sharp),
+						GetOverallArmor(StatDefOf.ArmorRating_Blunt),
+						GetOverallArmor(StatDefOf.ArmorRating_Heat)
+					},
+
+					parts = DefDatabase<BodyPartGroupDef>.AllDefs.OrderBy(def => -1000 * def.listOrder)
+						.Select(bodyPartGroupDef =>
+						{
+							var bodyPartInfo = wornApparel.Where(apparel => MostImportantPart(apparel) == bodyPartGroupDef).ToList();
+							var apparels = bodyPartInfo.Select(apparel =>
+							{
+								var preview = Renderer.GetThingPreview(apparel, new Vector2(96f, 96f));
+								var quality = 0;
+								if (apparel.TryGetQuality(out var q)) quality = 1 + (int)q;
+								return new Gear.Apparel()
+								{
+									name = apparel.def.LabelCap,
+									tainted = apparel.WornByCorpse,
+									forced = pawn.outfits?.forcedHandler.IsForced(apparel) ?? false,
+									hp1 = apparel.HitPoints,
+									hp2 = apparel.MaxHitPoints,
+									mValue = apparel.MarketValue,
+									stuff = apparel.Stuff?.LabelCap ?? "",
+									mass = apparel.GetStatValue(StatDefOf.Mass).ToString("F2"),
+									aSharp = apparel.GetStatValue(StatDefOf.ArmorRating_Sharp).ToStringPercent(),
+									aBlunt = apparel.GetStatValue(StatDefOf.ArmorRating_Blunt).ToStringPercent(),
+									aHeat = apparel.GetStatValue(StatDefOf.ArmorRating_Heat).ToStringPercent(),
+									iCold = apparel.GetStatValue(StatDefOf.Insulation_Cold).ToStringTemperature(),
+									iHeat = apparel.GetStatValue(StatDefOf.Insulation_Heat).ToStringTemperatureOffset(),
+									quality = quality,
+									preview = preview
+								};
+							})
+							.ToArray();
+
+							return new Gear.BodyPart() { name = bodyPartGroupDef.LabelCap, apparels = apparels };
+						})
+						.Where(part => part.apparels.Length > 0)
+						.ToArray()
+				}
+			});
+		}
+
 		public static void SendAllState(Connection connection, ViewerID vID)
 		{
 			var puppeteer = State.Instance.PuppeteerForViewer(vID);
@@ -414,6 +528,7 @@ namespace Puppeteer
 			SendPriorities(connection);
 			SendSchedules(connection);
 			OperationQueue.Add(OperationType.SocialRelations, () => SendSocialRelations(connection, vID));
+			OperationQueue.Add(OperationType.Gear, () => SendGear(connection, vID));
 
 			if (TwitchToolkit.Exists)
 				SendToolkitCommands(connection, vID);

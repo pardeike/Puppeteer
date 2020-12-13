@@ -24,6 +24,7 @@ namespace Puppeteer
 		SendChangedSchedules,
 		UpdateColonists,
 		UpdateSocials,
+		UpdateGear,
 		TimeChanged,
 		MapEntered,
 	}
@@ -135,6 +136,9 @@ namespace Puppeteer
 						break;
 					case PuppeteerEvent.UpdateSocials:
 						GeneralCommands.SendNextSocial(connection);
+						break;
+					case PuppeteerEvent.UpdateGear:
+						GeneralCommands.SendNextGear(connection);
 						break;
 					case PuppeteerEvent.TimeChanged:
 						GeneralCommands.SendTimeInfoToAll();

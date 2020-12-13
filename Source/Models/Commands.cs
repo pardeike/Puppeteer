@@ -367,6 +367,47 @@ namespace Puppeteer
 		public Info info;
 	}
 
+	public class Gear : JSONConvertable<Gear>
+	{
+		public class Apparel
+		{
+			public string name;
+			public int quality;
+			public bool tainted;
+			public bool forced;
+			public int hp1;
+			public int hp2;
+			public float mValue;
+			public string stuff;
+			public string mass;
+			public string aSharp;
+			public string aBlunt;
+			public string aHeat;
+			public string iCold;
+			public string iHeat;
+			public byte[] preview;
+		}
+
+		public class BodyPart
+		{
+			public string name;
+			public Apparel[] apparels;
+		}
+
+		public class Info
+		{
+			public string currentMass;
+			public string maxMass;
+			public string[] comfortableTemps;
+			public string[] overallArmor;
+			public BodyPart[] parts;
+		}
+
+		public Gear() { type = "gear"; }
+		public ViewerID viewer;
+		public Info info;
+	}
+
 	public class GridUpdate : JSONConvertable<GridUpdate>
 	{
 		public class Frame

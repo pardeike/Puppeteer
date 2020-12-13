@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using Verse;
 
@@ -38,6 +39,19 @@ namespace Puppeteer
 		}
 	}
 
+	[HarmonyPatch]
+	public static class ReversePatches
+	{
+		[HarmonyPatch(typeof(PortraitsCache))]
+		[HarmonyPatch("NewRenderTexture")]
+		[HarmonyReversePatch(HarmonyReversePatchType.Original)]
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		public static RenderTexture NewRenderTexture(Vector2 _)
+		{
+			return null;
+		}
+	}
+
 	[StaticConstructorOnStartup]
 	public static class Renderer
 	{
@@ -65,13 +79,34 @@ namespace Puppeteer
 			var w = renderTexture.width;
 			var h = renderTexture.height;
 			var portrait = new Texture2D(w, h, TextureFormat.ARGB32, false);
-			var active = RenderTexture.active;
+			var previous = RenderTexture.active;
 			RenderTexture.active = renderTexture;
 			portrait.ReadPixels(new Rect(0, 0, w, h), 0, 0);
 			portrait.Apply();
-			RenderTexture.active = active;
+			RenderTexture.active = previous;
 			var data = portrait.EncodeToPNG();
 			UnityEngine.Object.Destroy(portrait);
+			return data;
+		}
+
+		static readonly byte[] emptyPNG = new Texture2D(1, 1, TextureFormat.ARGB32, false).EncodeToPNG();
+		public static byte[] GetThingPreview(Thing thing, Vector2 boundings)
+		{
+			if (thing.def.DrawMatSingle?.mainTexture == null) return emptyPNG;
+			var renderTexture = ReversePatches.NewRenderTexture(boundings);
+			var previous = RenderTexture.active;
+			RenderTexture.active = renderTexture;
+			GL.PushMatrix();
+			GL.LoadPixelMatrix(0, boundings.x, boundings.y, 0);
+			Widgets.ThingIcon(new Rect(Vector2.zero, boundings), thing);
+			GL.PopMatrix();
+			var w = renderTexture.width;
+			var h = renderTexture.height;
+			var readableTexture = new Texture2D(w, h, TextureFormat.ARGB32, false);
+			readableTexture.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+			RenderTexture.active = previous;
+			var data = readableTexture.EncodeToPNG();
+			RenderTexture.ReleaseTemporary(renderTexture);
 			return data;
 		}
 

@@ -90,7 +90,9 @@ namespace Puppeteer
 
 			var allRestrictions = map.GetComponent<OffLimitsComponent>().restrictions;
 			var extra = (allRestrictions.Count < maxRestrictions ? 24f : -6f) + 1f;
+#pragma warning disable CS0612
 			var list2 = list.BeginSection(allRestrictions.Count * (24f + 6f) + extra);
+#pragma warning restore CS0612
 			var restrictions = allRestrictions.ToArray();
 			for (var i = 0; i < restrictions.Length; i++)
 			{
