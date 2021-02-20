@@ -307,7 +307,6 @@ namespace Puppeteer
 		}
 
 		[HarmonyPriority(Priority.Last)]
-		[HarmonyDebug]
 		public static void Postfix(IThingHolder ___owner)
 		{
 			if (___owner is Pawn_ApparelTracker apparel)

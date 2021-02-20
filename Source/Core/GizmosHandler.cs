@@ -39,8 +39,8 @@ namespace Puppeteer
 				var m_Register = SymbolExtensions.GetMethodInfo(() => Register(default, default));
 
 				var list = instructions.ToList();
-				var idx = instructions.FirstIndexOf(inst => inst.Calls(m_FindAllowedDesignator));
-				if (idx < 0 || idx >= list.Count)
+				var idx = instructions.FirstIndex(inst => inst.Calls(m_FindAllowedDesignator));
+				if (idx < 0)
 				{
 					Log.Error("Cannot find BuildCopyCommandUtility.FindAllowedDesignator in BuildCopyCommandUtility.BuildCommand");
 					return instructions;
