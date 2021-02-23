@@ -73,34 +73,45 @@ namespace Puppeteer
 
 		public OffLimitsComponent(Map map) : base(map) { }
 
-		List<Pawn> tmpKeys;
-		List<PawnSettings> tmpVals;
+		List<Pawn> tmpKeys = new List<Pawn>();
+		List<PawnSettings> tmpVals = new List<PawnSettings>();
 		public override void ExposeData()
 		{
-			base.ExposeData();
-
-			Scribe_Collections.Look(ref areas, "areas", LookMode.Deep, Array.Empty<OffLimitsArea>());
-			Scribe_Collections.Look(ref restrictions, "restrictions", LookMode.Deep, Array.Empty<Restriction>());
-
-			if (areas == null)
-				areas = new List<OffLimitsArea>();
-			if (restrictions == null)
-				restrictions = new List<Restriction>();
-
-			if (Scribe.mode == LoadSaveMode.Saving)
+			try
 			{
-				tmpKeys = new List<Pawn>(pawnSettings.Keys);
-				tmpVals = new List<PawnSettings>(pawnSettings.Values);
+				base.ExposeData();
+
+				Scribe_Collections.Look(ref areas, "areas", LookMode.Deep, Array.Empty<OffLimitsArea>());
+				Scribe_Collections.Look(ref restrictions, "restrictions", LookMode.Deep, Array.Empty<Restriction>());
+
+				if (areas == null)
+					areas = new List<OffLimitsArea>();
+				if (restrictions == null)
+					restrictions = new List<Restriction>();
+
+				if (Scribe.mode == LoadSaveMode.Saving)
+				{
+					tmpKeys = new List<Pawn>(pawnSettings.Keys);
+					tmpVals = new List<PawnSettings>(pawnSettings.Values);
+				}
+
+				Scribe_Collections.Look(ref tmpKeys, "pawnSettings.pawns", LookMode.Reference);
+				Scribe_Collections.Look(ref tmpVals, "pawnSettings.settings", LookMode.Deep);
+
+				if (Scribe.mode == LoadSaveMode.PostLoadInit)
+				{
+					pawnSettings = new Dictionary<Pawn, PawnSettings>();
+					for (var i = 0; i < tmpKeys.Count; i++)
+						pawnSettings[tmpKeys[i]] = tmpVals[i];
+				}
 			}
-
-			Scribe_Collections.Look(ref tmpKeys, "pawnSettings.pawns", LookMode.Reference);
-			Scribe_Collections.Look(ref tmpVals, "pawnSettings.settings", LookMode.Deep);
-
-			if (Scribe.mode == LoadSaveMode.PostLoadInit)
+			catch
 			{
-				pawnSettings = new Dictionary<Pawn, PawnSettings>();
-				for (var i = 0; i < tmpKeys.Count; i++)
-					pawnSettings[tmpKeys[i]] = tmpVals[i];
+				if (Scribe.mode == LoadSaveMode.PostLoadInit)
+				{
+					Log.Warning("Could not load Puppeteer areas and restrictions. They were reset to their defaults");
+					pawnSettings = new Dictionary<Pawn, PawnSettings>();
+				}
 			}
 		}
 

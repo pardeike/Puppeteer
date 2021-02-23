@@ -164,13 +164,18 @@ namespace Puppeteer
 
 		static void SendTimeInfo(Connection connection, ViewerID vID)
 		{
+			if (connection == null) return;
+
 			var map = Find.CurrentMap;
 			if (map == null) return;
 
 			var tickManager = Find.TickManager;
 			if (tickManager == null) return;
 
-			var vector = Find.WorldGrid.LongLatOf(map.Tile);
+			var worldGrid = Find.WorldGrid;
+			if (worldGrid == null) return;
+
+			var vector = worldGrid.LongLatOf(map.Tile);
 			var dateStr = GenDate.DateFullStringWithHourAt(tickManager.TicksAbs, vector);
 			connection.Send(new TimeInfo() { viewer = vID, info = new TimeInfo.Info() { time = dateStr, speed = (int)Find.TickManager.CurTimeSpeed } });
 		}
@@ -251,9 +256,8 @@ namespace Puppeteer
 
 				int[] GetValues(Pawn p)
 				{
-					return Integrations.GetPawnColumnWorkers().Select(worker =>
+					return Integrations.GetPawnWorkerDefs().Select(workType =>
 					{
-						var workType = worker.def.workType;
 						var priority = p.workSettings.GetPriority(workType);
 						var passion = (int)p.skills.MaxPassionOfRelevantSkillsFor(workType);
 						var disabled = IsIncapableOfWholeWorkType(workType) || p.WorkTypeIsDisabled(workType);
@@ -262,7 +266,7 @@ namespace Puppeteer
 					.ToArray();
 				}
 
-				var columns = Integrations.GetPawnColumnWorkers().Select(worker => worker.def.workType.labelShort).ToArray();
+				var columns = Integrations.GetPawnWorkerDefs().Select(workType => workType.labelShort).ToArray();
 				var rows = AllColonistsWithCurrentTop(pawn)
 					.Select(colonist => new PrioritiyInfo.Priorities()
 					{
@@ -276,7 +280,7 @@ namespace Puppeteer
 					columns = columns,
 					manual = Current.Game.playSettings.useWorkPriorities,
 					norm = Integrations.defaultPriority,
-					max = Integrations.maxPriority,
+					max = Integrations.maxPriority + 1, // compensate for 0-index
 					rows = rows
 				};
 			}
