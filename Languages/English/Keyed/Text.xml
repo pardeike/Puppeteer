@@ -10,4 +10,6 @@
 	<StartTickets>Number of respawn tickets</StartTickets>
 	<PlayerActionCooldownTicks>Control cooldown preventing respawn (game hours)</PlayerActionCooldownTicks>
 
+	<SendChatResponsesToTwitch>Send Toolkit chat responses to Twitch</SendChatResponsesToTwitch>
+
 </LanguageData>

@@ -29,6 +29,18 @@ namespace Puppeteer
 			RoundRobbin.Create("update-gear", 307f);
 		}
 
+		public static int FirstIndex<T>(this IEnumerable<T> list, Func<T, bool> evaluator)
+		{
+			var idx = 0;
+			foreach (var item in list)
+			{
+				if (evaluator(item))
+					return idx;
+				idx++;
+			}
+			return -1;
+		}
+
 		public static string Base64Decode(this string value)
 		{
 			value = value.Replace('-', '+');

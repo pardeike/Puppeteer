@@ -6,6 +6,7 @@
 	<MapUpdateFrequency_Help>The update frequency tells the client to request new map images every x milliseconds. Higher values reduce the amount of data send.</MapUpdateFrequency_Help>
 	<StartTickets_Help>If you create a respawn portal your controlled colonists will respawn when they die. Give yourself a number of allowed respawns for a newly started game.</StartTickets_Help>
 	<PlayerActionCooldownTicks_Help>When you handle a controlled colonist, the respawning will be disabled for a certain time and a death will be considered your fault.</PlayerActionCooldownTicks_Help>
+	<SendChatResponsesToTwitch_Help>Normally if a viewer is using Puppeteer, all Twitch Toolkit responses go to their browser. This option makes the response also go to Twitch chat.</SendChatResponsesToTwitch_Help>
 	<CreateAreaHelp>Areas for restrictions. Each area is either global if it has no cells or specific to the cells marked (use +/- buttons to edit). You then turn areas on/off for each colonist in the previous list. Displaying areas can be turned on/off with a button in the bottom right of the screen.</CreateAreaHelp>
 	<EditAreaHelp>The list of restrictions is global and you can select (green checkmark) which are active for this area.</EditAreaHelp>
 

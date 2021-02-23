@@ -307,7 +307,6 @@ namespace Puppeteer
 		}
 
 		[HarmonyPriority(Priority.Last)]
-		[HarmonyDebug]
 		public static void Postfix(IThingHolder ___owner)
 		{
 			if (___owner is Pawn_ApparelTracker apparel)
@@ -325,38 +324,6 @@ namespace Puppeteer
 				Controller.instance.UpdateInventory(equipment.pawn);
 				return;
 			}
-		}
-	}
-
-	[HarmonyPatch(typeof(Designator_Place))]
-	[HarmonyPatch(nameof(Designator_Place.SelectedUpdate))]
-	static class Designator_Place_SelectedUpdate_Patch
-	{
-		[HarmonyPriority(Priority.Last)]
-		public static void Prefix(Designator_Place __instance, Rot4 ___placingRot)
-		{
-			var center = UI.MouseCell();
-			var ghostCol = Designator_Place.CannotPlaceColor;
-			if (__instance.CanDesignateCell(center).Accepted)
-				ghostCol = Designator_Place.CanPlaceColor;
-
-			var thingDef = __instance.PlacingDef;
-			var drawAltitude = AltitudeLayer.Blueprint;
-			Vector3 loc = GenThing.TrueCenter(center, ___placingRot, thingDef.Size, drawAltitude.AltitudeFor());
-
-			var renderTexture = ReversePatches.NewRenderTexture(new Vector2(128, 128));
-			var previous = RenderTexture.active;
-			RenderTexture.active = renderTexture;
-			GL.PushMatrix();
-			GL.LoadPixelMatrix(0, boundings.x, boundings.y, 0);
-
-			Log.Warning($"{__instance} {loc} {thingDef.Size} {ghostCol}");
-		}
-
-		[HarmonyPriority(Priority.Last)]
-		public static void Postfix(Designator_Place __instance)
-		{
-
 		}
 	}
 }

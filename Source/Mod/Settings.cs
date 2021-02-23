@@ -14,6 +14,7 @@ namespace Puppeteer
 		public bool showOffLimitZones = true;
 		public int startTickets = 20;
 		public int playerActionCooldownTicks = GenDate.TicksPerHour;
+		public bool sendChatResponsesToTwitch = false;
 
 		public HashSet<string> menuCommands = new HashSet<string>();
 	}
@@ -59,6 +60,9 @@ namespace Puppeteer
 				list.Gap(10f);
 				list.Dialog_IntSlider("StartTickets", n => $"{n} tickets", ref settings.startTickets, 0, 100);
 				list.Dialog_IntSlider("PlayerActionCooldownTicks", n => $"{Math.Floor((float)n / GenDate.TicksPerHour * 10 + 0.5) / 10} hour(s)", ref settings.playerActionCooldownTicks, 0, GenDate.TicksPerDay);
+
+				list.Gap(10f);
+				list.Dialog_Checkbox("SendChatResponsesToTwitch", ref settings.sendChatResponsesToTwitch);
 			}
 
 			list.End();

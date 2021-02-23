@@ -461,5 +461,17 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "1.5.2.0",
+		"infos": [
+			{
+				"title": "Maintainance",
+				"texts": [
+					"Regression: Puppeteer will not affect Twitch Toolkit points anymore",
+					"New mod settings: Choose if answers to Twitch Toolkit commands go to Puppeteer only (default) or also to Twitch chat"
+				]
+			}
+		]
 	}
 ]
