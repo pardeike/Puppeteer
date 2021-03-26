@@ -11,7 +11,7 @@ namespace Puppeteer
 	public static class Integrations
 	{
 		public static int defaultPriority = 3;
-		public static int maxPriority = 5;
+		public static int maxPriority = 4;
 
 		static readonly Type t_PawnColumnWorker_WorkType;
 
