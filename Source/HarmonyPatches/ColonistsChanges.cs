@@ -279,9 +279,18 @@ namespace Puppeteer
 		[HarmonyPriority(Priority.First)]
 		public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
 		{
+			float scale;
+			try
+			{
+				scale = Find.UIRoot == null || Find.MapUI == null ? 1f : (Find.ColonistBar?.Scale ?? 1f);
+			}
+			catch
+			{
+				scale = 1f;
+			}
+
 			foreach (var instr in instructions)
 			{
-				var scale = Find.UIRoot == null || Find.MapUI == null ? 1f : (Find.ColonistBar?.Scale ?? 1f);
 				if (instr.OperandIs(BaseSpaceBetweenColonistsVertical))
 				{
 					var offset = extraVerticalOffset + (Prefs.DevMode ? extraDevModeOffset : 0f);

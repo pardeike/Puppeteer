@@ -497,5 +497,16 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "1.5.5.0",
+		"infos": [
+			{
+				"title": "Minor fix",
+				"texts": [
+					"Fixes a rare problem with detecting extra space at top of screen when debug mode is on"
+				]
+			}
+		]
 	}
 ]
