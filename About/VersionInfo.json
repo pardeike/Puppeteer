@@ -473,5 +473,29 @@
 				]
 			}
 		]
+	},
+	{
+		"version": "1.5.3.0",
+		"infos": [
+			{
+				"title": "Bug fixes",
+				"texts": [
+					"Regression: Fixes Twitch Toolkit message routing for non-Puppeteer users",
+					"Fix: better support for WorkTab mod and fixed a one-off error in stepping priority values"
+				]
+			}
+		]
+	},
+	{
+		"version": "1.5.4.0",
+		"infos": [
+			{
+				"title": "Bug fix and random assignment",
+				"texts": [
+					"Fix: work priorities are now correctly capped at 4",
+					"Feature: holding ALT while right-clicking on the colonist bar will randomly assign an available viewer"
+				]
+			}
+		]
 	}
 ]

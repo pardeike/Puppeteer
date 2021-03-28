@@ -82,8 +82,14 @@ namespace Puppeteer
 
 			var puppet = State.Instance.PuppetForPawn(pawn);
 			var existingPuppeteer = puppet?.puppeteer;
-
 			var availablePuppeteers = State.Instance.ConnectedPuppeteers().OrderBy(p => p.vID.name).ToList();
+
+			if (existingPuppeteer == null && (e.modifiers & EventModifiers.Alt) != 0 && availablePuppeteers.Count > 0)
+			{
+				Controller.instance.AssignViewerToPawn(availablePuppeteers.RandomElement().vID, pawn);
+				return;
+			}
+
 			if (availablePuppeteers.Any() || existingPuppeteer != null)
 			{
 				var list = new List<FloatMenuOption>();

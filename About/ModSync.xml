@@ -2,7 +2,7 @@
 <ModSyncNinjaData>
   <ID>d4ac2d33-80f9-4151-b188-588b5bcb3943</ID>
   <ModName>Puppeteer</ModName>
-  <Version>1.5.2.0</Version>
+  <Version>1.5.4.0</Version>
   <SaveBreaking>False</SaveBreaking>
   <Host name="Github">
     <Owner>pardeike</Owner>

@@ -141,6 +141,7 @@ namespace Puppeteer
 			{
 				//Tools.LogWarning($"SendChatMessage [{userName}] [{message}]");
 
+				var originalMessage = message;
 				var match = parser.Match(message);
 				if (match.Success)
 				{
@@ -154,9 +155,13 @@ namespace Puppeteer
 				}
 
 				var puppeteer = State.Instance.PuppeteerForViewerName(userName);
-				if (puppeteer != null && puppeteer.IsConnected)
-					Controller.instance.SendChatMessage(puppeteer.vID, message);
+				if (puppeteer == null || puppeteer.IsConnected == false)
+				{
+					_ = method.Invoke(null, new object[] { originalMessage });
+					return;
+				}
 
+				Controller.instance.SendChatMessage(puppeteer.vID, message);
 				if (PuppeteerMod.Settings.sendChatResponsesToTwitch)
 					_ = method.Invoke(null, new object[] { message });
 			}
