@@ -10,6 +10,16 @@ using Verse;
 
 namespace Puppeteer
 {
+	[HarmonyPatch(typeof(Game))]
+	[HarmonyPatch(nameof(Game.FinalizeInit))]
+	static class Game_FinalizeInit_Patch
+	{
+		public static void Postfix()
+		{
+			ModCounter.Trigger();
+		}
+	}
+
 	[HarmonyPatch(typeof(Root_Play))]
 	[HarmonyPatch(nameof(Root_Play.Start))]
 	static class Root_Play_Start_Patch
