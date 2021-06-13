@@ -45,7 +45,7 @@ namespace Puppeteer
 			// cannot interact directly
 		}
 
-		protected override void FinalizeDesignationSucceeded()
+		public override void FinalizeDesignationSucceeded()
 		{
 			base.FinalizeDesignationSucceeded();
 		}

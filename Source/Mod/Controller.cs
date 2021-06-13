@@ -48,9 +48,6 @@ namespace Puppeteer
 		bool prioritiesChanged = false;
 		bool schedulesChanged = false;
 
-		static readonly MethodInfo m_VisibleHediffGroupsInOrder = Method(typeof(HealthCardUtility), "VisibleHediffGroupsInOrder");
-		static readonly Func<Pawn, bool, IEnumerable<IGrouping<BodyPartRecord, Hediff>>> VisibleHediffGroupsInOrder = (Func<Pawn, bool, IEnumerable<IGrouping<BodyPartRecord, Hediff>>>)Delegate.CreateDelegate(typeof(Func<Pawn, bool, IEnumerable<IGrouping<BodyPartRecord, Hediff>>>), m_VisibleHediffGroupsInOrder);
-
 		public Controller()
 		{
 			_ = FileWatcher.AddListener((action, file) =>
@@ -356,7 +353,7 @@ namespace Puppeteer
 
 		ColonistBaseInfo.Injury[] GetInjuries(Pawn pawn)
 		{
-			return VisibleHediffGroupsInOrder(pawn, true)
+			return HealthCardUtility.VisibleHediffGroupsInOrder(pawn, true)
 				.Cast<IEnumerable<Hediff>>()
 				.Select(diffs =>
 				{
@@ -391,12 +388,10 @@ namespace Puppeteer
 				.ToArray();
 		}
 
-		static readonly FieldInfo f_skillDefsInListOrderCached = Field(typeof(SkillUI), "skillDefsInListOrderCached");
-		static readonly FieldRef<List<SkillDef>> skillDefsInListOrderCachedRef = StaticFieldRefAccess<List<SkillDef>>(f_skillDefsInListOrderCached);
 		public static ColonistBaseInfo.SkillInfo[] GetSkills(Pawn pawn)
 		{
 			var skills = pawn.skills;
-			return skillDefsInListOrderCachedRef()
+			return SkillUI.skillDefsInListOrderCached
 				.Select(skillDef => skills.GetSkill(skillDef))
 				.Where(skill => skill.TotallyDisabled == false)
 				.Select(skill => new ColonistBaseInfo.SkillInfo()

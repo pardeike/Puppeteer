@@ -85,7 +85,7 @@ namespace Puppeteer
 				yield return target;
 		}
 
-		protected override string ToGameStringFromPOV_Worker(Thing pov, bool forceLog)
+		public override string ToGameStringFromPOV_Worker(Thing pov, bool forceLog)
 		{
 			return text;
 		}

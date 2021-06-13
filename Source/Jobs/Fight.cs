@@ -12,7 +12,7 @@ namespace Puppeteer
 			this.enemyTarget = enemyTarget;
 		}
 
-		protected override void UpdateEnemyTarget(Pawn pawn)
+		public override void UpdateEnemyTarget(Pawn pawn)
 		{
 			pawn.mindState.enemyTarget = enemyTarget;
 		}

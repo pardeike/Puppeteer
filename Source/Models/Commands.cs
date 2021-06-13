@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static HarmonyLib.AccessTools;
 
 namespace Puppeteer
 {
@@ -131,8 +130,6 @@ namespace Puppeteer
 			public int marker;
 			public int[] treshholds;
 
-			static readonly FieldRef<Need, List<float>> threshPercentsRef = FieldRefAccess<Need, List<float>>(Field(typeof(Need), "threshPercents"));
-
 			public NeedInfo(Need rNeed)
 			{
 				var max = 1f;
@@ -142,7 +139,7 @@ namespace Puppeteer
 				name = rNeed.LabelCap;
 				value = (int)(rNeed.CurLevel * 100);
 				marker = rNeed.CurInstantLevelPercentage >= 0 ? (int)(rNeed.CurInstantLevelPercentage * max * 100 + 0.5f) : -1;
-				treshholds = threshPercentsRef(rNeed)?.Select(p => (int)(p * 100)).ToArray() ?? Array.Empty<int>();
+				treshholds = rNeed.threshPercents?.Select(p => (int)(p * 100)).ToArray() ?? Array.Empty<int>();
 			}
 		}
 

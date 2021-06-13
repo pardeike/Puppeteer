@@ -5,7 +5,6 @@ using System.Linq;
 using UnityEngine;
 using Verse;
 using WebSocketSharp;
-using static HarmonyLib.AccessTools;
 
 namespace Puppeteer
 {
@@ -218,7 +217,6 @@ namespace Puppeteer
 			}
 		}
 
-		static readonly FieldRef<ThingGrid, List<Thing>[]> thingGrid = FieldRefAccess<ThingGrid, List<Thing>[]>("thingGrid");
 		static string lastMatcherText1 = null;
 		static List<string> lastResult1 = null;
 		public List<string> GetMatchingButtons()
@@ -238,7 +236,7 @@ namespace Puppeteer
 					Find.ReverseDesignatorDatabase.AllDesignators.Select(des => des.LabelCap)
 				);
 				labels.AddRange(
-					thingGrid(map.thingGrid)
+					map.thingGrid.thingGrid
 						.SelectMany(g => g)
 						.Where(thing => ThingSelectionUtility.SelectableByMapClick(thing))
 						.SelectMany(thing => GetLabels(thing))

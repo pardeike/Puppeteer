@@ -61,9 +61,7 @@ namespace Puppeteer
 
 		public static void Help(this Listing_Standard list, string helpItem, float height = 0f)
 		{
-			var curX = GetterSetters.curXByRef(list);
-			var curY = GetterSetters.curYByRef(list);
-			var rect = new Rect(curX, curY, list.ColumnWidth, height > 0f ? height : Text.LineHeight);
+			var rect = new Rect(list.curX, list.curY, list.ColumnWidth, height > 0f ? height : Text.LineHeight);
 			if (Mouse.IsOver(rect))
 				SettingsDrawer.currentHelpItem = helpItem;
 		}
@@ -172,8 +170,8 @@ namespace Puppeteer
 
 			Widgets.Checkbox(new Vector2(rect.x, rect.y - 1f), ref forBool);
 
-			var curX = GetterSetters.curXByRef(list);
-			GetterSetters.curXByRef(list) = curX + indent;
+			var curX = list.curX;
+			list.curX += indent;
 
 			var anchor = Text.Anchor;
 			Text.Anchor = TextAnchor.UpperLeft;
@@ -184,7 +182,7 @@ namespace Puppeteer
 			GUI.color = color;
 			Text.Anchor = anchor;
 
-			GetterSetters.curXByRef(list) = curX;
+			list.curX = curX;
 		}
 
 		public static bool Dialog_RadioButton(this Listing_Standard list, bool active, string labelId)
@@ -200,8 +198,8 @@ namespace Puppeteer
 			var line = new Rect(rect);
 			var result = Widgets.RadioButton(line.xMin, line.yMin, active);
 
-			var curX = GetterSetters.curXByRef(list);
-			GetterSetters.curXByRef(list) = curX + indent;
+			var curX = list.curX;
+			list.curX += indent;
 
 			var anchor = Text.Anchor;
 			Text.Anchor = TextAnchor.UpperLeft;
@@ -212,7 +210,7 @@ namespace Puppeteer
 			GUI.color = color;
 			Text.Anchor = anchor;
 
-			GetterSetters.curXByRef(list) = curX;
+			list.curX = curX;
 
 			result |= Widgets.ButtonInvisible(rect, false);
 			if (result && !active)

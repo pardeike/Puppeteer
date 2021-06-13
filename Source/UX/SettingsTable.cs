@@ -23,8 +23,8 @@ namespace Puppeteer
 	public class PuppeteerSettingsWindow : MainTabWindow_PawnTable
 	{
 		private static PawnTableDef pawnTableDef;
-		protected override PawnTableDef PawnTableDef => pawnTableDef ?? (pawnTableDef = DefDatabase<PawnTableDef>.GetNamed("PuppeteerTableSettings"));
-		protected override IEnumerable<Pawn> Pawns => Find.CurrentMap != null ? Find.CurrentMap.mapPawns.FreeColonists : new List<Pawn>();
+		public override PawnTableDef PawnTableDef => pawnTableDef ?? (pawnTableDef = DefDatabase<PawnTableDef>.GetNamed("PuppeteerTableSettings"));
+		public override IEnumerable<Pawn> Pawns => Find.CurrentMap != null ? Find.CurrentMap.mapPawns.FreeColonists : new List<Pawn>();
 		public override void PostOpen()
 		{
 			base.PostOpen();

@@ -9,7 +9,7 @@ namespace Puppeteer
 	public class CopyPastePuppeteerSettings : PawnColumnWorker_CopyPaste
 	{
 		private static PawnSettings clipboard;
-		protected override bool AnythingInClipboard => clipboard != null;
+		public override bool AnythingInClipboard => clipboard != null;
 
 		public override void DoCell(Rect rect, Pawn pawn, PawnTable table)
 		{
@@ -17,7 +17,7 @@ namespace Puppeteer
 			base.DoCell(rect, pawn, table);
 		}
 
-		protected override void CopyFrom(Pawn p)
+		public override void CopyFrom(Pawn p)
 		{
 			clipboard = new PawnSettings();
 			var settings = PawnSettings.SettingsFor(p);
@@ -25,7 +25,7 @@ namespace Puppeteer
 			clipboard.activeAreas.AddRange(settings.activeAreas);
 		}
 
-		protected override void PasteTo(Pawn p)
+		public override void PasteTo(Pawn p)
 		{
 			if (clipboard != null)
 			{
@@ -40,17 +40,17 @@ namespace Puppeteer
 
 	class PawnColumnWorker_PuppetEnabled : PawnColumnWorker_Checkbox
 	{
-		protected override bool HasCheckbox(Pawn pawn)
+		public override bool HasCheckbox(Pawn pawn)
 		{
 			return true;
 		}
 
-		protected override bool GetValue(Pawn pawn)
+		public override bool GetValue(Pawn pawn)
 		{
 			return PawnSettings.SettingsFor(pawn).enabled;
 		}
 
-		protected override void SetValue(Pawn pawn, bool value)
+		public override void SetValue(Pawn pawn, bool value)
 		{
 			PawnSettings.SettingsFor(pawn).enabled = value;
 		}
@@ -61,7 +61,7 @@ namespace Puppeteer
 		const int IdealWidth = 748;
 		const int TopAreaHeight = 65;
 		const int ManageAreasButtonHeight = 32;
-		protected override GameFont DefaultHeaderFont => GameFont.Tiny;
+		public override GameFont DefaultHeaderFont => GameFont.Tiny;
 
 		public override int GetMinWidth(PawnTable table)
 		{
@@ -159,11 +159,11 @@ namespace Puppeteer
 			return a.Label.CompareTo(b.Label);
 		}
 
-		protected override void HeaderClicked(Rect headerRect, PawnTable table)
+		public override void HeaderClicked(Rect headerRect, PawnTable table)
 		{
 		}
 
-		protected override string GetHeaderTip(PawnTable table)
+		public override string GetHeaderTip(PawnTable table)
 		{
 			return base.GetHeaderTip(table) + "\n" + "Restrict colonists by defining areas that do not allow certain viewer commands.";
 		}
